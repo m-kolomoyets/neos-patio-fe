@@ -5,6 +5,7 @@ import EditIcon from '@/icons/edit_24.svg?react';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { Tabs } from '@/components/ui/Tabs';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { Typography } from '@/components/ui/Typography';
 import s from './styles.module.css';
 
@@ -56,127 +57,185 @@ const TABS_ITEMS = [
     { value: 'settings', label: 'Settings' },
 ];
 
+const TOOLTIP_SIDES = ['top', 'right', 'bottom', 'left'] as const;
+
 export const UiKit: React.FC = () => {
     return (
-        <div className={s.wrap}>
-            <Section title="Typography">
-                {TYPOGRAPHY_VARIANTS.map((variant) => {
-                    return (
-                        <Row key={variant} label={variant}>
-                            <Typography variant={variant}>The quick brown fox jumps over the lazy dog</Typography>
-                        </Row>
-                    );
-                })}
-            </Section>
+        <Tooltip.Provider>
+            <div className={s.wrap}>
+                <Section title="Typography">
+                    {TYPOGRAPHY_VARIANTS.map((variant) => {
+                        return (
+                            <Row key={variant} label={variant}>
+                                <Typography variant={variant}>The quick brown fox jumps over the lazy dog</Typography>
+                            </Row>
+                        );
+                    })}
+                </Section>
 
-            <Section title="Button — variants × sizes">
-                {BUTTON_VARIANTS.map((variant) => {
-                    return (
-                        <Row key={variant} label={variant}>
-                            {BUTTON_SIZES.map((size) => {
-                                return (
-                                    <Button key={size} variant={variant} size={size}>
-                                        {variant} / {size}
-                                    </Button>
-                                );
-                            })}
-                        </Row>
-                    );
-                })}
-            </Section>
+                <Section title="Button — variants × sizes">
+                    {BUTTON_VARIANTS.map((variant) => {
+                        return (
+                            <Row key={variant} label={variant}>
+                                {BUTTON_SIZES.map((size) => {
+                                    return (
+                                        <Button key={size} variant={variant} size={size}>
+                                            {variant} / {size}
+                                        </Button>
+                                    );
+                                })}
+                            </Row>
+                        );
+                    })}
+                </Section>
 
-            <Section title="Button — with icons">
-                {BUTTON_VARIANTS.map((variant) => {
-                    return (
-                        <Row key={variant} label={variant}>
-                            {BUTTON_SIZES.map((size) => {
-                                return (
-                                    <Button key={`${size}-left`} variant={variant} size={size}>
-                                        <EditIcon />
-                                        Edit
-                                    </Button>
-                                );
-                            })}
-                            {BUTTON_SIZES.map((size) => {
-                                return (
-                                    <Button key={`${size}-right`} variant={variant} size={size}>
-                                        Next
-                                        <ArrowRightIcon />
-                                    </Button>
-                                );
-                            })}
-                        </Row>
-                    );
-                })}
-            </Section>
+                <Section title="Button — with icons">
+                    {BUTTON_VARIANTS.map((variant) => {
+                        return (
+                            <Row key={variant} label={variant}>
+                                {BUTTON_SIZES.map((size) => {
+                                    return (
+                                        <Button key={`${size}-left`} variant={variant} size={size}>
+                                            <EditIcon />
+                                            Edit
+                                        </Button>
+                                    );
+                                })}
+                                {BUTTON_SIZES.map((size) => {
+                                    return (
+                                        <Button key={`${size}-right`} variant={variant} size={size}>
+                                            Next
+                                            <ArrowRightIcon />
+                                        </Button>
+                                    );
+                                })}
+                            </Row>
+                        );
+                    })}
+                </Section>
 
-            <Section title="Button — icon only">
-                {BUTTON_VARIANTS.map((variant) => {
-                    return (
-                        <Row key={variant} label={variant}>
-                            {BUTTON_SIZES.map((size) => {
-                                return (
-                                    <Button key={size} variant={variant} size={size} isIcon aria-label="Edit">
-                                        <EditIcon />
-                                    </Button>
-                                );
-                            })}
-                        </Row>
-                    );
-                })}
-            </Section>
+                <Section title="Button — icon only">
+                    {BUTTON_VARIANTS.map((variant) => {
+                        return (
+                            <Row key={variant} label={variant}>
+                                {BUTTON_SIZES.map((size) => {
+                                    return (
+                                        <Button key={size} variant={variant} size={size} isIcon aria-label="Edit">
+                                            <EditIcon />
+                                        </Button>
+                                    );
+                                })}
+                            </Row>
+                        );
+                    })}
+                </Section>
 
-            <Section title="Tabs">
-                <Row label="default">
-                    <Tabs.Root defaultValue={TABS_ITEMS[0].value}>
-                        <Tabs.List>
-                            {TABS_ITEMS.map((item) => {
-                                return (
-                                    <Tabs.Tab key={item.value} value={item.value}>
-                                        {item.label}
-                                    </Tabs.Tab>
-                                );
-                            })}
-                            <Tabs.Indicator />
-                        </Tabs.List>
-                    </Tabs.Root>
-                </Row>
-                <Row label="disabled">
-                    <Tabs.Root defaultValue={TABS_ITEMS[0].value}>
-                        <Tabs.List>
-                            <Tabs.Tab value={TABS_ITEMS[0].value}>{TABS_ITEMS[0].label}</Tabs.Tab>
-                            <Tabs.Tab value={TABS_ITEMS[1].value} disabled>
-                                {TABS_ITEMS[1].label}
-                            </Tabs.Tab>
-                            <Tabs.Tab value={TABS_ITEMS[2].value}>{TABS_ITEMS[2].label}</Tabs.Tab>
-                            <Tabs.Indicator />
-                        </Tabs.List>
-                    </Tabs.Root>
-                </Row>
-            </Section>
+                <Section title="Tabs">
+                    <Row label="default">
+                        <Tabs.Root defaultValue={TABS_ITEMS[0].value}>
+                            <Tabs.List>
+                                {TABS_ITEMS.map((item) => {
+                                    return (
+                                        <Tabs.Tab key={item.value} value={item.value}>
+                                            {item.label}
+                                        </Tabs.Tab>
+                                    );
+                                })}
+                                <Tabs.Indicator />
+                            </Tabs.List>
+                        </Tabs.Root>
+                    </Row>
+                    <Row label="disabled">
+                        <Tabs.Root defaultValue={TABS_ITEMS[0].value}>
+                            <Tabs.List>
+                                <Tabs.Tab value={TABS_ITEMS[0].value}>{TABS_ITEMS[0].label}</Tabs.Tab>
+                                <Tabs.Tab value={TABS_ITEMS[1].value} disabled>
+                                    {TABS_ITEMS[1].label}
+                                </Tabs.Tab>
+                                <Tabs.Tab value={TABS_ITEMS[2].value}>{TABS_ITEMS[2].label}</Tabs.Tab>
+                                <Tabs.Indicator />
+                            </Tabs.List>
+                        </Tabs.Root>
+                    </Row>
+                </Section>
 
-            <Section title="Button — loading & disabled">
-                {BUTTON_VARIANTS.map((variant) => {
-                    return (
-                        <Row key={variant} label={variant}>
-                            {BUTTON_SIZES.map((size) => {
-                                return (
-                                    <Button key={`${size}-loading`} variant={variant} size={size} isLoading>
-                                        Loading
-                                    </Button>
-                                );
-                            })}
-                            {BUTTON_SIZES.map((size) => {
-                                return (
-                                    <Button key={`${size}-disabled`} variant={variant} size={size} disabled>
-                                        Disabled
-                                    </Button>
-                                );
-                            })}
-                        </Row>
-                    );
-                })}
-            </Section>
-        </div>
+                <Section title="Tooltip">
+                    <Row label="title + description">
+                        <Tooltip.Root>
+                            <Tooltip.Trigger render={<Button variant="surface">Hover me</Button>} />
+                            <Tooltip.Popup
+                                title="Keyboard shortcut"
+                                description="Press ⌘K to open the command palette from anywhere in the app."
+                            />
+                        </Tooltip.Root>
+                    </Row>
+                    <Row label="description only">
+                        <Tooltip.Root>
+                            <Tooltip.Trigger render={<Button variant="surface">No title</Button>} />
+                            <Tooltip.Popup description="A short description without a title." />
+                        </Tooltip.Root>
+                    </Row>
+                    <Row label="sides">
+                        {TOOLTIP_SIDES.map((side) => {
+                            return (
+                                <Tooltip.Root key={side}>
+                                    <Tooltip.Trigger render={<Button variant="surface">{side}</Button>} />
+                                    <Tooltip.Popup
+                                        side={side}
+                                        title={`Side: ${side}`}
+                                        description="The arrow follows the rendered side."
+                                    />
+                                </Tooltip.Root>
+                            );
+                        })}
+                    </Row>
+                    <Row label="long content (max 20rem)">
+                        <Tooltip.Root>
+                            <Tooltip.Trigger render={<Button variant="surface">Long text</Button>} />
+                            <Tooltip.Popup
+                                title="Long description"
+                                description="This tooltip contains enough text to demonstrate the dynamic width clamped at 320px, so it wraps across multiple lines instead of growing indefinitely."
+                            />
+                        </Tooltip.Root>
+                    </Row>
+                    <Row label="rich JSX content">
+                        <Tooltip.Root>
+                            <Tooltip.Trigger render={<Button variant="surface">Rich content</Button>} />
+                            <Tooltip.Popup
+                                title="Status"
+                                description={
+                                    <span>
+                                        Currently <strong>online</strong> — last seen just now.
+                                    </span>
+                                }
+                            />
+                        </Tooltip.Root>
+                    </Row>
+                </Section>
+
+                <Section title="Button — loading & disabled">
+                    {BUTTON_VARIANTS.map((variant) => {
+                        return (
+                            <Row key={variant} label={variant}>
+                                {BUTTON_SIZES.map((size) => {
+                                    return (
+                                        <Button key={`${size}-loading`} variant={variant} size={size} isLoading>
+                                            Loading
+                                        </Button>
+                                    );
+                                })}
+                                {BUTTON_SIZES.map((size) => {
+                                    return (
+                                        <Button key={`${size}-disabled`} variant={variant} size={size} disabled>
+                                            Disabled
+                                        </Button>
+                                    );
+                                })}
+                            </Row>
+                        );
+                    })}
+                </Section>
+            </div>
+        </Tooltip.Provider>
     );
 };
