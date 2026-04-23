@@ -1,10 +1,13 @@
 import type { ButtonSize, ButtonVariant } from '@/components/ui/Button/types';
+import type { ToggleGroupSize } from '@/components/ui/ToggleGroup/types';
 import type { TypographyVariant } from '@/components/ui/Typography/types';
 import ArrowRightIcon from '@/icons/arrow-right_24.svg?react';
 import EditIcon from '@/icons/edit_24.svg?react';
+import TrashIcon from '@/icons/trash_24.svg?react';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { Tabs } from '@/components/ui/Tabs';
+import { ToggleGroup } from '@/components/ui/ToggleGroup';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { Typography } from '@/components/ui/Typography';
 import s from './styles.module.css';
@@ -58,6 +61,14 @@ const TABS_ITEMS = [
 ];
 
 const TOOLTIP_SIDES = ['top', 'right', 'bottom', 'left'] as const;
+
+const TOGGLE_GROUP_SIZES: ToggleGroupSize[] = ['md', 'sm'];
+
+const TOGGLE_GROUP_ITEMS = [
+    { value: 'edit', icon: <EditIcon />, label: 'Edit' },
+    { value: 'next', icon: <ArrowRightIcon />, label: 'Next' },
+    { value: 'delete', icon: <TrashIcon />, label: 'Delete' },
+];
 
 export const UiKit: React.FC = () => {
     return (
@@ -158,6 +169,72 @@ export const UiKit: React.FC = () => {
                         </Tabs.Root>
                     </Row>
                 </Section>
+                <Section title="Button — loading & disabled">
+                    {BUTTON_VARIANTS.map((variant) => {
+                        return (
+                            <Row key={variant} label={variant}>
+                                {BUTTON_SIZES.map((size) => {
+                                    return (
+                                        <Button key={`${size}-loading`} variant={variant} size={size} isLoading>
+                                            Loading
+                                        </Button>
+                                    );
+                                })}
+                                {BUTTON_SIZES.map((size) => {
+                                    return (
+                                        <Button key={`${size}-disabled`} variant={variant} size={size} disabled>
+                                            Disabled
+                                        </Button>
+                                    );
+                                })}
+                            </Row>
+                        );
+                    })}
+                </Section>
+
+                <Section title="Toggle Group">
+                    {TOGGLE_GROUP_SIZES.map((size) => {
+                        return (
+                            <Row key={size} label={size}>
+                                <ToggleGroup.Root size={size} defaultValue={[TOGGLE_GROUP_ITEMS[0].value]}>
+                                    {TOGGLE_GROUP_ITEMS.map((item) => {
+                                        return (
+                                            <ToggleGroup.Item
+                                                key={item.value}
+                                                value={item.value}
+                                                aria-label={item.label}
+                                            >
+                                                {item.icon}
+                                            </ToggleGroup.Item>
+                                        );
+                                    })}
+                                </ToggleGroup.Root>
+                            </Row>
+                        );
+                    })}
+                    <Row label="multiple">
+                        <ToggleGroup.Root multiple defaultValue={[TOGGLE_GROUP_ITEMS[0].value]}>
+                            {TOGGLE_GROUP_ITEMS.map((item) => {
+                                return (
+                                    <ToggleGroup.Item key={item.value} value={item.value} aria-label={item.label}>
+                                        {item.icon}
+                                    </ToggleGroup.Item>
+                                );
+                            })}
+                        </ToggleGroup.Root>
+                    </Row>
+                    <Row label="disabled">
+                        <ToggleGroup.Root disabled defaultValue={[TOGGLE_GROUP_ITEMS[0].value]}>
+                            {TOGGLE_GROUP_ITEMS.map((item) => {
+                                return (
+                                    <ToggleGroup.Item key={item.value} value={item.value} aria-label={item.label}>
+                                        {item.icon}
+                                    </ToggleGroup.Item>
+                                );
+                            })}
+                        </ToggleGroup.Root>
+                    </Row>
+                </Section>
 
                 <Section title="Tooltip">
                     <Row label="title + description">
@@ -211,29 +288,6 @@ export const UiKit: React.FC = () => {
                             />
                         </Tooltip.Root>
                     </Row>
-                </Section>
-
-                <Section title="Button — loading & disabled">
-                    {BUTTON_VARIANTS.map((variant) => {
-                        return (
-                            <Row key={variant} label={variant}>
-                                {BUTTON_SIZES.map((size) => {
-                                    return (
-                                        <Button key={`${size}-loading`} variant={variant} size={size} isLoading>
-                                            Loading
-                                        </Button>
-                                    );
-                                })}
-                                {BUTTON_SIZES.map((size) => {
-                                    return (
-                                        <Button key={`${size}-disabled`} variant={variant} size={size} disabled>
-                                            Disabled
-                                        </Button>
-                                    );
-                                })}
-                            </Row>
-                        );
-                    })}
                 </Section>
             </div>
         </Tooltip.Provider>
