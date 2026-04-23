@@ -113,6 +113,19 @@
     --gap-400: 100rem;
     --gap-480: 120rem;
 
+    /* Border radiuses */
+    --radius-none: 0;
+    --radius-xxs: 0.125rem;
+    --radius-xs: 0.25rem;
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.625rem;
+    --radius-xl: 0.75rem;
+    --radius-2xl: 1rem;
+    --radius-3xl: 1.25rem;
+    --radius-4xl: 1.5rem;
+    --radius-full: 9999px;
+
     /* Focus Ring */
     --ring-offset-color: var(--color-gray-0);
     --ring-color: var(--color-primary);
