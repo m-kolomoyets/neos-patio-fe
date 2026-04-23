@@ -61,6 +61,25 @@
     --color-success-800: hsl(155 85% 20%);
     --color-success-900: hsl(156 83% 16%);
 
+    /* Glass surface */
+    --surface-thin:
+        linear-gradient(0deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.2) 100%), rgba(0, 0, 0, 0.04);
+    --surface-regular:
+        linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.04) 100%), rgba(0, 0, 0, 0.1);
+    --surface-thick:
+        linear-gradient(0deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.08) 100%), rgba(0, 0, 0, 0.4);
+    --surface-thicker:
+        linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.04) 100%), rgba(0, 0, 0, 0.5);
+
+    /* Glass stroke */
+    --stroke-surface: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.2) 0%,
+        rgba(255, 255, 255, 0) 41%,
+        rgba(255, 255, 255, 0) 57%,
+        rgba(255, 255, 255, 0.05) 100%
+    );
+
     /* Focus Ring */
     --ring-offset-color: var(--color-gray-0);
     --ring-color: var(--color-primary);
@@ -86,6 +105,30 @@ body {
 
 #root {
     isolation: isolate;
+}
+
+.surface-thin,
+.surface-regular,
+.surface-thick,
+.surface-thicker {
+    background-blend-mode: normal, luminosity;
+    backdrop-filter: blur(20px);
+}
+
+.surface-thin {
+    background: var(--surface-thin);
+}
+
+.surface-regular {
+    background: var(--surface-regular);
+}
+
+.surface-thick {
+    background: var(--surface-thick);
+}
+
+.surface-thicker {
+    background: var(--surface-thicker);
 }
 
 .sr-only {
