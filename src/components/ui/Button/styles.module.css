@@ -1,0 +1,89 @@
+.wrap {
+    --button-icon-size: 1.25rem;
+
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--gap-1) + var(--gap-0_5));
+    cursor: pointer;
+    color: var(--color-base-white);
+    font-weight: 500;
+    border: none;
+    border-radius: var(--radius-full);
+    text-decoration: none;
+    transition:
+        color 0.2s ease-in-out,
+        background-color 0.2s ease-in-out,
+        opacity 0.2s ease-in-out;
+}
+
+.wrap > svg {
+    width: var(--button-icon-size);
+    height: var(--button-icon-size);
+    flex-shrink: 0;
+}
+
+.wrap[data-button-is-loading="true"] > .spinner + svg {
+    display: none;
+}
+
+.wrap:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.wrap[data-button-size="xl"] {
+    padding: calc(var(--gap-3) + var(--gap-0_5));
+    font-size: 1rem;
+    line-height: 1.5rem;
+}
+
+.wrap[data-button-size="xl"] {
+    padding: var(--gap-3);
+    font-size: 1rem;
+    line-height: 1.5rem;
+}
+
+.wrap[data-button-size="md"] {
+    padding: calc(var(--gap-2) + var(--gap-0_5));
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.wrap[data-button-size="sm"] {
+    padding: var(--gap-2);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.wrap[data-button-variant="brand"] {
+    background-color: var(--color-brand-700);
+}
+
+.wrap[data-button-variant="brand"]:not(:disabled):is(:hover, [data-popup-open], [data-state="open"]) {
+    background-color: var(--color-brand-800);
+}
+
+.wrap[data-button-variant="brand"]:not(:disabled):active {
+    background-color: var(--color-brand-900);
+}
+
+.wrap[data-button-variant="surface"]:not(:disabled):is(:hover, [data-popup-open], [data-state="open"]) {
+    background:
+        radial-gradient(ellipse 59.72% 55.84% at 50% 88.89%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%),
+        rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0.04);
+    background-blend-mode: normal, normal, luminosity;
+    overflow: hidden;
+    backdrop-filter: blur(24px);
+}
+
+.wrap[data-button-variant="link"] {
+    background-color: transparent;
+}
+
+.wrap[data-button-variant="link"]:not(:disabled):is(:hover, [data-popup-open], [data-state="open"]) {
+    text-decoration: underline;
+}
