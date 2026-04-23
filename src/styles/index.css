@@ -2,11 +2,64 @@
 
 :root {
     /* Common Variables */
-    --color-white-100: hsl(0deg 0% 100%);
-    --color-primary: hsl(25deg 88% 52%);
-    --color-dark-900: hsl(180deg 4% 9%);
-    --color-dark-700: hsl(226.7deg 10.6% 16.7%);
-    --color-dark-600: hsl(225deg 15% 21%);
+    --color-base-white: hsl(0 0% 100%);
+    --color-base-black: hsl(0 0% 0%);
+    --color-base-transparent: hsl(0 0% 100% / 0%);
+    --color-brand-25: hsl(20 100% 99%);
+    --color-brand-50: hsl(21 88% 97%);
+    --color-brand-100: hsl(22 82% 94%);
+    --color-brand-200: hsl(21 85% 87%);
+    --color-brand-300: hsl(21 83% 80%);
+    --color-brand-400: hsl(21 83% 70%);
+    --color-brand-500: hsl(21 83% 60%);
+    --color-brand-600: hsl(21 62% 53%);
+    --color-brand-700: hsl(21 56% 45%);
+    --color-brand-800: hsl(21 56% 37%);
+    --color-brand-900: hsl(21 56% 27%);
+    --color-gray-25: hsl(0 0% 99%);
+    --color-gray-50: hsl(0 0% 98%);
+    --color-gray-100: hsl(0 0% 96%);
+    --color-gray-200: hsl(220 5% 92%);
+    --color-gray-300: hsl(220 6% 85%);
+    --color-gray-400: hsl(220 6% 66%);
+    --color-gray-500: hsl(220 6% 47%);
+    --color-gray-600: hsl(220 8% 35%);
+    --color-gray-700: hsl(220 11% 29%);
+    --color-gray-800: hsl(220 20% 18%);
+    --color-gray-900: hsl(220 24% 12%);
+    --color-error-25: hsl(4 88% 99%);
+    --color-error-50: hsl(4 88% 97%);
+    --color-error-100: hsl(4 95% 94%);
+    --color-error-200: hsl(4 98% 89%);
+    --color-error-300: hsl(4 96% 80%);
+    --color-error-400: hsl(4 93% 69%);
+    --color-error-500: hsl(4 86% 58%);
+    --color-error-600: hsl(4 74% 49%);
+    --color-error-700: hsl(4 76% 40%);
+    --color-error-800: hsl(4 72% 33%);
+    --color-error-900: hsl(8 65% 29%);
+    --color-warning-25: hsl(44 100% 98%);
+    --color-warning-50: hsl(44 100% 96%);
+    --color-warning-100: hsl(44 98% 89%);
+    --color-warning-200: hsl(44 99% 77%);
+    --color-warning-300: hsl(42 99% 65%);
+    --color-warning-400: hsl(39 98% 56%);
+    --color-warning-500: hsl(34 94% 50%);
+    --color-warning-600: hsl(28 97% 44%);
+    --color-warning-700: hsl(22 92% 37%);
+    --color-warning-800: hsl(19 84% 31%);
+    --color-warning-900: hsl(18 80% 26%);
+    --color-success-25: hsl(144 78% 98%);
+    --color-success-50: hsl(144 78% 96%);
+    --color-success-100: hsl(141 74% 92%);
+    --color-success-200: hsl(144 69% 80%);
+    --color-success-300: hsl(148 63% 67%);
+    --color-success-400: hsl(150 57% 54%);
+    --color-success-500: hsl(152 77% 39%);
+    --color-success-600: hsl(153 91% 30%);
+    --color-success-700: hsl(155 91% 24%);
+    --color-success-800: hsl(155 85% 20%);
+    --color-success-900: hsl(156 83% 16%);
 
     /* Focus Ring */
     --ring-offset-color: var(--color-gray-0);
@@ -24,12 +77,6 @@
     --scrollbar-track-color: hsl(0deg 0% 87.5%);
     --scrollbar-thumb-color: hsl(0deg 0% 68.6%);
     --scrollbar-thumb-color-hover: hsl(210deg 11.2% 51%);
-
-    /* Companies colors */
-    --color-react: hsl(192.5deg 95.1% 68.2%);
-    --color-typescript: hsl(211.4deg 60.3% 48.4%);
-    --gradient-vite: linear-gradient(-45deg, hsl(280.7deg 99% 60%) 0%, hsl(197.3deg 100% 63.9%) 100%);
-    --gradient-tanstack-router: linear-gradient(-45deg, hsl(83.7deg 80.5% 44.3%) 0%, hsl(160.1deg 84.1% 39.4%) 100%);
 }
 
 body {
