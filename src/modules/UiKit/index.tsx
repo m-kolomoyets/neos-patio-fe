@@ -1,3 +1,146 @@
+import type { ButtonSize, ButtonVariant } from '@/components/ui/Button/types';
+import type { TypographyVariant } from '@/components/ui/Typography/types';
+import ArrowRightIcon from '@/icons/arrow-right_24.svg?react';
+import EditIcon from '@/icons/edit_24.svg?react';
+import clsx from 'clsx';
+import { Button } from '@/components/ui/Button';
+import { Typography } from '@/components/ui/Typography';
+import s from './styles.module.css';
+
+type SectionProps = {
+    title: string;
+    children: React.ReactNode;
+};
+
+const Section: React.FC<SectionProps> = ({ title, children }) => {
+    return (
+        <section className={clsx(s.section, 'surface-thick')}>
+            <Typography variant="display-sm">{title}</Typography>
+            <div className={s.sectionContent}>{children}</div>
+        </section>
+    );
+};
+
+const Row: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => {
+    return (
+        <div className={s.row}>
+            <Typography variant="text-sm" className={s.rowLabel}>
+                {label}
+            </Typography>
+            {children}
+        </div>
+    );
+};
+
+const TYPOGRAPHY_VARIANTS: TypographyVariant[] = [
+    'display-2xl',
+    'display-xl',
+    'display-lg',
+    'display-md',
+    'display-sm',
+    'display-xs',
+    'text-xl',
+    'text-lg',
+    'text-md',
+    'text-sm',
+    'text-xs',
+];
+
+const BUTTON_VARIANTS: ButtonVariant[] = ['brand', 'surface', 'link'];
+const BUTTON_SIZES: ButtonSize[] = ['xl', 'lg', 'md', 'sm'];
+
 export const UiKit: React.FC = () => {
-    return <div>UiKit</div>;
+    return (
+        <div className={s.wrap}>
+            <Section title="Typography">
+                {TYPOGRAPHY_VARIANTS.map((variant) => {
+                    return (
+                        <Row key={variant} label={variant}>
+                            <Typography variant={variant}>The quick brown fox jumps over the lazy dog</Typography>
+                        </Row>
+                    );
+                })}
+            </Section>
+
+            <Section title="Button — variants × sizes">
+                {BUTTON_VARIANTS.map((variant) => {
+                    return (
+                        <Row key={variant} label={variant}>
+                            {BUTTON_SIZES.map((size) => {
+                                return (
+                                    <Button key={size} variant={variant} size={size}>
+                                        {variant} / {size}
+                                    </Button>
+                                );
+                            })}
+                        </Row>
+                    );
+                })}
+            </Section>
+
+            <Section title="Button — with icons">
+                {BUTTON_VARIANTS.map((variant) => {
+                    return (
+                        <Row key={variant} label={variant}>
+                            {BUTTON_SIZES.map((size) => {
+                                return (
+                                    <Button key={`${size}-left`} variant={variant} size={size}>
+                                        <EditIcon />
+                                        Edit
+                                    </Button>
+                                );
+                            })}
+                            {BUTTON_SIZES.map((size) => {
+                                return (
+                                    <Button key={`${size}-right`} variant={variant} size={size}>
+                                        Next
+                                        <ArrowRightIcon />
+                                    </Button>
+                                );
+                            })}
+                        </Row>
+                    );
+                })}
+            </Section>
+
+            <Section title="Button — icon only">
+                {BUTTON_VARIANTS.map((variant) => {
+                    return (
+                        <Row key={variant} label={variant}>
+                            {BUTTON_SIZES.map((size) => {
+                                return (
+                                    <Button key={size} variant={variant} size={size} isIcon aria-label="Edit">
+                                        <EditIcon />
+                                    </Button>
+                                );
+                            })}
+                        </Row>
+                    );
+                })}
+            </Section>
+
+            <Section title="Button — loading & disabled">
+                {BUTTON_VARIANTS.map((variant) => {
+                    return (
+                        <Row key={variant} label={variant}>
+                            {BUTTON_SIZES.map((size) => {
+                                return (
+                                    <Button key={`${size}-loading`} variant={variant} size={size} isLoading>
+                                        Loading
+                                    </Button>
+                                );
+                            })}
+                            {BUTTON_SIZES.map((size) => {
+                                return (
+                                    <Button key={`${size}-disabled`} variant={variant} size={size} disabled>
+                                        Disabled
+                                    </Button>
+                                );
+                            })}
+                        </Row>
+                    );
+                })}
+            </Section>
+        </div>
+    );
 };

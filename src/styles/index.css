@@ -127,12 +127,12 @@
     --radius-full: 9999px;
 
     /* Focus Ring */
-    --ring-offset-color: var(--color-gray-0);
-    --ring-color: var(--color-primary);
+    --ring-offset-color: var(--color-base-white);
+    --ring-color: var(--color-brand-500);
     --ring-inset: ;
 
     /* stylelint-disable-next-line length-zero-no-unit */
-    --ring-offset-width: 2px;
+    --ring-offset-width: 0px;
     --ring-width: 2px;
     --ring-offset-shadow: var(--ring-inset) 0 0 0 calc(var(--ring-offset-width)) var(--ring-offset-color);
     --ring-shadow: var(--ring-inset) 0 0 0 calc(var(--ring-width) + var(--ring-offset-width)) var(--ring-color);
@@ -147,6 +147,16 @@
 body {
     position: relative;
     font-family: "Inter", sans-serif;
+}
+
+::selection {
+    background-color: var(--color-brand-500);
+    color: var(--color-base-white);
+}
+
+::-moz-selection {
+    background-color: var(--color-brand-500);
+    color: var(--color-base-white);
 }
 
 #root {
