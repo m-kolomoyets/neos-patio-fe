@@ -1,4 +1,5 @@
 import type { ButtonSize, ButtonVariant } from '@/components/ui/Button/types';
+import type { NotificationBadgeSize } from '@/components/ui/NotificationBadge/types';
 import type { ToggleGroupSize } from '@/components/ui/ToggleGroup/types';
 import type { TypographyVariant } from '@/components/ui/Typography/types';
 import ArrowRightIcon from '@/icons/arrow-right_24.svg?react';
@@ -6,6 +7,7 @@ import EditIcon from '@/icons/edit_24.svg?react';
 import TrashIcon from '@/icons/trash_24.svg?react';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
+import { NotificationBadge } from '@/components/ui/NotificationBadge';
 import { Tabs } from '@/components/ui/Tabs';
 import { ToggleGroup } from '@/components/ui/ToggleGroup';
 import { Tooltip } from '@/components/ui/Tooltip';
@@ -63,6 +65,8 @@ const TABS_ITEMS = [
 const TOOLTIP_SIDES = ['top', 'right', 'bottom', 'left'] as const;
 
 const TOGGLE_GROUP_SIZES: ToggleGroupSize[] = ['md', 'sm'];
+
+const NOTIFICATION_BADGE_SIZES: NotificationBadgeSize[] = ['lg', 'md', 'xs'];
 
 const TOGGLE_GROUP_ITEMS = [
     { value: 'edit', icon: <EditIcon />, label: 'Edit' },
@@ -234,6 +238,18 @@ export const UiKit: React.FC = () => {
                             })}
                         </ToggleGroup.Root>
                     </Row>
+                </Section>
+
+                <Section title="Notification Badge">
+                    {NOTIFICATION_BADGE_SIZES.map((size) => {
+                        return (
+                            <Row key={size} label={size}>
+                                <NotificationBadge size={size} value={3} />
+                                <NotificationBadge size={size} value={12} />
+                                <NotificationBadge size={size} value={99} />
+                            </Row>
+                        );
+                    })}
                 </Section>
 
                 <Section title="Tooltip">
