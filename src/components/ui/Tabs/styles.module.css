@@ -1,0 +1,112 @@
+.root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-3);
+}
+
+.list {
+    min-width: 272px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-1);
+    padding: var(--gap-1);
+    width: fit-content;
+    border-radius: var(--radius-full);
+}
+
+.tab {
+    position: relative;
+    flex: 1;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-1);
+    padding: var(--gap-2) calc(var(--gap-1) + var(--gap-0_5));
+    border: none;
+    background-color: transparent;
+    color: var(--color-base-white);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    opacity: 0.5;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+    transition:
+        color 0.2s ease-in-out,
+        opacity 0.2s ease-in-out;
+}
+
+.tab:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.tab:not(:disabled)[data-active]:hover {
+    background:
+        radial-gradient(ellipse 59.72% 55.84% at 50% 88.89%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%),
+        linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
+        linear-gradient(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.04));
+    background-blend-mode: normal, normal, luminosity;
+    overflow: hidden;
+    backdrop-filter: blur(24px);
+    opacity: 1;
+}
+
+.tab[data-selected] {
+    background-color: hsl(0 0% 100% / 0.16);
+    opacity: 1;
+}
+
+.tab[data-active] {
+    opacity: 1;
+}
+
+.root[data-tabs-size="md"] .tab {
+    padding: var(--gap-2) calc(var(--gap-3) + var(--gap-0_5));
+    min-height: 2.25rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.root[data-tabs-size="sm"] .tab {
+    padding: calc(var(--gap-1) + var(--gap-0_5)) var(--gap-3);
+    min-height: 1.875rem;
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+}
+
+.indicator {
+    position: absolute;
+    z-index: 0;
+    top: var(--gap-1);
+    left: 0;
+    width: var(--active-tab-width);
+    height: calc(100% - var(--gap-1) * 2);
+    border-radius: var(--radius-full);
+    background-color: hsl(0 0% 100% / 0.16);
+    transform: translateX(var(--active-tab-left));
+    transition:
+        transform 0.2s ease-in-out,
+        width 0.2s ease-in-out;
+}
+
+.indicator::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--stroke-surface);
+    mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.panel {
+    outline: none;
+}

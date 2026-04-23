@@ -4,6 +4,7 @@ import ArrowRightIcon from '@/icons/arrow-right_24.svg?react';
 import EditIcon from '@/icons/edit_24.svg?react';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
+import { Tabs } from '@/components/ui/Tabs';
 import { Typography } from '@/components/ui/Typography';
 import s from './styles.module.css';
 
@@ -48,6 +49,12 @@ const TYPOGRAPHY_VARIANTS: TypographyVariant[] = [
 
 const BUTTON_VARIANTS: ButtonVariant[] = ['brand', 'surface', 'link'];
 const BUTTON_SIZES: ButtonSize[] = ['xl', 'lg', 'md', 'sm'];
+
+const TABS_ITEMS = [
+    { value: 'overview', label: 'Overview' },
+    { value: 'activity', label: 'Activity' },
+    { value: 'settings', label: 'Settings' },
+];
 
 export const UiKit: React.FC = () => {
     return (
@@ -117,6 +124,35 @@ export const UiKit: React.FC = () => {
                         </Row>
                     );
                 })}
+            </Section>
+
+            <Section title="Tabs">
+                <Row label="default">
+                    <Tabs.Root defaultValue={TABS_ITEMS[0].value}>
+                        <Tabs.List>
+                            {TABS_ITEMS.map((item) => {
+                                return (
+                                    <Tabs.Tab key={item.value} value={item.value}>
+                                        {item.label}
+                                    </Tabs.Tab>
+                                );
+                            })}
+                            <Tabs.Indicator />
+                        </Tabs.List>
+                    </Tabs.Root>
+                </Row>
+                <Row label="disabled">
+                    <Tabs.Root defaultValue={TABS_ITEMS[0].value}>
+                        <Tabs.List>
+                            <Tabs.Tab value={TABS_ITEMS[0].value}>{TABS_ITEMS[0].label}</Tabs.Tab>
+                            <Tabs.Tab value={TABS_ITEMS[1].value} disabled>
+                                {TABS_ITEMS[1].label}
+                            </Tabs.Tab>
+                            <Tabs.Tab value={TABS_ITEMS[2].value}>{TABS_ITEMS[2].label}</Tabs.Tab>
+                            <Tabs.Indicator />
+                        </Tabs.List>
+                    </Tabs.Root>
+                </Row>
             </Section>
 
             <Section title="Button — loading & disabled">
