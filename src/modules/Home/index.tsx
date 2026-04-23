@@ -1,5 +1,5 @@
 import type { HomeExampleProps } from './types';
-import { Component as PhenomenonMarkIcon } from '@/icons/phenomenon-mark.svg?svgUse';
+import PhenomenonMarkIcon from '@/icons/phenomenon-mark.svg?react';
 import clsx from 'clsx';
 import Counter from './components/Counter';
 import s from './style.module.css';

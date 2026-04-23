@@ -1,6 +1,4 @@
-/// <reference  types="@svg-use/vite/client"  />
 import { fileURLToPath } from 'node:url';
-import svgUse from '@svg-use/vite';
 import { devtools } from '@tanstack/devtools-vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react';
@@ -8,6 +6,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vite';
 import eslint from 'vite-plugin-eslint2';
 import { createHtmlPlugin } from 'vite-plugin-html';
+import svgr from 'vite-plugin-svgr';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -23,7 +22,15 @@ export default defineConfig(({ mode }) => {
                     plugins: ['babel-plugin-react-compiler'],
                 },
             }),
-            svgUse(),
+            svgr({
+                include: '**/*.svg?react',
+                svgrOptions: {
+                    plugins: ['@svgr/plugin-svgo', '@svgr/plugin-jsx'],
+                    svgoConfig: {
+                        floatPrecision: 2,
+                    },
+                },
+            }),
             eslint({ exclude: ['/virtual:/', 'node_modules/**'] }),
             visualizer({
                 filename: './tmp/bundle-visualizer.html',

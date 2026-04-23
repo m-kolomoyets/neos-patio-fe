@@ -756,28 +756,24 @@ src
 
 2. Import icon required as follows:
 ```ts
-import { Component as ArrowLeftIcon } from '@/icons/arrow-left.svg?svgUse';
+import ArrowLeftIcon from '@/icons/arrow-left.svg?react';
 ```
 
 3. Use the icon as regular JSX component:
-```ts
+```tsx
 <ArrowLeftIcon className={s.icon} />
 ```
 
-Type of the component and its props:
-Location: `Location: node_modules/@svg-use/react/dist/esm/ThemesExternalSvg.d.ts`
+SVGs are transformed into React components by [`vite-plugin-svgr`](https://github.com/pd4d10/vite-plugin-svgr), which wraps [SVGR](https://react-svgr.com) under the hood. The resulting component accepts all standard `SVGProps<SVGSVGElement>` (e.g. `className`, `width`, `height`, `fill`, `stroke`, `aria-*`, event handlers, etc.).
 
 ```ts
-declare const createThemedExternalSvg: ({ url, id, viewBox }: FactoryProps) => (props: ThemeProps & SVGAttributes<SVGSVGElement>) => JSX.Element;
+import type { SVGProps } from 'react';
 
-export interface ThemeProps {
-	color?: string;
-	colorSecondary?: string;
-	colorTertiary?: string;
-}
+declare const ArrowLeftIcon: React.FC<SVGProps<SVGSVGElement>>;
 ```
 
 Key moments:
 
-- 👉 Import Component names export, then name it as applicable icon naming is.
-- 👉 Autocomplete will support path to the svg file, ⚠️BUT⚠️ you should add ?svgUse param at the end of import statement for @svg-use to work
+- 👉 Use the default export and name it according to the icon (e.g. `ArrowLeftIcon`).
+- 👉 Autocomplete will support the path to the svg file, ⚠️BUT⚠️ you must append the `?react` query param to the import path so `vite-plugin-svgr` transforms the SVG into a React component.
+- 👉 Style icons via `currentColor` in the SVG source and control color through CSS `color` on the parent — this keeps icons themeable without extra props.
