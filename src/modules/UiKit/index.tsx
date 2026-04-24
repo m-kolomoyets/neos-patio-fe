@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { NotificationBadge } from '@/components/ui/NotificationBadge';
 import { OptionItem } from '@/components/ui/OptionItem';
+import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Tabs } from '@/components/ui/Tabs';
 import { ToggleGroup } from '@/components/ui/ToggleGroup';
 import { Tooltip } from '@/components/ui/Tooltip';
@@ -67,6 +68,13 @@ const TABS_ITEMS = [
 ];
 
 const TOOLTIP_SIDES = ['top', 'right', 'bottom', 'left'] as const;
+
+const SCROLL_AREA_OPTIONS = Array.from({ length: 20 }, (_, index) => {
+    return {
+        value: `option-${index + 1}`,
+        label: `Option ${index + 1}`,
+    };
+});
 
 const TOGGLE_GROUP_SIZES: ToggleGroupSize[] = ['md', 'sm'];
 
@@ -303,30 +311,63 @@ export const UiKit: React.FC = () => {
                         </OptionItem>
                     </Row>
                     <Row label="list">
-                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: '16rem' }}>
-                            <OptionItem leftAddon={<SearchIcon />}>Search</OptionItem>
-                            <OptionItem leftAddon={<EditIcon />} checked>
-                                Edit
-                            </OptionItem>
-                            <OptionItem leftAddon={<ArrowRightIcon />}>Next step</OptionItem>
-                            <OptionItem leftAddon={<TrashIcon />}>Delete</OptionItem>
-                        </div>
+                        <ScrollArea className={s.optionList}>
+                            <div className={s.optionListInner}>
+                                <OptionItem leftAddon={<SearchIcon />}>Search</OptionItem>
+                                <OptionItem leftAddon={<EditIcon />} checked>
+                                    Edit
+                                </OptionItem>
+                                <OptionItem leftAddon={<ArrowRightIcon />}>Next step</OptionItem>
+                                <OptionItem leftAddon={<TrashIcon />}>Delete</OptionItem>
+                            </div>
+                        </ScrollArea>
                     </Row>
                     <Row label="variant=surface">
-                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: '16rem' }}>
-                            <OptionItem variant="surface" leftAddon={<SearchIcon />}>
-                                Search
-                            </OptionItem>
-                            <OptionItem variant="surface" leftAddon={<EditIcon />} checked>
-                                Edit (selected)
-                            </OptionItem>
-                            <OptionItem variant="surface" leftAddon={<ArrowRightIcon />}>
-                                Next step
-                            </OptionItem>
-                            <OptionItem variant="surface" leftAddon={<TrashIcon />}>
-                                Delete
-                            </OptionItem>
-                        </div>
+                        <ScrollArea className={s.optionList}>
+                            <div className={s.optionListInner}>
+                                <OptionItem variant="surface" leftAddon={<SearchIcon />}>
+                                    Search
+                                </OptionItem>
+                                <OptionItem variant="surface" leftAddon={<EditIcon />} checked>
+                                    Edit (selected)
+                                </OptionItem>
+                                <OptionItem variant="surface" leftAddon={<ArrowRightIcon />}>
+                                    Next step
+                                </OptionItem>
+                                <OptionItem variant="surface" leftAddon={<TrashIcon />}>
+                                    Delete
+                                </OptionItem>
+                            </div>
+                        </ScrollArea>
+                    </Row>
+                </Section>
+
+                <Section title="Scroll Area">
+                    <Row label="vertical">
+                        <ScrollArea className={s.optionList}>
+                            <div className={s.optionListInner}>
+                                {SCROLL_AREA_OPTIONS.map((option) => {
+                                    return (
+                                        <OptionItem key={option.value} leftAddon={<SearchIcon />}>
+                                            {option.label}
+                                        </OptionItem>
+                                    );
+                                })}
+                            </div>
+                        </ScrollArea>
+                    </Row>
+                    <Row label="surface">
+                        <ScrollArea className={s.optionList}>
+                            <div className={s.optionListInner}>
+                                {SCROLL_AREA_OPTIONS.map((option) => {
+                                    return (
+                                        <OptionItem key={option.value} variant="surface" leftAddon={<EditIcon />}>
+                                            {option.label}
+                                        </OptionItem>
+                                    );
+                                })}
+                            </div>
+                        </ScrollArea>
                     </Row>
                 </Section>
 

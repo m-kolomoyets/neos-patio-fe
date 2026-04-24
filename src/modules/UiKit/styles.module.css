@@ -36,3 +36,13 @@
     min-width: 7.5rem;
     opacity: 0.6;
 }
+
+.optionList {
+    width: 16rem;
+    height: 12rem;
+}
+
+.optionListInner {
+    display: flex;
+    flex-direction: column;
+}
