@@ -1,21 +1,16 @@
+import Logout24Icon from '@/icons/logout_24.svg?react';
 import User24Icon from '@/icons/user_24.svg?react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useDisconnect } from 'wagmi';
 import { Avatar } from 'web3-avatar-react';
 import { Button } from '@/components/ui/Button';
 import s from './styles.module.css';
 
 export const ConnectWalletButton: React.FC = () => {
+    const { disconnect } = useDisconnect();
     return (
         <ConnectButton.Custom>
-            {({
-                account,
-                chain,
-                openAccountModal,
-                openChainModal,
-                openConnectModal,
-                authenticationStatus,
-                mounted,
-            }) => {
+            {({ account, chain, openChainModal, openConnectModal, authenticationStatus, mounted }) => {
                 const ready = mounted && authenticationStatus !== 'loading';
                 const connected =
                     ready && account && chain && (!authenticationStatus || authenticationStatus === 'authenticated');
@@ -35,12 +30,13 @@ export const ConnectWalletButton: React.FC = () => {
                             if (!connected) {
                                 return (
                                     <Button
-                                        onClick={openConnectModal}
+                                        className={s.connect}
                                         type="button"
                                         variant="surface"
                                         size="xl"
                                         title="Connect Wallet"
                                         isIcon
+                                        onClick={openConnectModal}
                                     >
                                         <User24Icon />
                                         <span className="sr-only">Connect Wallet</span>
@@ -51,12 +47,12 @@ export const ConnectWalletButton: React.FC = () => {
                             if (chain.unsupported) {
                                 return (
                                     <Button
-                                        onClick={openChainModal}
                                         type="button"
                                         variant="surface"
                                         size="xl"
                                         title="Wrong network"
                                         isIcon
+                                        onClick={openChainModal}
                                     >
                                         <User24Icon />
                                         <span className="sr-only">Wrong network</span>
@@ -66,14 +62,20 @@ export const ConnectWalletButton: React.FC = () => {
 
                             return (
                                 <Button
+                                    className={s.connected}
                                     isIcon
                                     variant="surface"
-                                    onClick={openAccountModal}
                                     type="button"
-                                    aria-label={account.displayName}
-                                    className={s['avatar-button']}
+                                    title="Logout"
+                                    onClick={() => {
+                                        void disconnect();
+                                    }}
                                 >
                                     <Avatar address={account.address} className={s.avatar} />
+                                    <span className="sr-only">Logout</span>
+                                    <span className={s['logout-overlay']}>
+                                        <Logout24Icon className={s.icon} />
+                                    </span>
                                 </Button>
                             );
                         })()}

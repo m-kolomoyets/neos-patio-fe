@@ -1,10 +1,45 @@
-.avatar-button {
+.connected {
+    position: relative;
     padding: 0 !important;
+    box-shadow:
+        0px 0px 2.4000000953674316px 1.2000000476837158px rgba(255, 255, 255, 0.1),
+        0px 0px 2.4000000953674316px rgba(35.21, 35.21, 35.21, 0.75) inset,
+        0px 0px 1.2000000476837158px 0.36000001430511475px rgba(0, 0, 0, 0.9) inset;
     overflow: hidden;
+}
+
+.connected .logout-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    background-color: hsla(0, 0%, 0%, 0.6);
+    pointer-events: none;
+}
+
+.connected:is(:hover, :focus-visible) .logout-overlay {
+    opacity: 1;
+}
+
+.connected .logout-overlay .icon {
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 .avatar {
     width: 3rem;
     height: 3rem;
     border-radius: var(--radius-full);
+}
+
+.connect,
+.connected:is(:hover) {
+    box-shadow:
+        0px 0px 2.4000000953674316px 1.2000000476837158px rgba(255, 255, 255, 0.1),
+        0px 0px 2.4000000953674316px rgba(35.21, 35.21, 35.21, 0.75) inset,
+        0px 0px 1.2000000476837158px 0.36000001430511475px rgba(0, 0, 0, 0.9) inset;
 }
