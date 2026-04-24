@@ -73,7 +73,7 @@ export const ConnectWalletButton: React.FC = () => {
                                 >
                                     <Avatar address={account.address} className={s.avatar} />
                                     <span className="sr-only">Logout</span>
-                                    <span className={s['logout-overlay']}>
+                                    <span className={s['logout-overlay']} aria-hidden>
                                         <Logout24Icon className={s.icon} />
                                     </span>
                                 </Button>
