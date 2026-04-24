@@ -3,11 +3,7 @@ import type { ComponentPropsWithoutRef } from 'react';
 
 type BaseInputProps = ComponentPropsWithoutRef<typeof BaseInput>;
 
-export type InputProps = Omit<BaseInputProps, 'className'> & {
-    /**
-     * Class name applied to the outer wrapper element.
-     */
-    className?: string;
+export type InputProps = BaseInputProps & {
     /**
      * JSX rendered on the left side of the input, inside the wrapper.
      */

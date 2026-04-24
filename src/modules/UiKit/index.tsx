@@ -11,6 +11,7 @@ import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { NotificationBadge } from '@/components/ui/NotificationBadge';
+import { OptionItem } from '@/components/ui/OptionItem';
 import { Tabs } from '@/components/ui/Tabs';
 import { ToggleGroup } from '@/components/ui/ToggleGroup';
 import { Tooltip } from '@/components/ui/Tooltip';
@@ -287,6 +288,46 @@ export const UiKit: React.FC = () => {
                             </Row>
                         );
                     })}
+                </Section>
+
+                <Section title="Option Item">
+                    <Row label="default">
+                        <OptionItem>Alice</OptionItem>
+                    </Row>
+                    <Row label="with left addon">
+                        <OptionItem leftAddon={<EditIcon />}>Edit profile</OptionItem>
+                    </Row>
+                    <Row label="checked">
+                        <OptionItem leftAddon={<EditIcon />} checked>
+                            Selected option
+                        </OptionItem>
+                    </Row>
+                    <Row label="list">
+                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: '16rem' }}>
+                            <OptionItem leftAddon={<SearchIcon />}>Search</OptionItem>
+                            <OptionItem leftAddon={<EditIcon />} checked>
+                                Edit
+                            </OptionItem>
+                            <OptionItem leftAddon={<ArrowRightIcon />}>Next step</OptionItem>
+                            <OptionItem leftAddon={<TrashIcon />}>Delete</OptionItem>
+                        </div>
+                    </Row>
+                    <Row label="variant=surface">
+                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: '16rem' }}>
+                            <OptionItem variant="surface" leftAddon={<SearchIcon />}>
+                                Search
+                            </OptionItem>
+                            <OptionItem variant="surface" leftAddon={<EditIcon />} checked>
+                                Edit (selected)
+                            </OptionItem>
+                            <OptionItem variant="surface" leftAddon={<ArrowRightIcon />}>
+                                Next step
+                            </OptionItem>
+                            <OptionItem variant="surface" leftAddon={<TrashIcon />}>
+                                Delete
+                            </OptionItem>
+                        </div>
+                    </Row>
                 </Section>
 
                 <Section title="Tooltip">

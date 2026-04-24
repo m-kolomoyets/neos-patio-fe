@@ -150,6 +150,12 @@ body {
     font-family: "Inter", sans-serif;
 }
 
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 ::selection {
     background-color: var(--color-brand-500);
     color: var(--color-base-white);
