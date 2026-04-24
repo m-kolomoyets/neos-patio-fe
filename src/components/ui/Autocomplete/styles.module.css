@@ -1,0 +1,50 @@
+.positioner {
+    z-index: 50;
+    width: var(--anchor-width);
+    min-width: var(--anchor-width);
+    max-width: var(--anchor-width);
+}
+
+.popup {
+    padding: var(--gap-1);
+    width: 100%;
+}
+
+.scrollArea {
+    width: 100%;
+}
+
+.scrollAreaViewport {
+    --row-count: 5;
+    --row-height: 36px;
+    --row-gap: 2px;
+
+    max-height: calc((var(--row-count) * var(--row-height)) + ((var(--row-count) - 1) * var(--row-gap)));
+}
+
+.list {
+    outline: none;
+}
+
+.state {
+    display: flex;
+    align-items: center;
+    padding: var(--gap-2) calc(var(--gap-2) + var(--gap-0_5));
+    color: var(--color-base-white);
+    opacity: 0.7;
+}
+
+.stateError {
+    color: var(--color-error-400, #f87171);
+    opacity: 1;
+}
+
+.optionIcon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--color-gray-900);
+}
+
+.row {
+    box-sizing: border-box;
+}

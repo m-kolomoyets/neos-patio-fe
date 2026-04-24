@@ -1,0 +1,21 @@
+.wrap {
+    position: relative;
+    background: var(--surface-thin);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    backdrop-filter: blur(24px);
+}
+
+.wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--stroke-surface);
+    mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}

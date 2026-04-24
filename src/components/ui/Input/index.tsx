@@ -1,14 +1,25 @@
-import type { MouseEvent } from 'react';
 import type { InputProps } from './types';
-import { useRef } from 'react';
+import React from 'react';
 import { Input as BaseInput } from '@base-ui/react/input';
 import clsx from 'clsx';
 import s from './styles.module.css';
 
-export const Input: React.FC<InputProps> = ({ className, leftAddon, rightAddon, isRounded = false, ...rest }) => {
-    const inputRef = useRef<HTMLInputElement>(null);
+export const Input: React.FC<InputProps & { ref?: React.Ref<HTMLInputElement> }> = ({
+    className,
+    leftAddon,
+    rightAddon,
+    isRounded = false,
+    ref,
+    wrapperRef,
+    ...rest
+}) => {
+    const inputRef = React.useRef<HTMLInputElement>(null);
 
-    const handleMouseDown = (event: MouseEvent<HTMLDivElement>) => {
+    React.useImperativeHandle(ref, () => {
+        return inputRef.current as HTMLInputElement;
+    });
+
+    const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
         const target = event.target as HTMLElement;
         if (target === event.currentTarget || !target.closest('button, a, input, [role="button"]')) {
             event.preventDefault();
@@ -18,6 +29,7 @@ export const Input: React.FC<InputProps> = ({ className, leftAddon, rightAddon, 
 
     return (
         <div
+            ref={wrapperRef}
             className={clsx(s.wrap, 'focus-within-primary', className)}
             data-rounded={isRounded}
             onMouseDown={handleMouseDown}

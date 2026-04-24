@@ -6,6 +6,7 @@ import s from './styles.module.css';
 export const ScrollArea: React.FC<ScrollAreaProps> = ({
     className,
     viewportClassName,
+    viewportRef,
     orientation = 'vertical',
     children,
     ...rest
@@ -15,7 +16,7 @@ export const ScrollArea: React.FC<ScrollAreaProps> = ({
 
     return (
         <BaseScrollArea.Root className={clsx(s.root, className)} {...rest}>
-            <BaseScrollArea.Viewport className={clsx(s.viewport, viewportClassName)}>
+            <BaseScrollArea.Viewport ref={viewportRef} className={clsx(s.viewport, viewportClassName)}>
                 <BaseScrollArea.Content className={s.content}>{children}</BaseScrollArea.Content>
             </BaseScrollArea.Viewport>
             {showVertical ? (

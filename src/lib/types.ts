@@ -8,3 +8,9 @@ export type WithClassName<T> = T & {
 };
 
 export type SetStateValue<T> = React.Dispatch<React.SetStateAction<T>>;
+
+export type LabelValueOption = {
+    label: string;
+    value: string;
+    Icon?: React.FC<React.SVGProps<SVGSVGElement>>;
+};

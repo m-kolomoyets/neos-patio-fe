@@ -2,12 +2,15 @@ import type { ButtonSize, ButtonVariant } from '@/components/ui/Button/types';
 import type { NotificationBadgeSize } from '@/components/ui/NotificationBadge/types';
 import type { ToggleGroupSize } from '@/components/ui/ToggleGroup/types';
 import type { TypographyVariant } from '@/components/ui/Typography/types';
+import type { LabelValueOption } from '@/lib/types';
+import React from 'react';
 import ArrowRightIcon from '@/icons/arrow-right_24.svg?react';
 import EditIcon from '@/icons/edit_24.svg?react';
 import SearchIcon from '@/icons/search_24.svg?react';
 import TrashIcon from '@/icons/trash_24.svg?react';
 import clsx from 'clsx';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
+import { Autocomplete } from '@/components/ui/Autocomplete';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { NotificationBadge } from '@/components/ui/NotificationBadge';
@@ -86,7 +89,29 @@ const TOGGLE_GROUP_ITEMS = [
     { value: 'delete', icon: <TrashIcon />, label: 'Delete' },
 ];
 
+const AUTOCOMPLETE_OPTIONS: LabelValueOption[] = Array.from({ length: 200 }, (_, index) => {
+    return {
+        value: `token-${index + 1}`,
+        label: `Token ${index + 1}`,
+    };
+});
+
+const AUTOCOMPLETE_ICON_OPTIONS: LabelValueOption[] = [
+    { value: 'edit', label: 'Edit profile', Icon: EditIcon },
+    { value: 'search', label: 'Search everywhere', Icon: SearchIcon },
+    { value: 'next', label: 'Next step', Icon: ArrowRightIcon },
+    { value: 'delete', label: 'Delete account', Icon: TrashIcon },
+];
+
 export const UiKit: React.FC = () => {
+    const [autocompleteValue, setAutocompleteValue] = React.useState<string | undefined>();
+    const [autocompleteSearch, setAutocompleteSearch] = React.useState('');
+    const [iconAutocompleteValue, setIconAutocompleteValue] = React.useState<string | undefined>('edit');
+    const [iconAutocompleteSearch, setIconAutocompleteSearch] = React.useState('');
+    const [loadingSearch, setLoadingSearch] = React.useState('');
+    const [errorSearch, setErrorSearch] = React.useState('');
+    const [emptySearch, setEmptySearch] = React.useState('');
+
     return (
         <Tooltip.Provider>
             <div className={s.wrap}>
@@ -283,6 +308,72 @@ export const UiKit: React.FC = () => {
                     </Row>
                     <Row label="disabled">
                         <Input placeholder="Disabled" disabled />
+                    </Row>
+                </Section>
+
+                <Section title="Autocomplete">
+                    <Row label="virtualized (200 options)">
+                        <Autocomplete
+                            className={s.autocomplete}
+                            options={AUTOCOMPLETE_OPTIONS}
+                            value={autocompleteValue}
+                            onValueChange={setAutocompleteValue}
+                            searchValue={autocompleteSearch}
+                            onSearchValueChange={setAutocompleteSearch}
+                            placeholder="Search tokens…"
+                        />
+                    </Row>
+                    <Row label="with icons">
+                        <Autocomplete
+                            className={s.autocomplete}
+                            options={AUTOCOMPLETE_ICON_OPTIONS}
+                            value={iconAutocompleteValue}
+                            onValueChange={setIconAutocompleteValue}
+                            searchValue={iconAutocompleteSearch}
+                            onSearchValueChange={setIconAutocompleteSearch}
+                            placeholder="Pick an action…"
+                        />
+                    </Row>
+                    <Row label="loading">
+                        <Autocomplete
+                            className={s.autocomplete}
+                            options={AUTOCOMPLETE_OPTIONS}
+                            searchValue={loadingSearch}
+                            onSearchValueChange={setLoadingSearch}
+                            isLoading
+                            placeholder="Fetching…"
+                        />
+                    </Row>
+                    <Row label="error">
+                        <Autocomplete
+                            className={s.autocomplete}
+                            options={AUTOCOMPLETE_OPTIONS}
+                            searchValue={errorSearch}
+                            onSearchValueChange={setErrorSearch}
+                            isError
+                            errorLabel="Failed to load tokens"
+                            placeholder="Try again…"
+                        />
+                    </Row>
+                    <Row label="empty">
+                        <Autocomplete
+                            className={s.autocomplete}
+                            options={[]}
+                            searchValue={emptySearch}
+                            onSearchValueChange={setEmptySearch}
+                            emptyLabel="No tokens match your query"
+                            placeholder="Nothing here…"
+                        />
+                    </Row>
+                    <Row label="disabled">
+                        <Autocomplete
+                            className={s.autocomplete}
+                            options={AUTOCOMPLETE_OPTIONS}
+                            searchValue=""
+                            onSearchValueChange={() => {}}
+                            disabled
+                            placeholder="Disabled"
+                        />
                     </Row>
                 </Section>
 
