@@ -4,10 +4,12 @@ import type { ToggleGroupSize } from '@/components/ui/ToggleGroup/types';
 import type { TypographyVariant } from '@/components/ui/Typography/types';
 import ArrowRightIcon from '@/icons/arrow-right_24.svg?react';
 import EditIcon from '@/icons/edit_24.svg?react';
+import SearchIcon from '@/icons/search_24.svg?react';
 import TrashIcon from '@/icons/trash_24.svg?react';
 import clsx from 'clsx';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { NotificationBadge } from '@/components/ui/NotificationBadge';
 import { Tabs } from '@/components/ui/Tabs';
 import { ToggleGroup } from '@/components/ui/ToggleGroup';
@@ -244,6 +246,34 @@ export const UiKit: React.FC = () => {
                                 );
                             })}
                         </ToggleGroup.Root>
+                    </Row>
+                </Section>
+
+                <Section title="Input">
+                    <Row label="default">
+                        <Input placeholder="Enter your name" />
+                    </Row>
+                    <Row label="rounded">
+                        <Input placeholder="Enter your name" isRounded />
+                    </Row>
+                    <Row label="left addon">
+                        <Input placeholder="Search" leftAddon={<SearchIcon />} />
+                    </Row>
+                    <Row label="right addon">
+                        <Input placeholder="Amount" rightAddon={<Typography variant="text-sm">USD</Typography>} />
+                    </Row>
+                    <Row label="both addons">
+                        <Input
+                            placeholder="Search"
+                            leftAddon={<SearchIcon />}
+                            rightAddon={<Typography variant="text-sm">⌘K</Typography>}
+                        />
+                    </Row>
+                    <Row label="type=search">
+                        <Input type="search" placeholder="Type to search…" defaultValue="query" />
+                    </Row>
+                    <Row label="disabled">
+                        <Input placeholder="Disabled" disabled />
                     </Row>
                 </Section>
 
