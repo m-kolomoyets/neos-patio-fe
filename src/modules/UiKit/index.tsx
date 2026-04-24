@@ -6,6 +6,7 @@ import ArrowRightIcon from '@/icons/arrow-right_24.svg?react';
 import EditIcon from '@/icons/edit_24.svg?react';
 import TrashIcon from '@/icons/trash_24.svg?react';
 import clsx from 'clsx';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { Button } from '@/components/ui/Button';
 import { NotificationBadge } from '@/components/ui/NotificationBadge';
 import { Tabs } from '@/components/ui/Tabs';
@@ -78,6 +79,12 @@ export const UiKit: React.FC = () => {
     return (
         <Tooltip.Provider>
             <div className={s.wrap}>
+                <Section title="Wallet Connect">
+                    <Row label="custom button">
+                        <ConnectWalletButton />
+                    </Row>
+                </Section>
+
                 <Section title="Typography">
                     {TYPOGRAPHY_VARIANTS.map((variant) => {
                         return (
