@@ -9,6 +9,7 @@ export const Input: React.FC<InputProps & { ref?: React.Ref<HTMLInputElement> }>
     leftAddon,
     rightAddon,
     isRounded = false,
+    size = 'default',
     ref,
     wrapperRef,
     ...rest
@@ -32,6 +33,7 @@ export const Input: React.FC<InputProps & { ref?: React.Ref<HTMLInputElement> }>
             ref={wrapperRef}
             className={clsx(s.wrap, 'focus-within-primary', className)}
             data-rounded={isRounded}
+            data-size={size}
             onMouseDown={handleMouseDown}
         >
             {leftAddon ? <span className={s.addon}>{leftAddon}</span> : null}

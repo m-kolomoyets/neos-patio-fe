@@ -1,6 +1,8 @@
 import type { Input as BaseInput } from '@base-ui/react/input';
 
-type BaseInputProps = React.ComponentPropsWithoutRef<typeof BaseInput>;
+type BaseInputProps = Omit<React.ComponentPropsWithoutRef<typeof BaseInput>, 'size'>;
+
+export type InputSize = 'default' | 'sm' | 'md' | 'xl';
 
 export type InputProps = BaseInputProps & {
     /**
@@ -21,4 +23,9 @@ export type InputProps = BaseInputProps & {
      * @default false
      */
     isRounded?: boolean;
+    /**
+     * Visual size of the input. `'default'` preserves the original sizing.
+     * @default 'default'
+     */
+    size?: InputSize;
 };

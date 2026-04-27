@@ -1,4 +1,5 @@
 import type { ButtonSize, ButtonVariant } from '@/components/ui/Button/types';
+import type { InputSize } from '@/components/ui/Input/types';
 import type { NotificationBadgeSize } from '@/components/ui/NotificationBadge/types';
 import type { ToggleGroupSize } from '@/components/ui/ToggleGroup/types';
 import type { TypographyVariant } from '@/components/ui/Typography/types';
@@ -82,6 +83,8 @@ const SCROLL_AREA_OPTIONS = Array.from({ length: 20 }, (_, index) => {
 const TOGGLE_GROUP_SIZES: ToggleGroupSize[] = ['md', 'sm'];
 
 const NOTIFICATION_BADGE_SIZES: NotificationBadgeSize[] = ['lg', 'md', 'xs'];
+
+const INPUT_SIZES: InputSize[] = ['default', 'xl', 'md', 'sm'];
 
 const TOGGLE_GROUP_ITEMS = [
     { value: 'edit', icon: <EditIcon />, label: 'Edit' },
@@ -284,9 +287,13 @@ export const UiKit: React.FC = () => {
                 </Section>
 
                 <Section title="Input">
-                    <Row label="default">
-                        <Input placeholder="Enter your name" />
-                    </Row>
+                    {INPUT_SIZES.map((size) => {
+                        return (
+                            <Row key={size} label={size}>
+                                <Input size={size} placeholder="Enter your name" />
+                            </Row>
+                        );
+                    })}
                     <Row label="rounded">
                         <Input placeholder="Enter your name" isRounded />
                     </Row>
@@ -303,8 +310,31 @@ export const UiKit: React.FC = () => {
                             rightAddon={<Typography variant="text-sm">⌘K</Typography>}
                         />
                     </Row>
+                    <Row label="sizes × addons">
+                        {INPUT_SIZES.map((size) => {
+                            return (
+                                <Input
+                                    key={size}
+                                    size={size}
+                                    placeholder={size}
+                                    leftAddon={<SearchIcon />}
+                                    rightAddon={<Typography variant="text-sm">⌘K</Typography>}
+                                />
+                            );
+                        })}
+                    </Row>
                     <Row label="type=search">
-                        <Input type="search" placeholder="Type to search…" defaultValue="query" />
+                        {INPUT_SIZES.map((size) => {
+                            return (
+                                <Input
+                                    key={size}
+                                    size={size}
+                                    type="search"
+                                    placeholder={`Type to search… (${size})`}
+                                    defaultValue="query"
+                                />
+                            );
+                        })}
                     </Row>
                     <Row label="disabled">
                         <Input placeholder="Disabled" disabled />

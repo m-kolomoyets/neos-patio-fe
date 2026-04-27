@@ -174,7 +174,7 @@ body {
 .surface-regular,
 .surface-thick,
 .surface-thicker {
-    background-blend-mode: normal, luminosity;
+    /* background-blend-mode: normal, luminosity; */
     backdrop-filter: blur(20px);
 }
 

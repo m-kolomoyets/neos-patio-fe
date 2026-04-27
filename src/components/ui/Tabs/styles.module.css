@@ -36,6 +36,7 @@
     white-space: nowrap;
     transition:
         color 0.2s ease-in-out,
+        background 0.2s ease-in-out,
         opacity 0.2s ease-in-out;
 }
 
