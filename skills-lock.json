@@ -1,70 +1,70 @@
 {
-  "version": 1,
-  "skills": {
-    "accessible-html-jsx": {
-      "source": "Phenomenon-Studio/phenomenon-skills",
-      "sourceType": "github",
-      "computedHash": "05f6d3c1bc447070d2e244f92f38eeb35653eb72ab4b9d67551bacae7bbcac41"
-    },
-    "caveman": {
-      "source": "JuliusBrussee/caveman",
-      "sourceType": "github",
-      "computedHash": "a818cdc41dcfaa50dd891c5cb5e5705968338de02e7e37949ca56e8c30ad4176"
-    },
-    "caveman-commit": {
-      "source": "JuliusBrussee/caveman",
-      "sourceType": "github",
-      "computedHash": "76994afc39b68f4dbe098df76262b68d9928a23ee0f6aaebb11ba0e0f55bfa13"
-    },
-    "grill-me": {
-      "source": "mattpocock/skills",
-      "sourceType": "github",
-      "computedHash": "784f0dbb7403b0f00324bce9a112f715342777a0daee7bbb7385f9c6f0a170ea"
-    },
-    "npm-audit-install": {
-      "source": "Phenomenon-Studio/phenomenon-skills",
-      "sourceType": "github",
-      "computedHash": "c38a2e2af172eb4f2412bbeac18fd7319510e3c0d0812df1a4c253b8bd3f2c0a"
-    },
-    "react": {
-      "source": "Phenomenon-Studio/phenomenon-skills",
-      "sourceType": "github",
-      "computedHash": "692cfa4ef2f1c1761ac2cdddc50de0d387f465a8571e0acb19768820e1796f5c"
-    },
-    "tanstack-form": {
-      "source": "Phenomenon-Studio/phenomenon-skills",
-      "sourceType": "github",
-      "computedHash": "9eea009b9f4336823206a2a05cb80dd355429928d467704f615ea8d3d9bb23d6"
-    },
-    "tanstack-query": {
-      "source": "Phenomenon-Studio/phenomenon-skills",
-      "sourceType": "github",
-      "computedHash": "d0c4e0cd8542c374699043201254a7e3ad09c4a75be8481efcb58a32b3bde042"
-    },
-    "tanstack-router": {
-      "source": "Phenomenon-Studio/phenomenon-skills",
-      "sourceType": "github",
-      "computedHash": "3918ee1f2d9f75fd4a219bb5121d0c6f2fe90f4a204be811f8bd2eca3968507b"
-    },
-    "to-issue": {
-      "source": "Phenomenon-Studio/phenomenon-skills",
-      "sourceType": "github",
-      "computedHash": "21e30c8b1b1ce336db8f9026ea96043c8af6b3a5d9aa25ee21c5b0f2569551a2"
-    },
-    "to-prd": {
-      "source": "Phenomenon-Studio/phenomenon-skills",
-      "sourceType": "github",
-      "computedHash": "ab67e83d37d413a0af3dff2bfaf36e84ac46340ec5a1d6338d8e7feac55113e1"
-    },
-    "typescript": {
-      "source": "Phenomenon-Studio/phenomenon-skills",
-      "sourceType": "github",
-      "computedHash": "dc42d94968ccf0630017a8828f9cea1487fb20edfdaa5d934a6a2737bfbad777"
-    },
-    "write-a-skill": {
-      "source": "mattpocock/skills",
-      "sourceType": "github",
-      "computedHash": "b44d8aab2ead83c716e01af4c9a24ccc4575ce70ad58ec4f1749fb88c9cc82ba"
+    "version": 1,
+    "skills": {
+        "accessible-html-jsx": {
+            "source": "Phenomenon-Studio/phenomenon-skills",
+            "sourceType": "github",
+            "computedHash": "05f6d3c1bc447070d2e244f92f38eeb35653eb72ab4b9d67551bacae7bbcac41"
+        },
+        "caveman": {
+            "source": "JuliusBrussee/caveman",
+            "sourceType": "github",
+            "computedHash": "a818cdc41dcfaa50dd891c5cb5e5705968338de02e7e37949ca56e8c30ad4176"
+        },
+        "caveman-commit": {
+            "source": "JuliusBrussee/caveman",
+            "sourceType": "github",
+            "computedHash": "76994afc39b68f4dbe098df76262b68d9928a23ee0f6aaebb11ba0e0f55bfa13"
+        },
+        "grill-me": {
+            "source": "mattpocock/skills",
+            "sourceType": "github",
+            "computedHash": "784f0dbb7403b0f00324bce9a112f715342777a0daee7bbb7385f9c6f0a170ea"
+        },
+        "npm-audit-install": {
+            "source": "Phenomenon-Studio/phenomenon-skills",
+            "sourceType": "github",
+            "computedHash": "c38a2e2af172eb4f2412bbeac18fd7319510e3c0d0812df1a4c253b8bd3f2c0a"
+        },
+        "react": {
+            "source": "Phenomenon-Studio/phenomenon-skills",
+            "sourceType": "github",
+            "computedHash": "692cfa4ef2f1c1761ac2cdddc50de0d387f465a8571e0acb19768820e1796f5c"
+        },
+        "tanstack-form": {
+            "source": "Phenomenon-Studio/phenomenon-skills",
+            "sourceType": "github",
+            "computedHash": "9eea009b9f4336823206a2a05cb80dd355429928d467704f615ea8d3d9bb23d6"
+        },
+        "tanstack-query": {
+            "source": "Phenomenon-Studio/phenomenon-skills",
+            "sourceType": "github",
+            "computedHash": "d0c4e0cd8542c374699043201254a7e3ad09c4a75be8481efcb58a32b3bde042"
+        },
+        "tanstack-router": {
+            "source": "Phenomenon-Studio/phenomenon-skills",
+            "sourceType": "github",
+            "computedHash": "3918ee1f2d9f75fd4a219bb5121d0c6f2fe90f4a204be811f8bd2eca3968507b"
+        },
+        "to-issue": {
+            "source": "Phenomenon-Studio/phenomenon-skills",
+            "sourceType": "github",
+            "computedHash": "21e30c8b1b1ce336db8f9026ea96043c8af6b3a5d9aa25ee21c5b0f2569551a2"
+        },
+        "to-prd": {
+            "source": "Phenomenon-Studio/phenomenon-skills",
+            "sourceType": "github",
+            "computedHash": "ab67e83d37d413a0af3dff2bfaf36e84ac46340ec5a1d6338d8e7feac55113e1"
+        },
+        "typescript": {
+            "source": "Phenomenon-Studio/phenomenon-skills",
+            "sourceType": "github",
+            "computedHash": "dc42d94968ccf0630017a8828f9cea1487fb20edfdaa5d934a6a2737bfbad777"
+        },
+        "write-a-skill": {
+            "source": "mattpocock/skills",
+            "sourceType": "github",
+            "computedHash": "b44d8aab2ead83c716e01af4c9a24ccc4575ce70ad58ec4f1749fb88c9cc82ba"
+        }
     }
-  }
 }

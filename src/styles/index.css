@@ -16,6 +16,8 @@
     --color-brand-700: hsl(21 56% 45%);
     --color-brand-800: hsl(21 56% 37%);
     --color-brand-900: hsl(21 56% 27%);
+    --color-brand-yellow-600: hsl(39 96% 40%);
+    --color-brand-yellow-700: hsl(36 92% 33%);
     --color-gray-25: hsl(0 0% 99%);
     --color-gray-50: hsl(0 0% 98%);
     --color-gray-100: hsl(0 0% 96%);
@@ -79,6 +81,15 @@
         rgba(255, 255, 255, 0) 57%,
         rgba(255, 255, 255, 0.05) 100%
     );
+    --stroke-surface-thin:
+        linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.05) 100%),
+        linear-gradient(
+            133.79deg,
+            rgba(255, 255, 255, 0.9) -7.85%,
+            rgba(255, 255, 255, 0.358468) 9.73%,
+            rgba(255, 255, 255, 0) 84.96%,
+            rgba(255, 255, 255, 0.9) 100.63%
+        );
 
     /* Gaps */
     /* Gap variables, using rems for spacing scale */

@@ -1,4 +1,5 @@
 import type { ButtonSize, ButtonVariant } from '@/components/ui/Button/types';
+import type { ChipSize } from '@/components/ui/Chip/types';
 import type { InputSize } from '@/components/ui/Input/types';
 import type { NotificationBadgeSize } from '@/components/ui/NotificationBadge/types';
 import type { ToggleGroupSize } from '@/components/ui/ToggleGroup/types';
@@ -9,10 +10,12 @@ import ArrowRightIcon from '@/icons/arrow-right_24.svg?react';
 import EditIcon from '@/icons/edit_24.svg?react';
 import SearchIcon from '@/icons/search_24.svg?react';
 import TrashIcon from '@/icons/trash_24.svg?react';
+import { ToggleGroup as BaseToggleGroup } from '@base-ui/react/toggle-group';
 import clsx from 'clsx';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { Autocomplete } from '@/components/ui/Autocomplete';
 import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
 import { Input } from '@/components/ui/Input';
 import { NotificationBadge } from '@/components/ui/NotificationBadge';
 import { OptionItem } from '@/components/ui/OptionItem';
@@ -85,6 +88,15 @@ const TOGGLE_GROUP_SIZES: ToggleGroupSize[] = ['md', 'sm'];
 const NOTIFICATION_BADGE_SIZES: NotificationBadgeSize[] = ['lg', 'md', 'xs'];
 
 const INPUT_SIZES: InputSize[] = ['default', 'xl', 'md', 'sm'];
+
+const CHIP_SIZES: ChipSize[] = ['sm', 'md', 'lg'];
+
+const CHIP_ITEMS = [
+    { value: 'all', label: 'All' },
+    { value: 'art', label: 'Art' },
+    { value: 'music', label: 'Music' },
+    { value: 'gaming', label: 'Gaming' },
+];
 
 const TOGGLE_GROUP_ITEMS = [
     { value: 'edit', icon: <EditIcon />, label: 'Edit' },
@@ -283,6 +295,46 @@ export const UiKit: React.FC = () => {
                                 );
                             })}
                         </ToggleGroup.Root>
+                    </Row>
+                </Section>
+
+                <Section title="Chip">
+                    {CHIP_SIZES.map((size) => {
+                        return (
+                            <Row key={size} label={size}>
+                                <BaseToggleGroup defaultValue={[CHIP_ITEMS[0].value]}>
+                                    {CHIP_ITEMS.map((item) => {
+                                        return (
+                                            <Chip key={item.value} size={size} value={item.value}>
+                                                {item.label}
+                                            </Chip>
+                                        );
+                                    })}
+                                </BaseToggleGroup>
+                            </Row>
+                        );
+                    })}
+                    <Row label="multiple">
+                        <BaseToggleGroup multiple defaultValue={[CHIP_ITEMS[0].value, CHIP_ITEMS[2].value]}>
+                            {CHIP_ITEMS.map((item) => {
+                                return (
+                                    <Chip key={item.value} value={item.value}>
+                                        {item.label}
+                                    </Chip>
+                                );
+                            })}
+                        </BaseToggleGroup>
+                    </Row>
+                    <Row label="disabled">
+                        <BaseToggleGroup disabled defaultValue={[CHIP_ITEMS[0].value]}>
+                            {CHIP_ITEMS.map((item) => {
+                                return (
+                                    <Chip key={item.value} value={item.value}>
+                                        {item.label}
+                                    </Chip>
+                                );
+                            })}
+                        </BaseToggleGroup>
                     </Row>
                 </Section>
 
