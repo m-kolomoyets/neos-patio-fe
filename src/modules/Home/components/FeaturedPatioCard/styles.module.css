@@ -2,46 +2,64 @@
     --parallax-x: 0;
 
     position: relative;
-    flex: 0 0 calc((100% - var(--gap-4) * 2) / 3);
-    aspect-ratio: 4 / 5;
-    border-radius: var(--radius-3xl);
+    flex: 0 0 calc((100cqi - var(--gap-3) * 2) / 3);
+    border-radius: var(--radius-4xl);
     overflow: hidden;
     scroll-snap-align: start;
     scroll-snap-stop: always;
+    max-height: 488px;
     isolation: isolate;
+    padding: var(--gap-3);
+    transition: background 200ms ease-in-out;
+}
+
+.wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--stroke-surface);
+    mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+    transition: opacity 250ms ease;
+}
+
+.wrap:is(:hover, :focus-within) {
+    background: var(--surface-thick);
+    backdrop-filter: blur(56px);
+    box-shadow: 0px 0px 3px 2px rgba(255, 255, 255, 0.15) inset;
+}
+
+.wrap:is(:hover, :focus-within)::before {
+    opacity: 1;
 }
 
 .media {
-    position: absolute;
-    inset: 0;
     overflow: hidden;
-    z-index: -1;
+    width: 100%;
+    border-radius: var(--radius-2xl);
 }
 
 .image {
-    position: absolute;
     top: 0;
     left: -10%;
-    width: 120%;
     height: 100%;
     object-fit: cover;
-    transform: translateX(calc(var(--parallax-x) * 1px));
+    transform: translateX(calc(var(--parallax-x) * 1px)) scale(1.2);
     transition: transform 80ms linear;
-}
-
-.gradient {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgb(0 0 0 / 0) 40%, rgb(0 0 0 / 0.7) 100%);
+    pointer-events: none;
 }
 
 .content {
-    position: absolute;
-    inset: 0;
     display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: var(--gap-6);
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--gap-3) var(--gap-2);
     gap: var(--gap-4);
 }
 
@@ -64,13 +82,11 @@
 }
 
 .open-button {
-    width: 3rem;
-    height: 3rem;
     flex-shrink: 0;
 }
 
 @media (max-width: 1024px) {
     .wrap {
-        flex: 0 0 calc((100% - var(--gap-4)) / 2);
+        flex: 0 0 calc((100cqi - var(--gap-3)) / 2);
     }
 }

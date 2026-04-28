@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ChevronLeftIcon from '@/icons/chevrone-left_24.svg?react';
 import ChevronRightIcon from '@/icons/chevrone-right_24.svg?react';
+import clsx from 'clsx';
 import { useStickyStuck } from '@/hooks/useStickyStuck';
 import { useFeaturedPatios } from '@/services/patios/queries';
 import { Button } from '@/components/ui/Button';
@@ -52,10 +53,11 @@ export const FeaturedPatios: React.FC = () => {
 
     useEffect(() => {
         updateParallax();
+
         const viewport = viewportRef.current;
         if (!viewport) return;
         const onResize = () => {
-            return updateParallax();
+            updateParallax();
         };
         viewport.addEventListener('scroll', handleScroll, { passive: true });
         window.addEventListener('resize', onResize);
@@ -68,10 +70,36 @@ export const FeaturedPatios: React.FC = () => {
 
     const scrollByPage = useCallback((direction: 1 | -1) => {
         const viewport = viewportRef.current;
-        if (!viewport) return;
-        const firstCard = viewport.querySelector<HTMLElement>('[data-card-id]');
-        const cardWidth = firstCard?.getBoundingClientRect().width ?? viewport.clientWidth / 3;
-        viewport.scrollBy({ left: direction * cardWidth * 3, behavior: 'smooth' });
+
+        if (!viewport) {
+            return;
+        }
+
+        const cards = Array.from(viewport.querySelectorAll<HTMLElement>('[data-card-id]'));
+        const viewportLeft = viewport.getBoundingClientRect().left;
+        const cardOffsets = cards
+            .map((card) => {
+                return Math.round(card.getBoundingClientRect().left - viewportLeft + viewport.scrollLeft);
+            })
+            .sort((a, b) => {
+                return a - b;
+            });
+
+        if (cardOffsets.length === 0) {
+            return;
+        }
+
+        const current = viewport.scrollLeft;
+        const epsilon = 1;
+        const target =
+            direction === 1
+                ? (cardOffsets.find((offset) => {
+                      return offset > current + epsilon;
+                  }) ?? cardOffsets[cardOffsets.length - 1])
+                : ([...cardOffsets].reverse().find((offset) => {
+                      return offset < current - epsilon;
+                  }) ?? cardOffsets[0]);
+        viewport.scrollTo({ left: target, behavior: 'smooth' });
     }, []);
 
     return (
@@ -82,7 +110,12 @@ export const FeaturedPatios: React.FC = () => {
                 </Typography>
                 <span className={s.background} aria-hidden />
             </div>
-            <ScrollArea orientation="horizontal" viewportRef={viewportRef} viewportClassName={s.viewport}>
+            <ScrollArea
+                className={s.scroll}
+                orientation="horizontal"
+                viewportRef={viewportRef}
+                viewportClassName={s.viewport}
+            >
                 <div className={s.track}>
                     {isLoading
                         ? Array.from({ length: 3 }).map((_, i) => {
@@ -92,34 +125,36 @@ export const FeaturedPatios: React.FC = () => {
                               return <FeaturedPatioCard key={patio.id} patio={patio} />;
                           })}
                 </div>
-                <div className={s.controls}>
-                    <Button
-                        isIcon
-                        variant="surface"
-                        size="md"
-                        aria-label="Previous featured patios"
-                        className={s['control-button']}
-                        disabled={!canScrollLeft}
-                        onClick={() => {
-                            return scrollByPage(-1);
-                        }}
-                    >
-                        <ChevronLeftIcon />
-                    </Button>
-                    <Button
-                        isIcon
-                        variant="surface"
-                        size="md"
-                        aria-label="Next featured patios"
-                        className={s['control-button']}
-                        disabled={!canScrollRight}
-                        onClick={() => {
-                            return scrollByPage(1);
-                        }}
-                    >
-                        <ChevronRightIcon />
-                    </Button>
-                </div>
+                <Button
+                    isIcon
+                    variant="surface"
+                    size="md"
+                    title="Previous featured patios"
+                    data-direction="prev"
+                    className={clsx(s['control-button'], s.prev)}
+                    disabled={!canScrollLeft}
+                    onClick={() => {
+                        return scrollByPage(-1);
+                    }}
+                >
+                    <ChevronLeftIcon />
+                    <span className="sr-only">Previous featured patios</span>
+                </Button>
+                <Button
+                    isIcon
+                    variant="surface"
+                    size="md"
+                    title="Next featured patios"
+                    data-direction="next"
+                    className={clsx(s['control-button'], s.next)}
+                    disabled={!canScrollRight}
+                    onClick={() => {
+                        return scrollByPage(1);
+                    }}
+                >
+                    <ChevronRightIcon />
+                    <span className="sr-only">Next featured patios</span>
+                </Button>
             </ScrollArea>
         </section>
     );

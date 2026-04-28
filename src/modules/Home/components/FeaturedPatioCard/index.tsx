@@ -1,6 +1,7 @@
 import type { Patio } from '@/services/patios/types';
-import ArrowOpenIcon from '@/icons/arrow-top-right-circle-filled_24.svg?react';
+import ArrowTopRight24Icon from '@/icons/arrow-top-right_24.svg?react';
 import { Link } from '@tanstack/react-router';
+import { AspectRatio } from '@/components/ui/AspectRatio';
 import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
 import s from './styles.module.css';
@@ -12,31 +13,28 @@ type Props = {
 export const FeaturedPatioCard: React.FC<Props> = ({ patio }) => {
     return (
         <article className={s.wrap} data-card-id={patio.id}>
-            <div className={s.media}>
+            <AspectRatio ratio={381 / 408} className={s.media}>
                 <img className={s.image} src={patio.thumbnailUrl} alt={patio.name} loading="lazy" />
-                <div className={s.gradient} />
-            </div>
-            <div className={s.content}>
-                <div className={s['header-row']}>
-                    <div className={s.titles}>
-                        <Typography variant="display-sm">{patio.name}</Typography>
-                        <Typography variant="text-md" className={s.subtitle}>
-                            by {patio.author}
-                        </Typography>
-                    </div>
-                    <Button
-                        isIcon
-                        variant="surface"
-                        size="lg"
-                        aria-label={`Open ${patio.name}`}
-                        className={s['open-button']}
-                        nativeButton={false}
-                        render={<Link to="/patios/$id" params={{ id: patio.id }} />}
-                    >
-                        <ArrowOpenIcon />
-                    </Button>
+            </AspectRatio>
+            <footer className={s.content}>
+                <div className={s.titles}>
+                    <Typography variant="text-md">{patio.name}</Typography>
+                    <Typography className={s.subtitle} variant="text-sm">
+                        by {patio.author}
+                    </Typography>
                 </div>
-            </div>
+                <Button
+                    variant="surface"
+                    size="md"
+                    aria-label={`Open ${patio.name}`}
+                    className={s['open-button']}
+                    nativeButton={false}
+                    render={<Link to="/patios/$id" params={{ id: patio.id }} />}
+                >
+                    Open
+                    <ArrowTopRight24Icon />
+                </Button>
+            </footer>
         </article>
     );
 };
