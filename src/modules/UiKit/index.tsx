@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/Input';
 import { NotificationBadge } from '@/components/ui/NotificationBadge';
 import { OptionItem } from '@/components/ui/OptionItem';
 import { ScrollArea } from '@/components/ui/ScrollArea';
+import { Separator } from '@/components/ui/Separator';
 import { Tabs } from '@/components/ui/Tabs';
 import { ToggleGroup } from '@/components/ui/ToggleGroup';
 import { Tooltip } from '@/components/ui/Tooltip';
@@ -595,6 +596,23 @@ export const UiKit: React.FC = () => {
                                 }
                             />
                         </Tooltip.Root>
+                    </Row>
+                </Section>
+
+                <Section title="Separator">
+                    <Row label="horizontal">
+                        <div style={{ width: '100%' }}>
+                            <Separator />
+                        </div>
+                    </Row>
+                    <Row label="vertical">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', height: '2rem' }}>
+                            <Typography variant="text-sm">Home</Typography>
+                            <Separator orientation="vertical" />
+                            <Typography variant="text-sm">Pricing</Typography>
+                            <Separator orientation="vertical" />
+                            <Typography variant="text-sm">Blog</Typography>
+                        </div>
                     </Row>
                 </Section>
             </div>
