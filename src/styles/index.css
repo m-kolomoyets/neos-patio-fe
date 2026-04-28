@@ -161,6 +161,11 @@ body {
     font-family: "Inter", sans-serif;
 }
 
+body,
+html {
+    background-color: var(--color-base-white);
+}
+
 .truncate {
     white-space: nowrap;
     overflow: hidden;
@@ -185,7 +190,7 @@ body {
 .surface-regular,
 .surface-thick,
 .surface-thicker {
-    /* background-blend-mode: normal, luminosity; */
+    background-blend-mode: normal, luminosity;
     backdrop-filter: blur(20px);
 }
 

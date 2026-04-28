@@ -1,8 +1,10 @@
 import { useEffect, useMemo } from 'react';
 import { useInView } from '@/hooks/useInView';
+import { useStickyStuck } from '@/hooks/useStickyStuck';
 import { usePatiosListInfinite } from '@/services/patios/queries';
 import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
+import { HOME_SCROLL_ROOT_SELECTOR } from '../../constants';
 import { usePatioFilters } from '../../hooks/usePatioFilters';
 import { LibraryToolbar } from '../LibraryToolbar';
 import { PatioLibraryCard } from '../PatioLibraryCard';
@@ -22,6 +24,9 @@ export const PatioLibrary: React.FC = () => {
     const { filters } = usePatioFilters();
     const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
         usePatiosListInfinite(filters);
+    const { ref: headerRef, flag: isHeaderStuck } = useStickyStuck({
+        rootSelector: HOME_SCROLL_ROOT_SELECTOR,
+    });
 
     const [sentinelRef, sentinelInView] = useInView<HTMLDivElement>({ rootMargin: '200px' });
 
@@ -83,11 +88,11 @@ export const PatioLibrary: React.FC = () => {
 
     return (
         <section className={s.wrap}>
-            <header className={s.heading}>
+            <header ref={headerRef} className={s.header} data-stuck={isHeaderStuck || undefined}>
                 <Typography variant="display-xs" className={s.title}>
                     Patio Library
                 </Typography>
-                <LibraryToolbar />
+                <LibraryToolbar className={s.toolbar} />
             </header>
             {body}
         </section>

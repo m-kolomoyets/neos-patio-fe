@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ChevronLeftIcon from '@/icons/chevrone-left_24.svg?react';
 import ChevronRightIcon from '@/icons/chevrone-right_24.svg?react';
+import { useStickyStuck } from '@/hooks/useStickyStuck';
 import { useFeaturedPatios } from '@/services/patios/queries';
 import { Button } from '@/components/ui/Button';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Typography } from '@/components/ui/Typography';
+import { HOME_SCROLL_ROOT_SELECTOR } from '../../constants';
 import { FeaturedPatioCard } from '../FeaturedPatioCard';
 import s from './styles.module.css';
 
@@ -16,6 +18,9 @@ export const FeaturedPatios: React.FC = () => {
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(false);
     const rafIdRef = useRef<number | null>(null);
+    const { ref: headerRef, flag: isHeaderStuck } = useStickyStuck({
+        rootSelector: HOME_SCROLL_ROOT_SELECTOR,
+    });
 
     const updateParallax = useCallback(() => {
         const viewport = viewportRef.current;
@@ -71,10 +76,22 @@ export const FeaturedPatios: React.FC = () => {
 
     return (
         <section className={s.wrap}>
-            <div className={s.header}>
+            <div ref={headerRef} className={s.header} data-stuck={isHeaderStuck || undefined}>
                 <Typography variant="display-xs" className={s.title}>
                     Featured Patios
                 </Typography>
+                <span className={s.background} aria-hidden />
+            </div>
+            <ScrollArea orientation="horizontal" viewportRef={viewportRef} viewportClassName={s.viewport}>
+                <div className={s.track}>
+                    {isLoading
+                        ? Array.from({ length: 3 }).map((_, i) => {
+                              return <div key={i} className={s['skeleton-card']} />;
+                          })
+                        : data?.map((patio) => {
+                              return <FeaturedPatioCard key={patio.id} patio={patio} />;
+                          })}
+                </div>
                 <div className={s.controls}>
                     <Button
                         isIcon
@@ -102,17 +119,6 @@ export const FeaturedPatios: React.FC = () => {
                     >
                         <ChevronRightIcon />
                     </Button>
-                </div>
-            </div>
-            <ScrollArea orientation="horizontal" viewportRef={viewportRef} viewportClassName={s.viewport}>
-                <div className={s.track}>
-                    {isLoading
-                        ? Array.from({ length: 3 }).map((_, i) => {
-                              return <div key={i} className={s['skeleton-card']} />;
-                          })
-                        : data?.map((patio) => {
-                              return <FeaturedPatioCard key={patio.id} patio={patio} />;
-                          })}
                 </div>
             </ScrollArea>
         </section>

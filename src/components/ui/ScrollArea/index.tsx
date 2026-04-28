@@ -17,15 +17,23 @@ export const ScrollArea: React.FC<ScrollAreaProps> = ({
     return (
         <BaseScrollArea.Root className={clsx(s.root, className)} {...rest}>
             <BaseScrollArea.Viewport ref={viewportRef} className={clsx(s.viewport, viewportClassName)}>
-                <BaseScrollArea.Content className={s.content}>{children}</BaseScrollArea.Content>
+                <BaseScrollArea.Content className={clsx(s.content, 'scroll-area-content')}>
+                    {children}
+                </BaseScrollArea.Content>
             </BaseScrollArea.Viewport>
             {showVertical ? (
-                <BaseScrollArea.Scrollbar className={s.scrollbar} orientation="vertical">
+                <BaseScrollArea.Scrollbar
+                    className={clsx(s.scrollbar, 'scroll-area-scrollbar-vertical')}
+                    orientation="vertical"
+                >
                     <BaseScrollArea.Thumb className={s.thumb} />
                 </BaseScrollArea.Scrollbar>
             ) : null}
             {showHorizontal ? (
-                <BaseScrollArea.Scrollbar className={s.scrollbar} orientation="horizontal">
+                <BaseScrollArea.Scrollbar
+                    className={clsx(s.scrollbar, 'scroll-area-scrollbar-horizontal')}
+                    orientation="horizontal"
+                >
                     <BaseScrollArea.Thumb className={s.thumb} />
                 </BaseScrollArea.Scrollbar>
             ) : null}
