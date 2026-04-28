@@ -2,7 +2,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--color-brand-700);
+    background-color: var(--color-brand-yellow-600);
     color: var(--color-base-white);
     border-radius: var(--radius-full);
     flex-shrink: 0;
@@ -28,7 +28,7 @@
 }
 
 .wrap[data-notification-badge-size="xs"] {
-    width: 0.5rem;
-    height: 0.5rem;
-    min-width: 0.5rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    min-width: 0.75rem;
 }

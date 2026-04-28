@@ -1,41 +1,39 @@
 .popup {
     width: 28rem;
     max-width: calc(100vw - 2rem);
-    padding: var(--gap-1) calc(var(--gap-1) + var(--gap-0_5));
+    padding: calc(var(--gap-1) + var(--gap-0_5));
     border-radius: var(--radius-2xl);
     backdrop-filter: blur(100px);
     color: var(--color-base-white);
     display: flex;
     flex-direction: column;
-    gap: var(--gap-2);
+    gap: var(--gap-0_5);
 }
 
 .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding-left: var(--gap-2);
 }
 
-.heading {
-    color: rgb(255 255 255 / 0.65);
+.heading,
+.section-label {
+    color: rgb(255 255 255 / 0.8);
 }
 
 .section {
     display: flex;
     flex-direction: column;
-    gap: var(--gap-2);
 }
 
 .section-label {
-    color: rgb(255 255 255 / 0.55);
+    padding: var(--gap-2);
 }
 
 .group {
     display: flex;
     flex-wrap: wrap;
     gap: var(--gap-2);
-}
-
-.reset-button {
-    color: var(--color-brand-500);
+    padding: var(--gap-1) var(--gap-2);
 }

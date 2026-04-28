@@ -10,6 +10,7 @@ import { Menu } from '@base-ui/react/menu';
 import { Button } from '@/components/ui/Button';
 import { NotificationBadge } from '@/components/ui/NotificationBadge';
 import { PopupWrapper } from '@/components/ui/PopupWrapper';
+import { Separator } from '@/components/ui/Separator';
 import { Typography } from '@/components/ui/Typography';
 import { usePatioFilters } from '../../hooks/usePatioFilters';
 import libraryToolbarStyles from '../LibraryToolbar/styles.module.css';
@@ -63,6 +64,7 @@ export const PatioSort: React.FC = () => {
                                 Reset
                             </Button>
                         </div>
+                        <Separator orientation="horizontal" />
                         <Menu.RadioGroup
                             value={filters.sort ?? null}
                             onValueChange={(value) => {

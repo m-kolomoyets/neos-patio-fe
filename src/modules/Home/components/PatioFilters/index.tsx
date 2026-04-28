@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { NotificationBadge } from '@/components/ui/NotificationBadge';
 import { PopupWrapper } from '@/components/ui/PopupWrapper';
+import { Separator } from '@/components/ui/Separator';
 import { Typography } from '@/components/ui/Typography';
 import { CONTINENT_LABELS, TYPE_LABELS } from './constants';
 import { usePatioFilters } from '../../hooks/usePatioFilters';
@@ -46,13 +47,14 @@ export const PatioFilters: React.FC = () => {
                                 variant="link"
                                 size="sm"
                                 onClick={resetFilters}
+                                title="Reset filters"
                                 disabled={!hasActiveFilters}
                                 className={s['reset-button']}
                             >
                                 Reset
                             </Button>
                         </div>
-
+                        <Separator orientation="horizontal" />
                         <div className={s.section}>
                             <Typography variant="text-xs" className={s['section-label']}>
                                 Continent

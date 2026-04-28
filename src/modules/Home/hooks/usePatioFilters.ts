@@ -2,10 +2,6 @@ import type { Continent, PatioType, SortKey } from '@/services/patios/types';
 import { useCallback, useMemo } from 'react';
 import { useHomeNavigate, useHomeSearch } from './useHomeRouteApi';
 
-const arrayOrUndefined = <T>(values: T[] | undefined): T[] | undefined => {
-    return values && values.length > 0 ? values : undefined;
-};
-
 export const usePatioFilters = () => {
     const search = useHomeSearch();
     const navigate = useHomeNavigate();
@@ -35,7 +31,7 @@ export const usePatioFilters = () => {
         (values: Continent[]) => {
             navigate({
                 search: (prev) => {
-                    return { ...prev, continents: arrayOrUndefined(values) };
+                    return { ...prev, continents: values };
                 },
                 replace: true,
             });
@@ -47,7 +43,7 @@ export const usePatioFilters = () => {
         (values: PatioType[]) => {
             navigate({
                 search: (prev) => {
-                    return { ...prev, types: arrayOrUndefined(values) };
+                    return { ...prev, types: values };
                 },
                 replace: true,
             });
