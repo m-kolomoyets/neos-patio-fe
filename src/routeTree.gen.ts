@@ -11,45 +11,55 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as PatiosIdRouteImport } from './routes/patios.$id'
 
 const UiKitLazyRouteImport = createFileRoute('/ui-kit')()
-const IndexLazyRouteImport = createFileRoute('/')()
 
 const UiKitLazyRoute = UiKitLazyRouteImport.update({
   id: '/ui-kit',
   path: '/ui-kit',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/ui-kit.lazy').then((d) => d.Route))
-const IndexLazyRoute = IndexLazyRouteImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
+const PatiosIdRoute = PatiosIdRouteImport.update({
+  id: '/patios/$id',
+  path: '/patios/$id',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/patios.$id.lazy').then((d) => d.Route))
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexLazyRoute
+  '/': typeof IndexRoute
   '/ui-kit': typeof UiKitLazyRoute
+  '/patios/$id': typeof PatiosIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexLazyRoute
+  '/': typeof IndexRoute
   '/ui-kit': typeof UiKitLazyRoute
+  '/patios/$id': typeof PatiosIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexLazyRoute
+  '/': typeof IndexRoute
   '/ui-kit': typeof UiKitLazyRoute
+  '/patios/$id': typeof PatiosIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ui-kit'
+  fullPaths: '/' | '/ui-kit' | '/patios/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ui-kit'
-  id: '__root__' | '/' | '/ui-kit'
+  to: '/' | '/ui-kit' | '/patios/$id'
+  id: '__root__' | '/' | '/ui-kit' | '/patios/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexLazyRoute: typeof IndexLazyRoute
+  IndexRoute: typeof IndexRoute
   UiKitLazyRoute: typeof UiKitLazyRoute
+  PatiosIdRoute: typeof PatiosIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,15 +75,23 @@ declare module '@tanstack/react-router' {
       id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexLazyRouteImport
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patios/$id': {
+      id: '/patios/$id'
+      path: '/patios/$id'
+      fullPath: '/patios/$id'
+      preLoaderRoute: typeof PatiosIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexLazyRoute: IndexLazyRoute,
+  IndexRoute: IndexRoute,
   UiKitLazyRoute: UiKitLazyRoute,
+  PatiosIdRoute: PatiosIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

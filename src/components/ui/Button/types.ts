@@ -1,9 +1,9 @@
-import { useRender } from '@base-ui/react/use-render';
+import { ButtonProps as BaseButtonProps } from '@base-ui/react';
 
 export type ButtonVariant = 'brand' | 'surface' | 'link';
 export type ButtonSize = 'xl' | 'lg' | 'md' | 'sm';
 
-export type ButtonProps = useRender.ComponentProps<'button'> & {
+export type ButtonProps = BaseButtonProps & {
     /**
      * The variant of the button
      * @see {@link ButtonVariant}

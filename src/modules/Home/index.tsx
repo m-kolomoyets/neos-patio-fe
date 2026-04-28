@@ -1,12 +1,16 @@
-import clsx from 'clsx';
-import { Typography } from '@/components/ui/Typography';
-import s from './style.module.css';
+import { FeaturedPatios } from './components/FeaturedPatios';
+import { PatioLibrary } from './components/PatioLibrary';
+import s from './styles.module.css';
 
 const Home: React.FC = () => {
     return (
-        <main className={clsx(s.wrap, 'full-height')}>
-            <Typography>Hello World</Typography>
-        </main>
+        <div className={s.wrap}>
+            <div className={s.background} aria-hidden />
+            <main className={s.main}>
+                <FeaturedPatios />
+                <PatioLibrary />
+            </main>
+        </div>
     );
 };
 

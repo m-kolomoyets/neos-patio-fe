@@ -1,0 +1,76 @@
+.wrap {
+    --parallax-x: 0;
+
+    position: relative;
+    flex: 0 0 calc((100% - var(--gap-4) * 2) / 3);
+    aspect-ratio: 4 / 5;
+    border-radius: var(--radius-3xl);
+    overflow: hidden;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    isolation: isolate;
+}
+
+.media {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.image {
+    position: absolute;
+    top: 0;
+    left: -10%;
+    width: 120%;
+    height: 100%;
+    object-fit: cover;
+    transform: translateX(calc(var(--parallax-x) * 1px));
+    transition: transform 80ms linear;
+}
+
+.gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgb(0 0 0 / 0) 40%, rgb(0 0 0 / 0.7) 100%);
+}
+
+.content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: var(--gap-6);
+    gap: var(--gap-4);
+}
+
+.header-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--gap-4);
+}
+
+.titles {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-1);
+    color: var(--color-base-white);
+}
+
+.subtitle {
+    color: rgb(255 255 255 / 0.7);
+}
+
+.open-button {
+    width: 3rem;
+    height: 3rem;
+    flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+    .wrap {
+        flex: 0 0 calc((100% - var(--gap-4)) / 2);
+    }
+}

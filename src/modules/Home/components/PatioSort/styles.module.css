@@ -1,0 +1,59 @@
+.popup {
+    width: 14rem;
+    padding: var(--gap-1) calc(var(--gap-1) + var(--gap-0_5));
+    border-radius: var(--radius-2xl);
+    backdrop-filter: blur(100px);
+    color: var(--color-base-white);
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-2);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--gap-2);
+}
+
+.heading {
+    color: rgb(255 255 255 / 0.65);
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2);
+    padding: var(--gap-2) var(--gap-3);
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+    user-select: none;
+    color: var(--color-base-white);
+    outline: none;
+}
+
+.item:where([data-highlighted]),
+.item:where([data-checked]) {
+    background: var(--surface-thin);
+}
+
+.icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: rgb(255 255 255 / 0.7);
+    flex-shrink: 0;
+}
+
+.label {
+    flex: 1;
+}
+
+.checkmark {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--color-brand-500);
+}
+
+.reset-button {
+    color: var(--color-brand-500);
+}

@@ -4,6 +4,10 @@
     border-radius: var(--radius-xl);
     overflow: hidden;
     backdrop-filter: blur(24px);
+    transform-origin: var(--transform-origin);
+    transition:
+        transform 150ms,
+        opacity 150ms;
 }
 
 .wrap::before {
@@ -18,4 +22,10 @@
         linear-gradient(#000 0 0);
     mask-composite: exclude;
     pointer-events: none;
+}
+
+.wrap[data-starting-style],
+.wrap[data-ending-style] {
+    opacity: 0;
+    transform: scale(0.9);
 }
