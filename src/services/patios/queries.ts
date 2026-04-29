@@ -1,6 +1,7 @@
 import type { PatiosListFilters } from './queryKeys';
+import type { Patio } from './types';
 import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { getPatio, listFeaturedPatios, listPatios } from './api';
+import { getPatio, listAllPatios, listFeaturedPatios, listPatios } from './api';
 import { patiosKeys } from './queryKeys';
 
 export const PATIOS_PAGE_SIZE = 12;
@@ -22,6 +23,30 @@ export const getPatiosListInfiniteQueryOptions = (filters: PatiosListFilters) =>
         getNextPageParam: (last) => {
             return last.nextPage;
         },
+    });
+};
+
+export const getPatiosListAllQueryOptions = (filters: PatiosListFilters) => {
+    return queryOptions({
+        queryKey: patiosKeys.fullListWithParams(filters),
+        queryFn: () => {
+            return listAllPatios(filters);
+        },
+    });
+};
+
+export const getGroupedPatiosQueryOptions = <TGroup>(
+    filters: PatiosListFilters,
+    groupFn: (_items: Patio[]) => TGroup[],
+    enabled: boolean
+) => {
+    return queryOptions({
+        queryKey: patiosKeys.fullListWithParams(filters),
+        queryFn: () => {
+            return listAllPatios(filters);
+        },
+        select: groupFn,
+        enabled,
     });
 };
 

@@ -1,11 +1,12 @@
-import { useEffect, useMemo } from 'react';
+import React from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useStickyStuck } from '@/hooks/useStickyStuck';
-import { usePatiosListInfinite } from '@/services/patios/queries';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Separator } from '@/components/ui/Separator';
 import { Typography } from '@/components/ui/Typography';
 import { HOME_SCROLL_ROOT_SELECTOR } from '../../constants';
+import { useGroupedPatios } from '../../hooks/useGroupedPatios';
 import { usePatioFilters } from '../../hooks/usePatioFilters';
 import { LibraryToolbar } from '../LibraryToolbar';
 import { PatioLibraryCard } from '../PatioLibraryCard';
@@ -23,8 +24,8 @@ const SkeletonGrid: React.FC<{ count: number }> = ({ count }) => {
 
 export const PatioLibrary: React.FC = () => {
     const { filters } = usePatioFilters();
-    const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
-        usePatiosListInfinite(filters);
+    const { mode, items, groups, isLoading, isError, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
+        useGroupedPatios(filters);
     const { ref: headerRef, flag: isHeaderStuck } = useStickyStuck({
         rootSelector: HOME_SCROLL_ROOT_SELECTOR,
     });
@@ -33,13 +34,7 @@ export const PatioLibrary: React.FC = () => {
         threshold: 0.75,
     });
 
-    const items = useMemo(() => {
-        return (
-            data?.pages.flatMap((p) => {
-                return p.items;
-            }) ?? []
-        );
-    }, [data]);
+    const isEmpty = mode === 'flat' ? (items?.length ?? 0) === 0 : (groups?.length ?? 0) === 0;
 
     let body: React.ReactNode;
     if (isLoading) {
@@ -59,13 +54,13 @@ export const PatioLibrary: React.FC = () => {
                 </Button>
             </div>
         );
-    } else if (items.length === 0) {
+    } else if (isEmpty) {
         body = (
             <div className={s.empty}>
                 <Typography variant="text-md">No patios found.</Typography>
             </div>
         );
-    } else {
+    } else if (mode === 'flat' && items) {
         body = (
             <>
                 <div className={s.grid}>
@@ -86,13 +81,36 @@ export const PatioLibrary: React.FC = () => {
                 ) : null}
             </>
         );
+    } else if (groups) {
+        body = (
+            <div className={s.groups}>
+                {groups.map((group) => {
+                    return (
+                        <section key={group.key} className={s.group}>
+                            <Typography variant="text-md" render={<h3 />} className={s['group-title']}>
+                                {group.title}
+                            </Typography>
+                            <Separator className={s['group-separator']} />
+                            <div className={s.grid}>
+                                {group.items.map((patio) => {
+                                    return <PatioLibraryCard key={patio.id} patio={patio} />;
+                                })}
+                            </div>
+                        </section>
+                    );
+                })}
+            </div>
+        );
     }
 
-    useEffect(() => {
-        if (sentinelInView && hasNextPage && !isFetchingNextPage) {
+    React.useEffect(() => {
+        if (mode !== 'flat') {
+            return;
+        }
+        if (sentinelInView && hasNextPage && !isFetchingNextPage && fetchNextPage) {
             fetchNextPage();
         }
-    }, [sentinelInView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+    }, [mode, sentinelInView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
     return (
         <section className={s.wrap}>

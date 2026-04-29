@@ -72,6 +72,29 @@
     padding-inline: var(--gap-8);
 }
 
+.groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-6);
+}
+
+.group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-3);
+}
+
+.group-title {
+    color: var(--color-base-white);
+    font-weight: 500;
+    padding-inline: var(--gap-8);
+}
+
+.group-separator {
+    margin-inline: var(--gap-8);
+    width: calc(100% - var(--gap-8) * 2) !important;
+}
+
 .skeleton-card {
     width: 100%;
     height: 126px;

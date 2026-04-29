@@ -68,6 +68,39 @@ export const listPatios = async (params: ListPatiosParams): Promise<ListPatiosRe
     return { items, nextPage, total: sorted.length };
 };
 
+export const listAllPatios = async (params: Omit<ListPatiosParams, 'page' | 'pageSize'>): Promise<Patio[]> => {
+    await sleep(MOCK_DELAY_MS);
+
+    const { q, continents, types, sort } = params;
+    const normalisedQ = q?.trim().toLowerCase();
+
+    let filtered = PATIOS_FIXTURES;
+
+    if (normalisedQ) {
+        filtered = filtered.filter((p) => {
+            return (
+                p.name.toLowerCase().includes(normalisedQ) ||
+                p.country.toLowerCase().includes(normalisedQ) ||
+                p.author.toLowerCase().includes(normalisedQ)
+            );
+        });
+    }
+
+    if (continents?.length) {
+        filtered = filtered.filter((p) => {
+            return continents.includes(p.continent);
+        });
+    }
+
+    if (types?.length) {
+        filtered = filtered.filter((p) => {
+            return types.includes(p.type);
+        });
+    }
+
+    return sortPatios(filtered, sort);
+};
+
 export const listFeaturedPatios = async (): Promise<Patio[]> => {
     await sleep(MOCK_DELAY_MS);
     return PATIOS_FIXTURES.filter((p) => {

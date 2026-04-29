@@ -1,5 +1,7 @@
 import type { Continent, PatioType } from '@/services/patios/types';
 
+export const FILTERS_DEBOUNCE_MS = 400;
+
 export const CONTINENT_LABELS: Array<{ value: Continent; label: string }> = [
     { value: 'africa', label: 'Africa' },
     { value: 'asia', label: 'Asia' },

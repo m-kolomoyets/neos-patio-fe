@@ -15,6 +15,12 @@ export const patiosKeys = {
     list(filters: PatiosListFilters) {
         return [...patiosKeys.listAll(), filters] as const;
     },
+    fullList() {
+        return [...patiosKeys.root(), 'full-list'] as const;
+    },
+    fullListWithParams(filters: PatiosListFilters) {
+        return [...patiosKeys.fullList(), filters] as const;
+    },
     detail(id: string) {
         return [...patiosKeys.root(), 'detail', id] as const;
     },
