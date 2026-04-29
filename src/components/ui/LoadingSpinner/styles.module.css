@@ -1,0 +1,14 @@
+.wrap {
+    --loading-spinner-size: 2rem;
+
+    width: var(--loading-spinner-size);
+    height: var(--loading-spinner-size);
+    flex-shrink: 0;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

@@ -50,7 +50,7 @@
     left: -10%;
     height: 100%;
     object-fit: cover;
-    transform: translateX(calc(var(--parallax-x) * 1px)) scale(1.2);
+    transform: translateX(calc(var(--parallax-x) * 2px)) scale(1.2);
     transition: transform 80ms linear;
     pointer-events: none;
 }

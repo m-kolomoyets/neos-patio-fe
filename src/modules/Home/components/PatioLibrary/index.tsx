@@ -1,8 +1,9 @@
 import { useEffect, useMemo } from 'react';
-import { useInView } from '@/hooks/useInView';
+import { useInView } from 'react-intersection-observer';
 import { useStickyStuck } from '@/hooks/useStickyStuck';
 import { usePatiosListInfinite } from '@/services/patios/queries';
 import { Button } from '@/components/ui/Button';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Typography } from '@/components/ui/Typography';
 import { HOME_SCROLL_ROOT_SELECTOR } from '../../constants';
 import { usePatioFilters } from '../../hooks/usePatioFilters';
@@ -28,13 +29,9 @@ export const PatioLibrary: React.FC = () => {
         rootSelector: HOME_SCROLL_ROOT_SELECTOR,
     });
 
-    const [sentinelRef, sentinelInView] = useInView<HTMLDivElement>({ rootMargin: '200px' });
-
-    useEffect(() => {
-        if (sentinelInView && hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-        }
-    }, [sentinelInView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+    const [sentinelRef, sentinelInView] = useInView({
+        threshold: 0.75,
+    });
 
     const items = useMemo(() => {
         return (
@@ -46,7 +43,7 @@ export const PatioLibrary: React.FC = () => {
 
     let body: React.ReactNode;
     if (isLoading) {
-        body = <SkeletonGrid count={8} />;
+        body = <SkeletonGrid count={12} />;
     } else if (isError) {
         body = (
             <div className={s.error}>
@@ -81,10 +78,21 @@ export const PatioLibrary: React.FC = () => {
                           })
                         : null}
                 </div>
-                <div ref={sentinelRef} className={s.sentinel} aria-hidden />
+                {hasNextPage ? (
+                    <div ref={sentinelRef} className={s.sentinel}>
+                        <LoadingSpinner />
+                        <span className="sr-only">Loading more patios...</span>
+                    </div>
+                ) : null}
             </>
         );
     }
+
+    useEffect(() => {
+        if (sentinelInView && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    }, [sentinelInView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
     return (
         <section className={s.wrap}>
