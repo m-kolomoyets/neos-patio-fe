@@ -1,7 +1,7 @@
-import type { PatiosListFilters } from './queryKeys';
+import type { PatioLettersFilters, PatiosListFilters } from './queryKeys';
 import type { Patio } from './types';
 import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { getPatio, listAllPatios, listFeaturedPatios, listPatios } from './api';
+import { getPatio, listAllPatios, listFeaturedPatios, listPatioLetters, listPatios } from './api';
 import { patiosKeys } from './queryKeys';
 
 export const PATIOS_PAGE_SIZE = 12;
@@ -57,6 +57,19 @@ export const getPatioQueryOptions = (id: string) => {
             return getPatio(id);
         },
     });
+};
+
+export const getPatioLettersQueryOptions = (filters: PatioLettersFilters) => {
+    return queryOptions({
+        queryKey: patiosKeys.letters(filters),
+        queryFn: () => {
+            return listPatioLetters(filters);
+        },
+    });
+};
+
+export const usePatioLetters = (filters: PatioLettersFilters) => {
+    return useQuery(getPatioLettersQueryOptions(filters));
 };
 
 export const useFeaturedPatios = () => {

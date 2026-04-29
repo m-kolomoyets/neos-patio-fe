@@ -1,6 +1,7 @@
 import type { ListPatiosParams } from './types';
 
 export type PatiosListFilters = Omit<ListPatiosParams, 'page' | 'pageSize'>;
+export type PatioLettersFilters = Omit<ListPatiosParams, 'page' | 'pageSize' | 'sort'>;
 
 export const patiosKeys = {
     root() {
@@ -23,5 +24,8 @@ export const patiosKeys = {
     },
     detail(id: string) {
         return [...patiosKeys.root(), 'detail', id] as const;
+    },
+    letters(filters: PatioLettersFilters) {
+        return [...patiosKeys.root(), 'letters', filters] as const;
     },
 };

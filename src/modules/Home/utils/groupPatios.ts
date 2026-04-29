@@ -12,7 +12,8 @@ const stripDiacritics = (input: string) => {
 };
 
 const firstAlphaLetter = (name: string) => {
-    return stripDiacritics(name.trim()).charAt(0).toUpperCase();
+    const char = stripDiacritics(name.trim()).charAt(0).toUpperCase();
+    return /[A-Z]/.test(char) ? char : '#';
 };
 
 export const groupByContinent = (items: Patio[], order: Continent[]): PatioGroup[] => {
@@ -54,6 +55,8 @@ export const groupByAlpha = (items: Patio[]): PatioGroup[] => {
 
     return Array.from(buckets.entries())
         .sort(([a], [b]) => {
+            if (a === '#') return 1;
+            if (b === '#') return -1;
             return a.localeCompare(b);
         })
         .map(([letter, list]) => {

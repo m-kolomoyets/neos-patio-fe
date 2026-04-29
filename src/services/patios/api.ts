@@ -101,6 +101,52 @@ export const listAllPatios = async (params: Omit<ListPatiosParams, 'page' | 'pag
     return sortPatios(filtered, sort);
 };
 
+export const listPatioLetters = async (
+    params: Omit<ListPatiosParams, 'page' | 'pageSize' | 'sort'>
+): Promise<string[]> => {
+    await sleep(MOCK_DELAY_MS);
+
+    const { q, continents, types } = params;
+    const normalisedQ = q?.trim().toLowerCase();
+
+    let filtered = PATIOS_FIXTURES;
+
+    if (normalisedQ) {
+        filtered = filtered.filter((p) => {
+            return (
+                p.name.toLowerCase().includes(normalisedQ) ||
+                p.country.toLowerCase().includes(normalisedQ) ||
+                p.author.toLowerCase().includes(normalisedQ)
+            );
+        });
+    }
+
+    if (continents?.length) {
+        filtered = filtered.filter((p) => {
+            return continents.includes(p.continent);
+        });
+    }
+
+    if (types?.length) {
+        filtered = filtered.filter((p) => {
+            return types.includes(p.type);
+        });
+    }
+
+    const letters = new Set<string>();
+    for (const patio of filtered) {
+        const stripped = patio.name.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+        const first = stripped.trim().charAt(0).toUpperCase();
+        letters.add(/[A-Z]/.test(first) ? first : '#');
+    }
+
+    return Array.from(letters).sort((a, b) => {
+        if (a === '#') return 1;
+        if (b === '#') return -1;
+        return a.localeCompare(b);
+    });
+};
+
 export const listFeaturedPatios = async (): Promise<Patio[]> => {
     await sleep(MOCK_DELAY_MS);
     return PATIOS_FIXTURES.filter((p) => {

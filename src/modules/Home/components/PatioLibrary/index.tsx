@@ -86,7 +86,11 @@ export const PatioLibrary: React.FC = () => {
             <div className={s.groups}>
                 {groups.map((group) => {
                     return (
-                        <section key={group.key} className={s.group}>
+                        <section
+                            key={group.key}
+                            className={s.group}
+                            data-letter={mode === 'alpha' ? group.key : undefined}
+                        >
                             <Typography variant="text-md" render={<h3 />} className={s['group-title']}>
                                 {group.title}
                             </Typography>

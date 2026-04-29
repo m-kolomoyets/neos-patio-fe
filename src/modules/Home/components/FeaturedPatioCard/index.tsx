@@ -28,12 +28,13 @@ export const FeaturedPatioCard: React.FC<Props> = ({ patio }) => {
                 <Button
                     variant="surface"
                     size="md"
-                    aria-label={`Open ${patio.name}`}
+                    title={`Open ${patio.name}`}
                     className={s['open-button']}
                     nativeButton={false}
                     render={<Link to="/patios/$id" params={{ id: patio.id }} />}
                 >
                     Open
+                    <span className="sr-only">{patio.name}</span>
                     <ArrowTopRight24Icon aria-hidden />
                 </Button>
             </footer>
