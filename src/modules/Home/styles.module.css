@@ -67,6 +67,16 @@
     transform: translateX(20px);
 }
 
+.scroll :global(.scroll-area-scrollbar-vertical .scroll-area-thumb) {
+    opacity: 1;
+    background: hsla(0, 0%, 100%, 0.36);
+    background-blend-mode: lighten;
+}
+
+.scroll :global(.scroll-area-scrollbar-vertical .scroll-area-thumb):hover {
+    background: hsla(0, 0%, 100%, 0.6);
+}
+
 @media (max-width: 1024px) {
     .main {
         padding: var(--gap-6);

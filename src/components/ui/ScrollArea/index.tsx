@@ -23,18 +23,18 @@ export const ScrollArea: React.FC<ScrollAreaProps> = ({
             </BaseScrollArea.Viewport>
             {showVertical ? (
                 <BaseScrollArea.Scrollbar
-                    className={clsx(s.scrollbar, 'scroll-area-scrollbar-vertical')}
+                    className={clsx(s.scrollbar, 'scroll-area-scrollbar', 'scroll-area-scrollbar-vertical')}
                     orientation="vertical"
                 >
-                    <BaseScrollArea.Thumb className={s.thumb} />
+                    <BaseScrollArea.Thumb className={clsx(s.thumb, 'scroll-area-thumb')} />
                 </BaseScrollArea.Scrollbar>
             ) : null}
             {showHorizontal ? (
                 <BaseScrollArea.Scrollbar
-                    className={clsx(s.scrollbar, 'scroll-area-scrollbar-horizontal')}
+                    className={clsx(s.scrollbar, 'scroll-area-scrollbar', 'scroll-area-scrollbar-horizontal')}
                     orientation="horizontal"
                 >
-                    <BaseScrollArea.Thumb className={s.thumb} />
+                    <BaseScrollArea.Thumb className={clsx(s.thumb, 'scroll-area-thumb')} />
                 </BaseScrollArea.Scrollbar>
             ) : null}
             {orientation === 'both' ? <BaseScrollArea.Corner className={s.corner} /> : null}
