@@ -254,6 +254,12 @@ html {
     box-shadow: var(--ring-offset-shadow), var(--ring-shadow), var(--shadow, 0 0 #00000000);
 }
 
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 @media (hover: hover) and (pointer: fine) {
     *::-webkit-scrollbar {
         width: var(--scrollbar-size);

@@ -18,8 +18,10 @@ export const FeaturedPatioCard: React.FC<Props> = ({ patio }) => {
             </AspectRatio>
             <footer className={s.content}>
                 <div className={s.titles}>
-                    <Typography variant="text-md">{patio.name}</Typography>
-                    <Typography className={s.subtitle} variant="text-sm">
+                    <Typography variant="text-md" render={<h3 />}>
+                        {patio.name}
+                    </Typography>
+                    <Typography className={s.subtitle} variant="text-sm" render={<p />}>
                         by {patio.author}
                     </Typography>
                 </div>
@@ -32,7 +34,7 @@ export const FeaturedPatioCard: React.FC<Props> = ({ patio }) => {
                     render={<Link to="/patios/$id" params={{ id: patio.id }} />}
                 >
                     Open
-                    <ArrowTopRight24Icon />
+                    <ArrowTopRight24Icon aria-hidden />
                 </Button>
             </footer>
         </article>

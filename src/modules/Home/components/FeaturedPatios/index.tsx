@@ -105,7 +105,7 @@ export const FeaturedPatios: React.FC = () => {
     return (
         <section className={s.wrap}>
             <div ref={headerRef} className={s.header} data-stuck={isHeaderStuck || undefined}>
-                <Typography variant="display-xs" className={s.title}>
+                <Typography variant="display-xs" className={s.title} render={<h2 />}>
                     Featured Patios
                 </Typography>
                 <span className={s.background} aria-hidden />
