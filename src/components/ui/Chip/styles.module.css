@@ -25,8 +25,8 @@
     border-radius: inherit;
     background: var(--stroke-surface-thin);
     mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
     mask-composite: exclude;
     pointer-events: none;
 }
@@ -44,16 +44,20 @@
 }
 
 .wrap[data-chip-size="lg"] {
-    padding: calc(var(--gap-1) + var(--gap-0_5)) var(--gap-3);
+    padding: calc(var(--gap-1) + var(--gap-0-5)) var(--gap-3);
     font-size: 0.875rem;
     line-height: 1.25rem;
 }
 
 .wrap:not(:disabled):hover {
     background:
-        radial-gradient(ellipse 59.72% 55.84% at 50% 88.89%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%),
-        linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-        linear-gradient(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.04));
+        radial-gradient(
+            ellipse 59.72% 55.84% at 50% 88.89%,
+            hsl(var(--color-hsl-white) / 0.2) 0%,
+            hsl(var(--color-hsl-white) / 0) 100%
+        ),
+        linear-gradient(hsl(var(--color-hsl-white) / 0.2), hsl(var(--color-hsl-white) / 0.2)),
+        linear-gradient(hsl(var(--color-hsl-black) / 0.04), hsl(var(--color-hsl-black) / 0.04));
     background-blend-mode: normal, normal, luminosity;
     overflow: hidden;
     backdrop-filter: blur(24px);

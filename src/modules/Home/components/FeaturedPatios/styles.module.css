@@ -6,7 +6,7 @@
 }
 
 .header {
-    position: relative;
+    position: sticky;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -14,7 +14,6 @@
     padding-bottom: var(--gap-4);
     gap: var(--gap-4);
     color: var(--color-base-white);
-    position: sticky;
     top: 0;
     z-index: 10;
 }
@@ -24,9 +23,10 @@
     position: absolute;
     inset: 0;
     z-index: 0;
+    opacity: 0;
     box-shadow:
-        0 4px 8px 0 hsla(0, 0%, 0%, 0.06),
-        0 0 4px 0 hsla(0, 0%, 0%, 0.04);
+        0 4px 8px 0 hsl(var(--color-hsl-black) / 0.06),
+        0 0 4px 0 hsl(var(--color-hsl-black) / 0.04);
     transition: opacity 0.2s ease;
     pointer-events: none;
 
@@ -35,10 +35,6 @@
     background: var(--surface-regular);
     background-blend-mode: normal, luminosity;
     backdrop-filter: blur(100px);
-}
-
-.header::after {
-    opacity: 0;
 }
 
 .header[data-stuck="true"]::after {

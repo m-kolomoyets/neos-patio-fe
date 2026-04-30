@@ -21,8 +21,8 @@
     padding: 1px;
     background: var(--stroke-surface);
     mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
     mask-composite: exclude;
     pointer-events: none;
     transition: opacity 250ms ease;
@@ -31,7 +31,7 @@
 .wrap:is(:hover, :focus-within) {
     background: var(--surface-thick);
     backdrop-filter: blur(100px);
-    box-shadow: 0px 0px 3px 2px rgba(255, 255, 255, 0.15) inset;
+    box-shadow: 0 0 3px 2px hsl(var(--color-hsl-white) / 0.15) inset;
 }
 
 .media {
@@ -43,20 +43,20 @@
     overflow: hidden;
     transition: box-shadow 250ms ease;
     box-shadow:
-        1px 3px 3px rgba(0, 0, 0, 0.1) inset,
-        1px 1.5px 4px rgba(0, 0, 0, 0.2) inset,
-        0px -1px 1px rgba(22.36, 23.32, 22.29, 0.4) inset,
-        0px -3px 3px rgba(0, 0, 0, 0.2) inset,
-        0px 0px 2px 1px rgba(255, 255, 255, 0.15);
+        1px 3px 3px hsl(var(--color-hsl-black) / 0.1) inset,
+        1px 1.5px 4px hsl(var(--color-hsl-black) / 0.2) inset,
+        0 -1px 1px hsl(26deg 0.2% 8.8 / 0.4) inset,
+        0 -3px 3px hsl(var(--color-hsl-black) / 0.2) inset,
+        0 0 2px 1px hsl(var(--color-hsl-white) / 0.15);
 }
 
 .wrap:is(:hover, :focus-within) .media {
     box-shadow:
-        0px 0px 2px 1px rgba(255, 255, 255, 0.15),
-        1px 3px 3px rgba(0, 0, 0, 0.1) inset,
-        1px 1.5px 4px rgba(0, 0, 0, 0.2) inset,
-        0px -1px 1px rgba(22.36, 23.32, 22.29, 0.4) inset,
-        0px -3px 3px rgba(0, 0, 0, 0.2) inset;
+        0 0 2px 1px hsl(var(--color-hsl-white) / 0.15),
+        1px 3px 3px hsl(var(--color-hsl-black) / 0.1) inset,
+        1px 1.5px 4px hsl(var(--color-hsl-black) / 0.2) inset,
+        0 -1px 1px hsl(26deg 0.2% 8.8 / 0.4) inset,
+        0 -3px 3px hsl(var(--color-hsl-black) / 0.2) inset;
 }
 
 .image {
@@ -98,7 +98,6 @@
 .title-wrap .cta {
     opacity: 0;
     padding: var(--gap-1);
-    height: fit-content;
     flex-shrink: 0;
     width: 1.5rem;
     min-height: 1.5rem;

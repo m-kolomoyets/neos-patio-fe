@@ -24,7 +24,7 @@
 .wrap[data-notification-badge-size="md"] {
     min-width: 1.5rem;
     height: 1.5rem;
-    padding: 0 calc(var(--gap-1) + var(--gap-0_5));
+    padding: 0 calc(var(--gap-1) + var(--gap-0-5));
 }
 
 .wrap[data-notification-badge-size="xs"] {

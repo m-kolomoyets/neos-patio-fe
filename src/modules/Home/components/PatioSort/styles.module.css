@@ -1,12 +1,12 @@
 .popup {
     width: 14rem;
-    padding: var(--gap-1) calc(var(--gap-1) + var(--gap-0_5));
+    padding: var(--gap-1) calc(var(--gap-1) + var(--gap-0-5));
     border-radius: var(--radius-2xl);
     backdrop-filter: blur(100px);
     color: var(--color-base-white);
     display: flex;
     flex-direction: column;
-    gap: var(--gap-0_5);
+    gap: var(--gap-0-5);
 }
 
 .header {

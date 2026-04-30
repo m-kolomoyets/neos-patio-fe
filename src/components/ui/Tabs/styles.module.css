@@ -23,7 +23,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--gap-1);
-    padding: var(--gap-2) calc(var(--gap-1) + var(--gap-0_5));
+    padding: var(--gap-2) calc(var(--gap-1) + var(--gap-0-5));
     border: none;
     background-color: transparent;
     color: var(--color-base-white);
@@ -47,9 +47,13 @@
 
 .tab:not(:disabled)[data-active]:hover {
     background:
-        radial-gradient(ellipse 59.72% 55.84% at 50% 88.89%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%),
-        linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-        linear-gradient(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.04));
+        radial-gradient(
+            ellipse 59.72% 55.84% at 50% 88.89%,
+            hsl(var(--color-hsl-white) / 0.2) 0%,
+            hsl(var(--color-hsl-white) / 0) 100%
+        ),
+        linear-gradient(hsl(var(--color-hsl-white) / 0.2), hsl(var(--color-hsl-white) / 0.2)),
+        linear-gradient(hsl(var(--color-hsl-black) / 0.04), hsl(var(--color-hsl-black) / 0.04));
     background-blend-mode: normal, normal, luminosity;
     overflow: hidden;
     backdrop-filter: blur(24px);
@@ -57,7 +61,7 @@
 }
 
 .tab[data-selected] {
-    background-color: hsl(0 0% 100% / 0.16);
+    background-color: hsl(0deg 0% 100% / 0.16);
     opacity: 1;
 }
 
@@ -66,14 +70,14 @@
 }
 
 .root[data-tabs-size="md"] .tab {
-    padding: var(--gap-2) calc(var(--gap-3) + var(--gap-0_5));
+    padding: var(--gap-2) calc(var(--gap-3) + var(--gap-0-5));
     min-height: 2.25rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
 }
 
 .root[data-tabs-size="sm"] .tab {
-    padding: calc(var(--gap-1) + var(--gap-0_5)) var(--gap-3);
+    padding: calc(var(--gap-1) + var(--gap-0-5)) var(--gap-3);
     min-height: 1.875rem;
     font-size: 0.8125rem;
     line-height: 1.125rem;
@@ -87,7 +91,7 @@
     width: var(--active-tab-width);
     height: calc(100% - var(--gap-1) * 2);
     border-radius: var(--radius-full);
-    background-color: hsl(0 0% 100% / 0.16);
+    background-color: hsl(0deg 0% 100% / 0.16);
     transform: translateX(var(--active-tab-left));
     transition:
         transform 0.2s ease-in-out,
@@ -102,8 +106,8 @@
     padding: 1px;
     background: var(--stroke-surface);
     mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
     mask-composite: exclude;
     pointer-events: none;
 }

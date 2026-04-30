@@ -36,7 +36,7 @@ const Section: React.FC<SectionProps> = ({ title, children }) => {
     return (
         <section className={clsx(s.section, 'surface-thick')}>
             <Typography variant="display-sm">{title}</Typography>
-            <div className={s.sectionContent}>{children}</div>
+            <div className={s['section-content']}>{children}</div>
         </section>
     );
 };
@@ -44,7 +44,7 @@ const Section: React.FC<SectionProps> = ({ title, children }) => {
 const Row: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => {
     return (
         <div className={s.row}>
-            <Typography variant="text-sm" className={s.rowLabel}>
+            <Typography variant="text-sm" className={s['row-label']}>
                 {label}
             </Typography>
             {children}
@@ -485,8 +485,8 @@ export const UiKit: React.FC = () => {
                         </OptionItem>
                     </Row>
                     <Row label="list">
-                        <ScrollArea className={s.optionList}>
-                            <div className={s.optionListInner}>
+                        <ScrollArea className={s['option-list']}>
+                            <div className={s['option-list-inner']}>
                                 <OptionItem leftAddon={<SearchIcon />}>Search</OptionItem>
                                 <OptionItem leftAddon={<EditIcon />} checked>
                                     Edit
@@ -497,8 +497,8 @@ export const UiKit: React.FC = () => {
                         </ScrollArea>
                     </Row>
                     <Row label="variant=surface">
-                        <ScrollArea className={s.optionList}>
-                            <div className={s.optionListInner}>
+                        <ScrollArea className={s['option-list']}>
+                            <div className={s['option-list-inner']}>
                                 <OptionItem variant="surface" leftAddon={<SearchIcon />}>
                                     Search
                                 </OptionItem>
@@ -518,8 +518,8 @@ export const UiKit: React.FC = () => {
 
                 <Section title="Scroll Area">
                     <Row label="vertical">
-                        <ScrollArea className={s.optionList}>
-                            <div className={s.optionListInner}>
+                        <ScrollArea className={s['option-list']}>
+                            <div className={s['option-list-inner']}>
                                 {SCROLL_AREA_OPTIONS.map((option) => {
                                     return (
                                         <OptionItem key={option.value} leftAddon={<SearchIcon />}>
@@ -531,8 +531,8 @@ export const UiKit: React.FC = () => {
                         </ScrollArea>
                     </Row>
                     <Row label="surface">
-                        <ScrollArea className={s.optionList}>
-                            <div className={s.optionListInner}>
+                        <ScrollArea className={s['option-list']}>
+                            <div className={s['option-list-inner']}>
                                 {SCROLL_AREA_OPTIONS.map((option) => {
                                     return (
                                         <OptionItem key={option.value} variant="surface" leftAddon={<EditIcon />}>

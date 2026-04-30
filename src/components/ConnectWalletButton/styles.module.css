@@ -2,9 +2,9 @@
     position: relative;
     padding: 0 !important;
     box-shadow:
-        0px 0px 2.4000000953674316px 1.2000000476837158px rgba(255, 255, 255, 0.1),
-        0px 0px 2.4000000953674316px rgba(35.21, 35.21, 35.21, 0.75) inset,
-        0px 0px 1.2000000476837158px 0.36000001430511475px rgba(0, 0, 0, 0.9) inset;
+        0 0 2.4px 1.2px hsl(var(--color-hsl-white) / 0.1),
+        0 0 2.4px hsl(0deg 0% 13.8% / 0.75) inset,
+        0 0 1.2px 0.36px hsl(var(--color-hsl-black) / 0.9) inset;
     overflow: hidden;
 }
 
@@ -17,7 +17,7 @@
     justify-content: center;
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
-    background-color: hsla(0, 0%, 0%, 0.6);
+    background-color: hsl(var(--color-hsl-black) / 0.6);
     pointer-events: none;
 }
 
@@ -39,7 +39,7 @@
 .connect,
 .connected:is(:hover) {
     box-shadow:
-        0px 0px 2.4000000953674316px 1.2000000476837158px rgba(255, 255, 255, 0.1),
-        0px 0px 2.4000000953674316px rgba(35.21, 35.21, 35.21, 0.75) inset,
-        0px 0px 1.2000000476837158px 0.36000001430511475px rgba(0, 0, 0, 0.9) inset;
+        0 0 2.4px 1.2px hsl(var(--color-hsl-white) / 0.1),
+        0 0 2.4px hsl(0deg 0% 13.8% / 0.75) inset,
+        0 0 1.2px 0.36px hsl(var(--color-hsl-black) / 0.9) inset;
 }

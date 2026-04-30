@@ -22,8 +22,8 @@
     padding: 1px;
     background: var(--stroke-surface);
     mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
     mask-composite: exclude;
     pointer-events: none;
     transition: opacity 250ms ease;
@@ -32,7 +32,7 @@
 .wrap:is(:hover, :focus-within) {
     background: var(--surface-thick);
     backdrop-filter: blur(56px);
-    box-shadow: 0px 0px 3px 2px rgba(255, 255, 255, 0.15) inset;
+    box-shadow: 0 0 3px 2px hsl(var(--color-hsl-white) / 0.15) inset;
 }
 
 .wrap:is(:hover, :focus-within)::before {

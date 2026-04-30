@@ -18,8 +18,8 @@
     padding: 1px;
     background: var(--stroke-surface-thin);
     mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
     mask-composite: exclude;
     pointer-events: none;
 }

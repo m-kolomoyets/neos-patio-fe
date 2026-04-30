@@ -73,9 +73,13 @@
 
 .item:not(:disabled):is(:hover, [data-pressed]) {
     background:
-        radial-gradient(ellipse 59.72% 55.84% at 50% 88.89%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%),
-        linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-        linear-gradient(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.04));
+        radial-gradient(
+            ellipse 59.72% 55.84% at 50% 88.89%,
+            hsl(var(--color-hsl-white) / 0.2) 0%,
+            hsl(var(--color-hsl-white) / 0) 100%
+        ),
+        linear-gradient(hsl(var(--color-hsl-white) / 0.2), hsl(var(--color-hsl-white) / 0.2)),
+        linear-gradient(hsl(var(--color-hsl-black) / 0.04), hsl(var(--color-hsl-black) / 0.04));
     background-blend-mode: normal, normal, luminosity;
     overflow: hidden;
     backdrop-filter: blur(24px);

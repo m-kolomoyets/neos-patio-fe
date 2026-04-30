@@ -10,11 +10,11 @@
     width: 100%;
 }
 
-.scrollArea {
+.scroll-area {
     width: 100%;
 }
 
-.scrollAreaViewport {
+.scroll-area-viewport {
     --row-count: 5;
     --row-height: 36px;
     --row-gap: 2px;
@@ -29,17 +29,17 @@
 .state {
     display: flex;
     align-items: center;
-    padding: var(--gap-2) calc(var(--gap-2) + var(--gap-0_5));
+    padding: var(--gap-2) calc(var(--gap-2) + var(--gap-0-5));
     color: var(--color-base-white);
     opacity: 0.7;
 }
 
-.stateError {
+.state.error {
     color: var(--color-error-400, #f87171);
     opacity: 1;
 }
 
-.optionIcon {
+.option-icon {
     width: 1.25rem;
     height: 1.25rem;
     color: var(--color-gray-900);

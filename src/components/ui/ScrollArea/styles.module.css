@@ -19,7 +19,7 @@
     display: flex;
     touch-action: none;
     user-select: none;
-    padding: var(--gap-0_5);
+    padding: var(--gap-0-5);
     opacity: 0;
     transition: opacity 0.15s ease-in-out;
 }
@@ -30,20 +30,20 @@
 }
 
 .scrollbar[data-orientation="vertical"] {
-    width: calc(var(--gap-2) + var(--gap-0_5));
+    width: calc(var(--gap-2) + var(--gap-0-5));
     height: 100%;
 }
 
 .scrollbar[data-orientation="horizontal"] {
     flex-direction: column;
-    height: calc(var(--gap-2) + var(--gap-0_5));
+    height: calc(var(--gap-2) + var(--gap-0-5));
     width: 100%;
 }
 
 .thumb {
     flex: 1;
     width: 6px;
-    background-color: hsla(0, 0%, 100%, 0.7);
+    background-color: hsl(var(--color-hsl-white) / 0.7);
     opacity: 0.15;
     border-radius: var(--radius-full);
     transition:

@@ -19,7 +19,7 @@
     border-radius: 1rem;
 }
 
-.sectionContent {
+.section-content {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -32,17 +32,17 @@
     flex-wrap: wrap;
 }
 
-.rowLabel {
+.row-label {
     min-width: 7.5rem;
     opacity: 0.6;
 }
 
-.optionList {
+.option-list {
     width: 16rem;
     height: 12rem;
 }
 
-.optionListInner {
+.option-list-inner {
     display: flex;
     flex-direction: column;
 }

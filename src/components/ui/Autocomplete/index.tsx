@@ -1,3 +1,5 @@
+'use mo memo';
+
 import type { LabelValueOption } from '@/lib/types';
 import type { AutocompleteProps } from './types';
 import React from 'react';
@@ -102,7 +104,7 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({
                 >
                     <BaseAutocomplete.Popup render={<PopupWrapper />} className={s.popup}>
                         {showError ? (
-                            <Typography variant="text-sm" className={clsx(s.state, s.stateError)}>
+                            <Typography variant="text-sm" className={clsx(s.state, s.error)}>
                                 {errorLabel}
                             </Typography>
                         ) : null}
@@ -120,8 +122,8 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({
                             <BaseAutocomplete.List className={s.list}>
                                 <ScrollArea
                                     viewportRef={scrollRef}
-                                    className={s.scrollArea}
-                                    viewportClassName={s.scrollAreaViewport}
+                                    className={s['scroll-area']}
+                                    viewportClassName={s['scroll-area-viewport']}
                                 >
                                     <div
                                         style={{
@@ -149,7 +151,7 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({
                                                     checked={option.value === value}
                                                     leftAddon={
                                                         OptionIcon ? (
-                                                            <OptionIcon className={s.optionIcon} aria-hidden />
+                                                            <OptionIcon className={s['option-icon']} aria-hidden />
                                                         ) : null
                                                     }
                                                     render={

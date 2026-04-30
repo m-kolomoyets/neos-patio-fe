@@ -7,7 +7,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: calc(var(--gap-1) + var(--gap-0_5));
+    gap: calc(var(--gap-1) + var(--gap-0-5));
     cursor: pointer;
     color: var(--color-base-white);
     font-weight: 500;
@@ -36,7 +36,7 @@
 }
 
 .wrap[data-button-size="xl"] {
-    padding: calc(var(--gap-3) + var(--gap-0_5));
+    padding: calc(var(--gap-3) + var(--gap-0-5));
     min-height: 3rem;
     font-size: 1rem;
     line-height: 1.5rem;
@@ -50,7 +50,7 @@
 }
 
 .wrap[data-button-size="md"] {
-    padding: calc(var(--gap-2) + var(--gap-0_5));
+    padding: calc(var(--gap-2) + var(--gap-0-5));
     min-height: 2.5rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
@@ -77,9 +77,13 @@
 
 .wrap[data-button-variant="surface"]:not(:disabled):is(:hover, [data-popup-open], [data-state="open"]) {
     background:
-        radial-gradient(ellipse 59.72% 55.84% at 50% 88.89%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%),
-        linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-        linear-gradient(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.04));
+        radial-gradient(
+            ellipse 59.72% 55.84% at 50% 88.89%,
+            hsl(var(--color-hsl-white) / 0.2) 0%,
+            hsl(var(--color-hsl-white) / 0) 100%
+        ),
+        linear-gradient(hsl(var(--color-hsl-white) / 0.2), hsl(var(--color-hsl-white) / 0.2)),
+        linear-gradient(hsl(var(--color-hsl-black) / 0.04), hsl(var(--color-hsl-black) / 0.04));
     background-blend-mode: normal, normal, luminosity;
     overflow: hidden;
     backdrop-filter: blur(24px);
