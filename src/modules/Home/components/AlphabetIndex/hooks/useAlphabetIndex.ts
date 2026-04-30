@@ -1,6 +1,7 @@
 import type { PatioLettersFilters } from '@/services/patios/queryKeys';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { usePatioLetters } from '@/services/patios/queries';
+import { useQuery } from '@tanstack/react-query';
+import { getPatioLettersQueryOptions } from '@/services/patios/queries';
 import { HOME_SCROLL_ROOT_SELECTOR } from '../../../constants';
 import { ALPHABET, SCROLL_SUPPRESS_MS } from '../constants';
 
@@ -18,7 +19,7 @@ export type UseAlphabetIndexResult = {
 };
 
 export const useAlphabetIndex = (filters: PatioLettersFilters): UseAlphabetIndexResult => {
-    const { data, isLoading } = usePatioLetters(filters);
+    const { data, isLoading } = useQuery(getPatioLettersQueryOptions(filters));
 
     const enabledLetters = useMemo(() => {
         return new Set(data ?? []);

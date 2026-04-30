@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ChevronLeftIcon from '@/icons/chevrone-left_24.svg?react';
 import ChevronRightIcon from '@/icons/chevrone-right_24.svg?react';
+import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { useStickyStuck } from '@/hooks/useStickyStuck';
-import { useFeaturedPatios } from '@/services/patios/queries';
+import { getFeaturedPatiosQueryOptions } from '@/services/patios/queries';
 import { Button } from '@/components/ui/Button';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Typography } from '@/components/ui/Typography';
@@ -14,7 +15,7 @@ import s from './styles.module.css';
 const PARALLAX_RANGE = 40;
 
 export const FeaturedPatios: React.FC = () => {
-    const { data, isLoading } = useFeaturedPatios();
+    const { data, isLoading } = useQuery(getFeaturedPatiosQueryOptions());
     const viewportRef = useRef<HTMLDivElement | null>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(false);
