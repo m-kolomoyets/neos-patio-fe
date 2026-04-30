@@ -76,14 +76,7 @@
 }
 
 .wrap[data-button-variant="surface"]:not(:disabled):is(:hover, [data-popup-open], [data-state="open"]) {
-    background:
-        radial-gradient(
-            ellipse 59.72% 55.84% at 50% 88.89%,
-            hsl(var(--color-hsl-white) / 0.2) 0%,
-            hsl(var(--color-hsl-white) / 0) 100%
-        ),
-        linear-gradient(hsl(var(--color-hsl-white) / 0.2), hsl(var(--color-hsl-white) / 0.2)),
-        linear-gradient(hsl(var(--color-hsl-black) / 0.04), hsl(var(--color-hsl-black) / 0.04));
+    background: var(--gradient-bottom-shine-primary);
     background-blend-mode: normal, normal, luminosity;
     overflow: hidden;
     backdrop-filter: blur(24px);

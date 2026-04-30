@@ -71,10 +71,7 @@
 }
 
 .wrap:not(:has(input:disabled)):hover {
-    background:
-        radial-gradient(ellipse 56.05% 54.1% at 50% 100%, hsl(0deg 0% 71.6% / 0.65) 0%, hsl(0deg 0% 36.9% / 0) 100%),
-        linear-gradient(hsl(var(--color-hsl-white) / 0.08), hsl(var(--color-hsl-white) / 0.08)),
-        linear-gradient(hsl(var(--color-hsl-black) / 0.4), hsl(var(--color-hsl-black) / 0.4));
+    background: var(--gradient-bottom-shine-secondary);
     background-blend-mode: color-dodge, normal, luminosity;
     backdrop-filter: blur(24px);
 }

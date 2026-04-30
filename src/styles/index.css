@@ -100,9 +100,21 @@
             hsl(var(--color-hsl-white) / 0.9) 100.63%
         );
 
-    /* Gaps */
+    /* Gradients */
+    --gradient-bottom-shine-primary:
+        radial-gradient(
+            ellipse 59.72% 55.84% at 50% 88.89%,
+            hsl(var(--color-hsl-white) / 0.2) 0%,
+            hsl(var(--color-hsl-white) / 0) 100%
+        ),
+        linear-gradient(hsl(var(--color-hsl-white) / 0.2), hsl(var(--color-hsl-white) / 0.2)),
+        linear-gradient(hsl(var(--color-hsl-black) / 0.04), hsl(var(--color-hsl-black) / 0.04));
+    --gradient-bottom-shine-secondary:
+        radial-gradient(ellipse 56.05% 54.1% at 50% 100%, hsl(0deg 0% 71.6% / 0.65) 0%, hsl(0deg 0% 36.9% / 0) 100%),
+        linear-gradient(hsl(var(--color-hsl-white) / 0.08), hsl(var(--color-hsl-white) / 0.08)),
+        linear-gradient(hsl(var(--color-hsl-black) / 0.4), hsl(var(--color-hsl-black) / 0.4));
 
-    /* Gap variables, using rems for spacing scale */
+    /* Gaps */
     --gap-px: 1px;
     --gap-0-5: 0.125rem;
     --gap-1: 0.25rem;
