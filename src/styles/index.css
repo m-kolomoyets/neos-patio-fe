@@ -185,7 +185,8 @@ body {
 
 body,
 html {
-    background-color: var(--color-base-white);
+    /* TODO: Maybe change to some other value */
+    background-color: skyblue;
 }
 
 #root {

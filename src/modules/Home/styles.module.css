@@ -6,11 +6,6 @@
     display: flex;
     flex-direction: column;
     isolation: isolate;
-    background-image: url("/images/bg-secondary.webp");
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
     padding-block: var(--home-content-offset-y);
 }
 
