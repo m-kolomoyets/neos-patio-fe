@@ -14,7 +14,7 @@ export const FeaturedPatioCard: React.FC<Props> = ({ patio }) => {
     return (
         <article className={s.wrap} data-card-id={patio.id}>
             <AspectRatio ratio={381 / 408} className={s.media}>
-                <img className={s.image} src={patio.thumbnailUrl} alt={patio.name} loading="lazy" />
+                <img className={s.image} src={patio.previewHighUrl} alt={patio.name} loading="lazy" />
             </AspectRatio>
             <footer className={s.content}>
                 <div className={s.titles}>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 
 type Options = {
     enabled?: boolean;
@@ -18,15 +18,15 @@ const isScrollStateSupported =
  * No-op when the browser supports `container-type: scroll-state` — use the native CSS feature instead.
  */
 export const useStickyStuck = ({ enabled = true, rootSelector = null }: Options = {}) => {
-    const [node, setNode] = useState<Element | null>(null);
-    const [stuck, setStuck] = useState(false);
+    const [node, setNode] = React.useState<Element | null>(null);
+    const [stuck, setStuck] = React.useState(false);
     const skip = !enabled || isScrollStateSupported;
 
-    const ref = useCallback((next: Element | null) => {
+    const ref = React.useCallback((next: Element | null) => {
         return setNode(next);
     }, []);
 
-    useEffect(() => {
+    React.useEffect(() => {
         if (skip || !node) return;
 
         const root = rootSelector ? document.querySelector(rootSelector) : null;

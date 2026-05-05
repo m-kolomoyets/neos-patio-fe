@@ -22,13 +22,15 @@ export type Patio = {
     country: string;
     continent: Continent;
     type: PatioType;
-    thumbnailUrl: string;
-    videoUrl?: string;
     author: string;
     createdAt: string;
     popularity: number;
     coords: { lat: number; lng: number };
     isFeatured: boolean;
+    videoUrl?: string;
+    previewLowUrl?: string;
+    previewHighUrl: string;
+    previewBackgroundUrl: string;
 };
 
 export type ListPatiosParams = {

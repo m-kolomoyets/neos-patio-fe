@@ -39,7 +39,7 @@ export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
             onKeyDown={handleKeyDown}
         >
             <div className={s.media}>
-                <img className={s.image} src={patio.thumbnailUrl} alt={patio.name} loading="lazy" />
+                <img className={s.image} src={patio.previewHighUrl} alt={patio.name} loading="lazy" />
             </div>
             <div className={s.body}>
                 <header className={s.top}>
