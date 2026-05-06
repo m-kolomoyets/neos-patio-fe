@@ -4,7 +4,8 @@ export const PATIOS_FIXTURES: Patio[] = [
     {
         id: '1',
         name: 'Mont Saint Michel',
-        videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Mont%20Saint%20Michel-parallax.mp4',
+        videoUrl: '/videos/Mont_Saint_Michel-parallax_optimized.mp4',
+        // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Mont%20Saint%20Michel-parallax.mp4',
         previewLowUrl: 'https://patiostorage.blob.core.windows.net/assets/Mont%20Saint%20Michel-preview-low.jpg',
         previewHighUrl: 'https://patiostorage.blob.core.windows.net/assets/Mont%20Saint%20Michel-preview.jpg',
         previewBackgroundUrl: 'https://patiostorage.blob.core.windows.net/assets/Mont%20Saint%20Michel.jpg',
@@ -19,7 +20,7 @@ export const PATIOS_FIXTURES: Patio[] = [
     },
     {
         id: '2',
-        name: '/National Gallery of Denmark',
+        name: 'National Gallery of Denmark',
         videoUrl: 'https://patiostorage.blob.core.windows.net/assets/National Gallery of Denmark-parallax.mp4',
         previewLowUrl: 'https://patiostorage.blob.core.windows.net/assets/National Gallery of Denmark-preview-low.jpg',
         previewHighUrl: 'https://patiostorage.blob.core.windows.net/assets/National Gallery of Denmark-preview.jpg',

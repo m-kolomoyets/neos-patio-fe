@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { Container } from '@/components/ui/Container';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { HOME_SCROLL_ROOT_CLASS } from './constants';
+import { ActionBar } from './components/ActionsBar';
 import { AlphabetIndex } from './components/AlphabetIndex';
 import { FeaturedPatios } from './components/FeaturedPatios';
 import HomeBackground from './components/HomeBackground';
@@ -22,6 +23,7 @@ const Home: React.FC = () => {
                         <PatioLibrary />
                     </ScrollArea>
                     <AlphabetIndex />
+                    <ActionBar />
                 </main>
             </Container>
         </div>

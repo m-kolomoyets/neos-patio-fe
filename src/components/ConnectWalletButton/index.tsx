@@ -25,6 +25,7 @@ export const ConnectWalletButton: React.FC = () => {
                                 userSelect: 'none',
                             },
                         })}
+                        className={s.wrap}
                     >
                         {(() => {
                             if (!connected) {

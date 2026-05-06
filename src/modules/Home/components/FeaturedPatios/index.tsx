@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ChevronLeftIcon from '@/icons/chevrone-left_24.svg?react';
 import ChevronRightIcon from '@/icons/chevrone-right_24.svg?react';
 import { useQuery } from '@tanstack/react-query';
@@ -12,34 +12,30 @@ import { HOME_SCROLL_ROOT_SELECTOR } from '../../constants';
 import { FeaturedPatioCard } from '../FeaturedPatioCard';
 import s from './styles.module.css';
 
-const PARALLAX_RANGE = 40;
+const isSlowConnection = (): boolean => {
+    if (typeof navigator === 'undefined') return false;
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    if (!conn) return false;
+    if (conn.saveData) return true;
+    return conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g';
+};
 
 export const FeaturedPatios: React.FC = () => {
     const { data, isLoading } = useQuery(getFeaturedPatiosQueryOptions());
     const viewportRef = useRef<HTMLDivElement | null>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(false);
+    const [intersectingIds, setIntersectingIds] = useState<ReadonlySet<string>>(() => {
+        return new Set();
+    });
     const rafIdRef = useRef<number | null>(null);
     const { ref: headerRef, flag: isHeaderStuck } = useStickyStuck({
         rootSelector: HOME_SCROLL_ROOT_SELECTOR,
     });
 
-    const updateParallax = useCallback(() => {
+    const updateScrollEdges = useCallback(() => {
         const viewport = viewportRef.current;
         if (!viewport) return;
-
-        const viewportRect = viewport.getBoundingClientRect();
-        const viewportCenter = viewportRect.left + viewportRect.width / 2;
-
-        const cards = viewport.querySelectorAll<HTMLElement>('[data-card-id]');
-        cards.forEach((card) => {
-            const rect = card.getBoundingClientRect();
-            const cardCenter = rect.left + rect.width / 2;
-            const progress = (cardCenter - viewportCenter) / viewportRect.width;
-            const clamped = Math.max(-1, Math.min(1, progress));
-            card.style.setProperty('--parallax-x', String(clamped * -PARALLAX_RANGE));
-        });
-
         setCanScrollLeft(viewport.scrollLeft > 4);
         setCanScrollRight(viewport.scrollLeft + viewport.clientWidth < viewport.scrollWidth - 4);
     }, []);
@@ -48,17 +44,16 @@ export const FeaturedPatios: React.FC = () => {
         if (rafIdRef.current !== null) return;
         rafIdRef.current = requestAnimationFrame(() => {
             rafIdRef.current = null;
-            updateParallax();
+            updateScrollEdges();
         });
-    }, [updateParallax]);
+    }, [updateScrollEdges]);
 
     useEffect(() => {
-        updateParallax();
-
+        updateScrollEdges();
         const viewport = viewportRef.current;
         if (!viewport) return;
         const onResize = () => {
-            updateParallax();
+            return updateScrollEdges();
         };
         viewport.addEventListener('scroll', handleScroll, { passive: true });
         window.addEventListener('resize', onResize);
@@ -67,15 +62,67 @@ export const FeaturedPatios: React.FC = () => {
             window.removeEventListener('resize', onResize);
             if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
         };
-    }, [updateParallax, handleScroll, data]);
+    }, [updateScrollEdges, handleScroll, data]);
+
+    useEffect(() => {
+        const viewport = viewportRef.current;
+        if (!viewport || !data?.length) return;
+        if (isSlowConnection()) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                setIntersectingIds((prev) => {
+                    const next = new Set(prev);
+                    let changed = false;
+                    for (const entry of entries) {
+                        const id = (entry.target as HTMLElement).dataset.cardId;
+                        if (!id) continue;
+                        if (entry.isIntersecting) {
+                            if (!next.has(id)) {
+                                next.add(id);
+                                changed = true;
+                            }
+                        } else if (next.has(id)) {
+                            next.delete(id);
+                            changed = true;
+                        }
+                    }
+                    return changed ? next : prev;
+                });
+            },
+            { root: viewport, threshold: 0 }
+        );
+
+        const cards = viewport.querySelectorAll<HTMLElement>('[data-card-id]');
+        cards.forEach((card) => {
+            return observer.observe(card);
+        });
+        return () => {
+            return observer.disconnect();
+        };
+    }, [data]);
+
+    const prefetchIds = useMemo<ReadonlySet<string>>(() => {
+        if (!data?.length || intersectingIds.size === 0) return new Set();
+        const result = new Set<string>();
+        const indexById = new Map(
+            data.map((p, i) => {
+                return [p.id, i];
+            })
+        );
+        for (const id of intersectingIds) {
+            const idx = indexById.get(id);
+            if (idx === undefined) continue;
+            result.add(id);
+            if (idx > 0) result.add(data[idx - 1].id);
+            if (idx < data.length - 1) result.add(data[idx + 1].id);
+        }
+        return result;
+    }, [data, intersectingIds]);
 
     const scrollByPage = useCallback((direction: 1 | -1) => {
         const viewport = viewportRef.current;
-
-        if (!viewport) {
-            return;
-        }
-
+        if (!viewport) return;
         const cards = Array.from(viewport.querySelectorAll<HTMLElement>('[data-card-id]'));
         const viewportLeft = viewport.getBoundingClientRect().left;
         const cardOffsets = cards
@@ -86,10 +133,7 @@ export const FeaturedPatios: React.FC = () => {
                 return a - b;
             });
 
-        if (cardOffsets.length === 0) {
-            return;
-        }
-
+        if (cardOffsets.length === 0) return;
         const current = viewport.scrollLeft;
         const epsilon = 1;
         const target =
@@ -103,13 +147,19 @@ export const FeaturedPatios: React.FC = () => {
         viewport.scrollTo({ left: target, behavior: 'smooth' });
     }, []);
 
+    const handleSkipButtonClick = () => {
+        document.getElementById('search-bar-trigger')?.focus();
+    };
+
     return (
         <section className={s.wrap}>
             <div ref={headerRef} className={s.header} data-stuck={isHeaderStuck || undefined}>
                 <Typography variant="display-xs" className={s.title} render={<h2 />}>
                     Featured Patios
                 </Typography>
-                <span className={s.background} aria-hidden />
+                <Button className={s['skip-button']} variant="brand" size="md" onClick={handleSkipButtonClick}>
+                    Go to search bar
+                </Button>
             </div>
             <ScrollArea
                 className={s.scroll}
@@ -123,7 +173,13 @@ export const FeaturedPatios: React.FC = () => {
                               return <div key={i} className={s['skeleton-card']} />;
                           })
                         : data?.map((patio) => {
-                              return <FeaturedPatioCard key={patio.id} patio={patio} />;
+                              return (
+                                  <FeaturedPatioCard
+                                      key={patio.id}
+                                      patio={patio}
+                                      shouldPrefetch={prefetchIds.has(patio.id)}
+                                  />
+                              );
                           })}
                 </div>
                 <Button

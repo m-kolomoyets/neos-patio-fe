@@ -1,6 +1,4 @@
 .wrap {
-    --parallax-x: 0;
-
     position: relative;
     flex: 0 0 calc((100cqi - var(--gap-3) * 2) / 3);
     border-radius: var(--radius-4xl);
@@ -45,14 +43,52 @@
     border-radius: var(--radius-2xl);
 }
 
-.image {
-    top: 0;
-    left: -10%;
+.stack {
+    --tx: 0;
+    --ty: 0;
+
+    position: absolute;
+    inset: 0;
+    transform: translate(calc(var(--tx) * 1px), calc(var(--ty) * 1px)) scale(1.15);
+    will-change: transform;
+    pointer-events: none;
+}
+
+.layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
     height: 100%;
     object-fit: cover;
-    transform: translateX(calc(var(--parallax-x) * 2px)) scale(1.2);
-    transition: transform 80ms linear;
     pointer-events: none;
+}
+
+.img-low {
+    z-index: 1;
+    opacity: 1;
+    transition: opacity 200ms ease-out;
+    filter: blur(8px);
+    transform: scale(1.05);
+}
+
+.img-low[data-faded] {
+    opacity: 0;
+}
+
+.img-high {
+    z-index: 2;
+    opacity: 1;
+    transition: opacity 100ms ease-out;
+}
+
+.video {
+    z-index: 3;
+    opacity: 0;
+    transition: opacity 100ms ease-out;
+}
+
+.video[data-active] {
+    opacity: 1;
 }
 
 .content {
@@ -78,7 +114,7 @@
 }
 
 .subtitle {
-    color: rgb(255 255 255 / 0.7);
+    color: hsl(var(--color-hsl-white) / 0.7);
 }
 
 .open-button {

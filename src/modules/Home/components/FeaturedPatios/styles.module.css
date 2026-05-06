@@ -60,6 +60,20 @@
     font-weight: 600;
 }
 
+.skip-button {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    cursor: default;
+}
+
+.skip-button:focus {
+    opacity: 1;
+    cursor: pointer;
+}
+
 .control-button {
     position: absolute;
     top: 45%;

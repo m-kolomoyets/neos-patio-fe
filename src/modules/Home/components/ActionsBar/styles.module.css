@@ -1,0 +1,38 @@
+.wrap {
+    position: absolute;
+    bottom: -24px;
+    width: 400px;
+    left: calc(50% - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-4);
+    border-radius: var(--radius-full);
+    padding: var(--gap-2);
+}
+
+.wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--stroke-surface);
+    mask:
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.logo {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+}
+
+.actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-2);
+}

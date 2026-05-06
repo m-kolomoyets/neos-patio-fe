@@ -34,6 +34,7 @@
         "@tanstack/react-virtual": "^3.13.23",
         "clsx": "^2.1.1",
         "ky": "^1.14.2",
+        "motion": "^12.38.0",
         "react": "^19.2.5",
         "react-dom": "^19.2.5",
         "react-intersection-observer": "^10.0.3",
