@@ -29,6 +29,8 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({
     placeholder,
     disabled,
     className,
+    size,
+    isRounded,
 }) => {
     const scrollRef = React.useRef<HTMLDivElement>(null);
     const wrapperRef = React.useRef<HTMLDivElement>(null);
@@ -83,7 +85,15 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({
             onOpenChange={setOpen}
         >
             <BaseAutocomplete.Input
-                render={<Input type="search" leftAddon={<SearchIcon aria-hidden />} wrapperRef={wrapperRef} />}
+                render={
+                    <Input
+                        type="search"
+                        leftAddon={<SearchIcon aria-hidden />}
+                        wrapperRef={wrapperRef}
+                        size={size}
+                        isRounded={isRounded}
+                    />
+                }
                 placeholder={placeholder}
                 className={className}
                 disabled={disabled}

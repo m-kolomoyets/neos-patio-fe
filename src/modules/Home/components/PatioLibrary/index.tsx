@@ -25,7 +25,11 @@ const SkeletonGrid: React.FC<{ count: number }> = ({ count }) => {
 export const PatioLibrary: React.FC = () => {
     const { filters } = usePatioFilters();
     const { mode, items, groups, isLoading, isError, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
-        useGroupedPatios(filters);
+        useGroupedPatios({
+            ...filters,
+            // NOTE: Search should work for search autocomplete only
+            q: '',
+        });
     const { ref: headerRef, flag: isHeaderStuck } = useStickyStuck({
         rootSelector: HOME_SCROLL_ROOT_SELECTOR,
     });

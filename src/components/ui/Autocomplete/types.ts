@@ -1,4 +1,5 @@
 import type { LabelValueOption } from '@/lib/types';
+import type { InputSize } from '../Input/types';
 
 export type AutocompleteProps = {
     /**
@@ -48,4 +49,15 @@ export type AutocompleteProps = {
     placeholder?: string;
     disabled?: boolean;
     className?: string;
+
+    /**
+     * Visual size of the input. Forwarded to the inner `Input`.
+     * @default 'default'
+     */
+    size?: InputSize;
+    /**
+     * Whether the input wrapper uses a fully rounded (pill) radius.
+     * @default false
+     */
+    isRounded?: boolean;
 };

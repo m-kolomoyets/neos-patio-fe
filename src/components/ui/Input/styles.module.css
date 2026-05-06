@@ -24,10 +24,12 @@
     backdrop-filter: blur(20px);
     box-shadow: var(--shadow);
     overflow: hidden;
+    will-change: background, box-shadow;
     transition:
         color 0.2s ease-in-out,
         background 0.2s ease-in-out,
-        opacity 0.2s ease-in-out;
+        opacity 0.2s ease-in-out,
+        backdrop-filter 0.2s ease-in-out;
 }
 
 .wrap[data-size="sm"] {
@@ -70,7 +72,7 @@
     border-radius: var(--radius-full);
 }
 
-.wrap:not(:has(input:disabled)):hover {
+.wrap:not(:has(input:disabled), [data-variant="surface"]):hover {
     background: var(--gradient-bottom-shine-secondary);
     background-blend-mode: color-dodge, normal, luminosity;
     backdrop-filter: blur(24px);
@@ -81,6 +83,16 @@
     opacity: 0.5;
     cursor: not-allowed;
     box-shadow: none;
+}
+
+.wrap[data-variant="surface"] {
+    background: var(--surface-regular);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow);
+}
+
+.wrap[data-variant="surface"]:not(:has(input:disabled)):hover {
+    backdrop-filter: blur(24px);
 }
 
 .wrap > input {
