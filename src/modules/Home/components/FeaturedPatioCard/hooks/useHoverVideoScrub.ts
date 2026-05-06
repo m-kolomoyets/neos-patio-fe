@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 const MAX_Y_PX = 24;
 const HOVER_LERP = 0.15;
-const LEAVE_DURATION_MS = 250;
+const TRANSITION_DURATION_MS = 500;
 const TIME_EPSILON = 0.01;
 const Y_EPSILON = 0.5;
 
@@ -64,6 +64,9 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
     const leaveStartRef = useRef<number | null>(null);
     const leaveFromTimeRef = useRef(0);
     const leaveFromYRef = useRef(0);
+    const enterStartRef = useRef<number | null>(null);
+    const enterFromYRef = useRef(0);
+    const enterFromTimeRef = useRef(0);
     const phaseRef = useRef<Phase>('idle');
 
     const setPhaseBoth = useCallback((p: Phase) => {
@@ -95,14 +98,33 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
             const tx = targetXRef.current;
             const ty = targetYRef.current * MAX_Y_PX;
 
-            currentYRef.current += (ty - currentYRef.current) * HOVER_LERP;
-            if (Math.abs(ty - currentYRef.current) < Y_EPSILON) currentYRef.current = ty;
+            const enterStart = enterStartRef.current;
+            let easedF = 1;
+            if (enterStart !== null) {
+                const elapsed = performance.now() - enterStart;
+                const t = Math.min(1, elapsed / TRANSITION_DURATION_MS);
+                easedF = easeOutCubic(t);
+                if (t >= 1) enterStartRef.current = null;
+            }
+
+            if (enterStart !== null) {
+                currentYRef.current = enterFromYRef.current + (ty - enterFromYRef.current) * easedF;
+            } else {
+                currentYRef.current += (ty - currentYRef.current) * HOVER_LERP;
+                if (Math.abs(ty - currentYRef.current) < Y_EPSILON) currentYRef.current = ty;
+            }
             writeStackY(currentYRef.current);
 
             if (video && metadataReadyRef.current && Number.isFinite(video.duration) && video.duration > 0) {
                 const targetTime = tx * video.duration;
-                currentTimeRef.current += (targetTime - currentTimeRef.current) * HOVER_LERP;
-                if (Math.abs(targetTime - currentTimeRef.current) < TIME_EPSILON) currentTimeRef.current = targetTime;
+                if (enterStart !== null) {
+                    currentTimeRef.current =
+                        enterFromTimeRef.current + (targetTime - enterFromTimeRef.current) * easedF;
+                } else {
+                    currentTimeRef.current += (targetTime - currentTimeRef.current) * HOVER_LERP;
+                    if (Math.abs(targetTime - currentTimeRef.current) < TIME_EPSILON)
+                        currentTimeRef.current = targetTime;
+                }
                 if (!video.seeking) {
                     try {
                         video.currentTime = currentTimeRef.current;
@@ -125,7 +147,7 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
             const start = leaveStartRef.current;
             if (start === null) return;
             const elapsed = performance.now() - start;
-            const t = Math.min(1, elapsed / LEAVE_DURATION_MS);
+            const t = Math.min(1, elapsed / TRANSITION_DURATION_MS);
             const eased = easeOutCubic(t);
 
             const y = leaveFromYRef.current * (1 - eased);
@@ -171,6 +193,9 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
             leaveStartRef.current = null;
             stopRaf();
             seedFromEvent(e);
+            enterFromYRef.current = currentYRef.current;
+            enterFromTimeRef.current = currentTimeRef.current;
+            enterStartRef.current = performance.now();
             if (!shouldMountVideo) setShouldMountVideo(true);
             if (phaseRef.current === 'broken') return;
             if (metadataReadyRef.current) {
@@ -198,6 +223,7 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
         (e: React.PointerEvent<HTMLElement>) => {
             if (!enabled || e.pointerType !== 'mouse') return;
             hoveredRef.current = false;
+            enterStartRef.current = null;
             stopRaf();
             if (phaseRef.current === 'broken') return;
             leaveFromTimeRef.current = currentTimeRef.current;
