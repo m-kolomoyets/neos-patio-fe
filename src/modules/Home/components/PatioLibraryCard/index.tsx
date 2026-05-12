@@ -4,6 +4,7 @@ import MapPinIcon from '@/icons/map-pin_24.svg?react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
+import { DepthImage } from '@/components/ui/DepthImage';
 import { Typography } from '@/components/ui/Typography';
 import { useHomeNavigate } from '../../hooks/useHomeRouteApi';
 import s from './styles.module.css';
@@ -39,7 +40,8 @@ export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
             onKeyDown={handleKeyDown}
         >
             <div className={s.media}>
-                <img className={s.image} src={patio.previewHighUrl} alt={patio.name} loading="lazy" />
+                {/* <img className={s.image} src={patio.previewHighUrl} alt={patio.name} loading="lazy" /> */}
+                <DepthImage className={s.image} src={patio.previewHighUrl} alt={patio.name} loading="lazy" />
             </div>
             <div className={s.body}>
                 <header className={s.top}>
