@@ -3,6 +3,7 @@ import ArrowTopRight24Icon from '@/icons/arrow-top-right_24.svg?react';
 import MapPinIcon from '@/icons/map-pin_24.svg?react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
+import { useSpotlight } from '@/hooks/useSpotlight';
 import { Button } from '@/components/ui/Button';
 import { DepthImage } from '@/components/ui/DepthImage';
 import { Typography } from '@/components/ui/Typography';
@@ -15,6 +16,7 @@ type Props = {
 
 export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
     const navigate = useHomeNavigate();
+    const spotlightRef = useSpotlight<HTMLElement>();
 
     const navigateToPatio = () => {
         navigate({
@@ -33,6 +35,7 @@ export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
 
     return (
         <article
+            ref={spotlightRef}
             className={s.wrap}
             data-card-id={patio.id}
             role="button"

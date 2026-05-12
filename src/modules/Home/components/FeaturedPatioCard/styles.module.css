@@ -1,4 +1,6 @@
 .wrap {
+    --spot-radius: 200px;
+
     position: relative;
     flex: 0 0 calc((100cqi - var(--gap-3) * 2) / 3);
     border-radius: var(--radius-4xl);
@@ -37,10 +39,38 @@
     opacity: 1;
 }
 
+.wrap::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+        circle var(--spot-radius, 360px) at var(--spot-x, 50%) var(--spot-y, 50%),
+        hsl(var(--color-hsl-white) / 0.22),
+        transparent 70%
+    );
+    mix-blend-mode: overlay;
+    opacity: 0;
+    transition: opacity 200ms ease;
+    z-index: 1;
+}
+
+.wrap[data-spot-active="true"]::after {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wrap::after {
+        display: none;
+    }
+}
+
 .media {
     overflow: hidden;
     width: 100%;
     border-radius: var(--radius-2xl);
+    z-index: 2;
 }
 
 .stack {

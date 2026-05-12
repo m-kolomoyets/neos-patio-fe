@@ -1,8 +1,9 @@
 import type { Patio } from '@/services/patios/types';
-import { memo, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import ArrowTopRight24Icon from '@/icons/arrow-top-right_24.svg?react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
+import { useSpotlight } from '@/hooks/useSpotlight';
 import { AspectRatio } from '@/components/ui/AspectRatio';
 import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
@@ -34,11 +35,20 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldPrefetch = false 
         onVideoError,
     } = useHoverVideo({ videoUrl: patio.videoUrl, shouldPrefetch });
 
+    const spotlightRef = useSpotlight<HTMLElement>();
+    const setRootRef = useCallback(
+        (el: HTMLElement | null) => {
+            rootRef(el);
+            spotlightRef(el);
+        },
+        [rootRef, spotlightRef]
+    );
+
     const showVideoLayer = phase === 'active' || phase === 'rewinding';
 
     return (
         <article
-            ref={rootRef}
+            ref={setRootRef}
             className={s.wrap}
             data-card-id={patio.id}
             data-phase={phase}
