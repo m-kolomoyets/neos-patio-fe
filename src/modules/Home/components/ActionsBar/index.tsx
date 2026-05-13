@@ -51,7 +51,7 @@ export const ActionBar: React.FC = () => {
                 {isSearchOpened ? (
                     <motion.div
                         key="search"
-                        className={s.searchState}
+                        className={s['search-state']}
                         variants={stateVariants}
                         initial="initial"
                         animate="animate"
@@ -59,7 +59,7 @@ export const ActionBar: React.FC = () => {
                         transition={stateTransition}
                     >
                         <PatioAutocomplete
-                            className={s.autocompleteInput}
+                            className={s['autocomplete-input']}
                             searchValue={query}
                             onSearchValueChange={setQuery}
                             options={patios ?? []}
@@ -72,7 +72,7 @@ export const ActionBar: React.FC = () => {
                 ) : (
                     <motion.div
                         key="default"
-                        className={clsx(s.defaultState, 'surface-regular')}
+                        className={clsx(s['default-state'], 'surface-regular')}
                         variants={stateVariants}
                         initial="initial"
                         animate="animate"

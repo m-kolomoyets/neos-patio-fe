@@ -1,6 +1,8 @@
 .wrap {
     --spot-radius: 200px;
+
     /* --image-width: 110px; */
+
     --image-width: 150px;
 
     position: relative;
@@ -154,8 +156,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: normal;
-    word-break: break-word;
-    word-wrap: break-word;
+    overflow-wrap: break-word;
     hyphens: auto;
 }
 
