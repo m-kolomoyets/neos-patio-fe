@@ -7,12 +7,8 @@ import { useSpotlight } from '@/hooks/useSpotlight';
 import { AspectRatio } from '@/components/ui/AspectRatio';
 import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
-import { useHoverVideoAutoplay } from './hooks/useHoverVideoAutoplay';
 import { useHoverVideoScrub } from './hooks/useHoverVideoScrub';
 import s from './styles.module.css';
-
-const SCRUB_ENABLED = import.meta.env.VITE_FEATURED_CURSOR_SCRUB === 'true';
-const useHoverVideo = SCRUB_ENABLED ? useHoverVideoScrub : useHoverVideoAutoplay;
 
 type Props = {
     patio: Patio;
@@ -33,7 +29,7 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldPrefetch = false 
         onPointerLeave,
         onVideoLoadedMetadata,
         onVideoError,
-    } = useHoverVideo({ videoUrl: patio.videoUrl, shouldPrefetch });
+    } = useHoverVideoScrub({ videoUrl: patio.videoUrl, shouldPrefetch });
 
     const spotlightRef = useSpotlight<HTMLElement>();
     const setRootRef = useCallback(
@@ -82,7 +78,7 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldPrefetch = false 
                             className={clsx(s.layer, s.video)}
                             src={videoSrc}
                             muted
-                            loop={!SCRUB_ENABLED}
+                            loop={false}
                             playsInline
                             preload="auto"
                             disablePictureInPicture
