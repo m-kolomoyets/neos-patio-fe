@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Typography } from '@/components/ui/Typography';
 import { HOME_SCROLL_ROOT_SELECTOR } from '../../constants';
+import { useCarouselParallax } from './hooks/useCarouselParallax';
 import { FeaturedPatioCard } from '../FeaturedPatioCard';
 import s from './styles.module.css';
 
@@ -32,6 +33,8 @@ export const FeaturedPatios: React.FC = () => {
     const { ref: headerRef, flag: isHeaderStuck } = useStickyStuck({
         rootSelector: HOME_SCROLL_ROOT_SELECTOR,
     });
+
+    useCarouselParallax({ viewportRef, dataKey: data });
 
     const updateScrollEdges = useCallback(() => {
         const viewport = viewportRef.current;

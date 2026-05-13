@@ -53,7 +53,7 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldPrefetch = false 
             onPointerLeave={onPointerLeave}
         >
             <AspectRatio ratio={381 / 408} className={s.media}>
-                <div ref={stackRef} className={s.stack}>
+                <div ref={stackRef} className={s.stack} data-stack>
                     {patio.previewLowUrl ? (
                         <img
                             className={clsx(s.layer, s['img-low'])}
