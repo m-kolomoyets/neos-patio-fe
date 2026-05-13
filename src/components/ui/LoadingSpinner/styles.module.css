@@ -1,10 +1,13 @@
 .wrap {
-    --loading-spinner-size: 2rem;
-
-    width: var(--loading-spinner-size);
-    height: var(--loading-spinner-size);
-    flex-shrink: 0;
-    animation: spin 1s linear infinite;
+    .spinner {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: conic-gradient(from 90deg, transparent 0deg, white 360deg);
+        mask: radial-gradient(circle, transparent 11px, black 12px);
+        -webkit-mask: radial-gradient(circle, transparent 11px, black 12px);
+        animation: spin 1s linear infinite;
+    }
 }
 
 @keyframes spin {
