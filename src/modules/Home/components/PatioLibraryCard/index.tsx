@@ -67,7 +67,7 @@ export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
                     <div className={s['title-wrap']}>
                         <Typography
                             variant="text-md"
-                            className={clsx(s.name, 'truncate')}
+                            className={clsx(s.name, 'truncate_')}
                             title={patio.name}
                             render={<h3 />}
                         >

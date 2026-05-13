@@ -1,5 +1,7 @@
 .wrap {
     --spot-radius: 200px;
+    /* --image-width: 110px; */
+    --image-width: 150px;
 
     position: relative;
     overflow: hidden;
@@ -66,8 +68,8 @@
 
 .media {
     position: relative;
-    width: 110px;
-    height: 110px;
+    width: var(--image-width);
+    height: var(--image-width);
     flex-shrink: 0;
     z-index: 2;
     border-radius: var(--radius-md);
@@ -91,9 +93,9 @@
 }
 
 .image {
-    width: 110px;
-    height: 110px;
-    object-fit: cover;
+    width: 145%;
+    height: 100%;
+    left: -20%;
     display: block;
 }
 
@@ -145,6 +147,16 @@
     font-weight: 600;
     min-width: 0;
     flex: 1 1 auto;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-word;
+    word-wrap: break-word;
+    hyphens: auto;
 }
 
 .footer {

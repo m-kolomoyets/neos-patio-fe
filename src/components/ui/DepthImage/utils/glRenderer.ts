@@ -13,6 +13,7 @@ varying vec2 v_uv;
 uniform sampler2D u_color;
 uniform sampler2D u_depth;
 uniform vec2 u_mouse;
+uniform vec2 u_uvScale;
 uniform float u_strength;
 uniform float u_focus;
 uniform float u_invert;
@@ -23,10 +24,11 @@ float sampleDepth(vec2 uv) {
 }
 
 void main() {
-  vec2 uv = v_uv;
+  vec2 baseUv = (v_uv - 0.5) * u_uvScale + 0.5;
+  vec2 uv = baseUv;
   for (int i = 0; i < 10; i++) {
     float d = sampleDepth(uv) - u_focus;
-    uv = v_uv + u_mouse * u_strength * d;
+    uv = baseUv + u_mouse * u_strength * d;
   }
   uv = clamp(uv, 0.0, 1.0);
   gl_FragColor = texture2D(u_color, uv);
@@ -111,9 +113,12 @@ export const createRenderer = (
     const uColor = gl.getUniformLocation(prog, 'u_color');
     const uDepth = gl.getUniformLocation(prog, 'u_depth');
     const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+    const uUvScale = gl.getUniformLocation(prog, 'u_uvScale');
     const uStrength = gl.getUniformLocation(prog, 'u_strength');
     const uFocus = gl.getUniformLocation(prog, 'u_focus');
     const uInvert = gl.getUniformLocation(prog, 'u_invert');
+
+    const imageAspect = color.width / color.height;
 
     const colorTex = uploadTex(gl, color);
     const depthTex = uploadTex(gl, depth);
@@ -133,12 +138,26 @@ export const createRenderer = (
     gl.uniform1f(uStrength, strength);
     gl.uniform1f(uFocus, focus);
     gl.uniform1f(uInvert, invert);
+    gl.uniform2f(uUvScale, 1, 1);
+
+    const applyCover = (w: number, h: number) => {
+        const canvasAspect = w / h;
+        let sx = 1;
+        let sy = 1;
+        if (imageAspect > canvasAspect) {
+            sx = canvasAspect / imageAspect;
+        } else {
+            sy = imageAspect / canvasAspect;
+        }
+        gl.uniform2f(uUvScale, sx, sy);
+    };
 
     return {
         setSize(w, h) {
             canvas.width = w;
             canvas.height = h;
             gl.viewport(0, 0, w, h);
+            applyCover(w, h);
         },
         draw(mx, my) {
             gl.uniform2f(uMouse, mx, my);

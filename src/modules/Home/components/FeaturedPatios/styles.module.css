@@ -106,7 +106,7 @@
     position: relative;
     display: flex;
     gap: var(--gap-3);
-    padding-bottom: var(--gap-2);
+    padding-bottom: var(--gap-6);
     width: max-content;
 }
 
