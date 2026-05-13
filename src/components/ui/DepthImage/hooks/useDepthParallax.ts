@@ -13,11 +13,12 @@ type Args = {
     focus: number;
     invertDepth: boolean;
     enabled: boolean;
+    interactionEl?: HTMLElement | null;
 };
 
 type State = 'idle' | 'ready' | 'failed';
 
-export const useDepthParallax = ({ src, strength, focus, invertDepth, enabled }: Args) => {
+export const useDepthParallax = ({ src, strength, focus, invertDepth, enabled, interactionEl }: Args) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const wrapRef = useRef<HTMLDivElement | null>(null);
     const rendererRef = useRef<Renderer | null>(null);
@@ -76,6 +77,8 @@ export const useDepthParallax = ({ src, strength, focus, invertDepth, enabled }:
         const canvas = canvasRef.current;
         if (!wrap || !canvas) return;
 
+        const pointerTarget: HTMLElement = interactionEl ?? wrap;
+
         const ro = new ResizeObserver(() => {
             const r = rendererRef.current;
             if (!r) return;
@@ -122,7 +125,7 @@ export const useDepthParallax = ({ src, strength, focus, invertDepth, enabled }:
         };
 
         const onMove = (e: PointerEvent) => {
-            const rect = wrap.getBoundingClientRect();
+            const rect = pointerTarget.getBoundingClientRect();
             const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
             const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
             targetRef.current.x = Math.max(-1, Math.min(1, nx));
@@ -137,8 +140,8 @@ export const useDepthParallax = ({ src, strength, focus, invertDepth, enabled }:
             wake();
         };
 
-        wrap.addEventListener('pointermove', onMove);
-        wrap.addEventListener('pointerleave', onLeave);
+        pointerTarget.addEventListener('pointermove', onMove);
+        pointerTarget.addEventListener('pointerleave', onLeave);
 
         // initial draw
         wake();
@@ -146,12 +149,12 @@ export const useDepthParallax = ({ src, strength, focus, invertDepth, enabled }:
         return () => {
             ro.disconnect();
             io.disconnect();
-            wrap.removeEventListener('pointermove', onMove);
-            wrap.removeEventListener('pointerleave', onLeave);
+            pointerTarget.removeEventListener('pointermove', onMove);
+            pointerTarget.removeEventListener('pointerleave', onLeave);
             if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
             rafRef.current = null;
         };
-    }, [state]);
+    }, [state, interactionEl]);
 
     return { canvasRef, wrapRef, state };
 };

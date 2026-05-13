@@ -30,6 +30,13 @@ export type DepthImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> &
      * Defaults to a plain `<img>` with the same `src` and `alt`.
      */
     fallback?: ReactNode;
+    /**
+     * Optional external element to bind pointer events and visibility tracking to.
+     * When provided, parallax responds to cursor movement across this element
+     * (normalized to its bounding rect) instead of the internal wrap.
+     * Canvas sizing and rendering stay scoped to the internal wrap.
+     */
+    interactionEl?: HTMLElement | null;
 };
 
 export type ParsedGDepth = {

@@ -30,6 +30,7 @@ export const DepthImage: React.FC<DepthImageProps> = ({
     invertDepth = false,
     fallback,
     className,
+    interactionEl,
     ...rest
 }) => {
     const reduced = useReducedMotion();
@@ -39,6 +40,7 @@ export const DepthImage: React.FC<DepthImageProps> = ({
         focus,
         invertDepth,
         enabled: !reduced,
+        interactionEl,
     });
 
     const showCanvas = !reduced && state === 'ready';

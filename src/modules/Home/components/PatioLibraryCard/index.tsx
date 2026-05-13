@@ -1,4 +1,5 @@
 import type { Patio } from '@/services/patios/types';
+import { useCallback, useState } from 'react';
 import ArrowTopRight24Icon from '@/icons/arrow-top-right_24.svg?react';
 import MapPinIcon from '@/icons/map-pin_24.svg?react';
 import { Link } from '@tanstack/react-router';
@@ -17,6 +18,15 @@ type Props = {
 export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
     const navigate = useHomeNavigate();
     const spotlightRef = useSpotlight<HTMLElement>();
+    const [articleEl, setArticleEl] = useState<HTMLElement | null>(null);
+
+    const setArticleRef = useCallback(
+        (el: HTMLElement | null) => {
+            setArticleEl(el);
+            spotlightRef(el);
+        },
+        [spotlightRef]
+    );
 
     const navigateToPatio = () => {
         navigate({
@@ -35,7 +45,7 @@ export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
 
     return (
         <article
-            ref={spotlightRef}
+            ref={setArticleRef}
             className={s.wrap}
             data-card-id={patio.id}
             role="button"
@@ -44,7 +54,13 @@ export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
         >
             <div className={s.media}>
                 {/* <img className={s.image} src={patio.previewHighUrl} alt={patio.name} loading="lazy" /> */}
-                <DepthImage className={s.image} src={patio.previewHighUrl} alt={patio.name} loading="lazy" />
+                <DepthImage
+                    className={s.image}
+                    src={patio.previewHighUrl}
+                    alt={patio.name}
+                    loading="lazy"
+                    interactionEl={articleEl}
+                />
             </div>
             <div className={s.body}>
                 <header className={s.top}>
