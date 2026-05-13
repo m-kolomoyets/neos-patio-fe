@@ -10,6 +10,9 @@ type Params = {
 type CardPair = {
     card: HTMLElement;
     stack: HTMLElement;
+    left: number;
+    width: number;
+    lastTx: number;
 };
 
 const prefersReducedMotion = (): boolean => {
@@ -30,6 +33,15 @@ export const useCarouselParallax = ({ viewportRef, dataKey }: Params): void => {
         reducedRef.current = prefersReducedMotion();
     }, []);
 
+    const measure = useCallback(() => {
+        const pairs = pairsRef.current;
+        for (let i = 0; i < pairs.length; i++) {
+            const pair = pairs[i];
+            pair.left = pair.card.offsetLeft;
+            pair.width = pair.card.offsetWidth;
+        }
+    }, []);
+
     const update = useCallback(() => {
         const viewport = viewportRef.current;
         if (!viewport) return;
@@ -38,14 +50,15 @@ export const useCarouselParallax = ({ viewportRef, dataKey }: Params): void => {
         const halfViewport = viewportWidth / 2;
         const pairs = pairsRef.current;
         for (let i = 0; i < pairs.length; i++) {
-            const { card, stack } = pairs[i];
-            const width = card.offsetWidth;
-            if (width === 0) continue;
-            const cardCenter = card.offsetLeft + width / 2;
+            const pair = pairs[i];
+            if (pair.width === 0) continue;
+            const cardCenter = pair.left + pair.width / 2;
             const delta = cardCenter - viewportCenter;
             const n = clamp(delta / halfViewport, -1, 1);
-            const tx = -n * MAX_X_PX;
-            stack.style.setProperty('--tx', tx.toFixed(2));
+            const tx = Math.round(-n * MAX_X_PX * 100) / 100;
+            if (tx === pair.lastTx) continue;
+            pair.lastTx = tx;
+            pair.stack.style.setProperty('--tx', String(tx));
         }
     }, [viewportRef]);
 
@@ -66,7 +79,13 @@ export const useCarouselParallax = ({ viewportRef, dataKey }: Params): void => {
         for (const card of cards) {
             const stack = card.querySelector<HTMLElement>('[data-stack]');
             if (!stack) continue;
-            pairs.push({ card, stack });
+            pairs.push({
+                card,
+                stack,
+                left: card.offsetLeft,
+                width: card.offsetWidth,
+                lastTx: Number.NaN,
+            });
         }
         pairsRef.current = pairs;
         update();
@@ -77,7 +96,8 @@ export const useCarouselParallax = ({ viewportRef, dataKey }: Params): void => {
         const viewport = viewportRef.current;
         if (!viewport) return;
         const onResize = () => {
-            return scheduleUpdate();
+            measure();
+            scheduleUpdate();
         };
         viewport.addEventListener('scroll', scheduleUpdate, { passive: true });
         window.addEventListener('resize', onResize);
@@ -89,5 +109,5 @@ export const useCarouselParallax = ({ viewportRef, dataKey }: Params): void => {
                 rafIdRef.current = null;
             }
         };
-    }, [scheduleUpdate, viewportRef]);
+    }, [measure, scheduleUpdate, viewportRef]);
 };
