@@ -1,4 +1,5 @@
 import type { Patio } from '@/services/patios/types';
+import type { CarouselParallaxApi } from '../FeaturedPatios/hooks/useCarouselParallax';
 import { memo, useCallback, useState } from 'react';
 import ArrowTopRight24Icon from '@/icons/arrow-top-right_24.svg?react';
 import { Link } from '@tanstack/react-router';
@@ -12,24 +13,31 @@ import s from './styles.module.css';
 
 type Props = {
     patio: Patio;
-    shouldPrefetch?: boolean;
+    shouldMountVideo?: boolean;
+    registerSnap?: CarouselParallaxApi['registerSnap'];
 };
 
-const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldPrefetch = false }) => {
+const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = false, registerSnap }) => {
     const [highLoaded, setHighLoaded] = useState(false);
     const {
         rootRef,
         stackRef,
         videoRef,
-        shouldMountVideo,
+        shouldMountVideo: videoMounted,
         videoSrc,
         phase,
+        metadataReady,
         onPointerEnter,
         onPointerMove,
         onPointerLeave,
         onVideoLoadedMetadata,
         onVideoError,
-    } = useHoverVideoScrub({ videoUrl: patio.videoUrl, shouldPrefetch });
+    } = useHoverVideoScrub({
+        cardId: patio.id,
+        videoUrl: patio.videoUrl,
+        shouldMountVideo,
+        registerSnap,
+    });
 
     const spotlightRef = useSpotlight<HTMLElement>();
     const setRootRef = useCallback(
@@ -40,7 +48,7 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldPrefetch = false 
         [rootRef, spotlightRef]
     );
 
-    const showVideoLayer = phase === 'active' || phase === 'rewinding';
+    const showVideoLayer = metadataReady && phase !== 'broken';
 
     return (
         <article
@@ -74,7 +82,7 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldPrefetch = false 
                             return setHighLoaded(true);
                         }}
                     />
-                    {shouldMountVideo && patio.videoUrl && videoSrc ? (
+                    {videoMounted && patio.videoUrl && videoSrc ? (
                         <video
                             ref={videoRef}
                             className={clsx(s.layer, s.video)}

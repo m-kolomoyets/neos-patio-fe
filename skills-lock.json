@@ -16,6 +16,12 @@
             "sourceType": "github",
             "computedHash": "76994afc39b68f4dbe098df76262b68d9928a23ee0f6aaebb11ba0e0f55bfa13"
         },
+        "do-work": {
+            "source": "Phenomenon-Studio/phenomenon-skills",
+            "sourceType": "github",
+            "skillPath": "common/do-work/SKILL.md",
+            "computedHash": "4c3c9d9b7daad9a3a315317dc303aefb4ab518a5262f5dd1f07e91d9df3490e0"
+        },
         "grill-me": {
             "source": "mattpocock/skills",
             "sourceType": "github",

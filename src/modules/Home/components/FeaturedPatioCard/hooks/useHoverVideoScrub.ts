@@ -8,9 +8,13 @@ const Y_EPSILON = 0.5;
 
 type Phase = 'idle' | 'loading' | 'active' | 'rewinding' | 'broken';
 
+type SnapRegistrar = (_id: string, _cb: (_s: number) => void) => () => void;
+
 type Params = {
+    cardId: string;
     videoUrl: string | undefined;
-    shouldPrefetch: boolean;
+    shouldMountVideo: boolean;
+    registerSnap?: SnapRegistrar;
 };
 
 type Result = {
@@ -20,6 +24,7 @@ type Result = {
     shouldMountVideo: boolean;
     videoSrc: string | undefined;
     phase: Phase;
+    metadataReady: boolean;
     onPointerEnter: (_e: React.PointerEvent<HTMLElement>) => void;
     onPointerMove: (_e: React.PointerEvent<HTMLElement>) => void;
     onPointerLeave: (_e: React.PointerEvent<HTMLElement>) => void;
@@ -31,23 +36,10 @@ const easeOutCubic = (t: number) => {
     return 1 - Math.pow(1 - t, 3);
 };
 
-const supportsHover = (): boolean => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(hover: hover)').matches;
-};
-
-const prefersReducedMotion = (): boolean => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-};
-
-export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result => {
-    const [capable] = useState<boolean>(() => {
-        return supportsHover() && !prefersReducedMotion();
-    });
-    const enabled = capable && Boolean(videoUrl);
-    const [shouldMountVideo, setShouldMountVideo] = useState(false);
+export const useHoverVideoScrub = ({ cardId, videoUrl, shouldMountVideo, registerSnap }: Params): Result => {
+    const enabled = shouldMountVideo && Boolean(videoUrl);
     const [phase, setPhase] = useState<Phase>('idle');
+    const [metadataReady, setMetadataReady] = useState(false);
     const [blobSrc, setBlobSrc] = useState<string | undefined>(undefined);
 
     const rootElRef = useRef<HTMLElement | null>(null);
@@ -68,15 +60,12 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
     const enterFromYRef = useRef(0);
     const enterFromTimeRef = useRef(0);
     const phaseRef = useRef<Phase>('idle');
+    const snapRef = useRef(0);
 
     const setPhaseBoth = useCallback((p: Phase) => {
         phaseRef.current = p;
         setPhase(p);
     }, []);
-
-    if (enabled && shouldPrefetch && !shouldMountVideo) {
-        setShouldMountVideo(true);
-    }
 
     const writeStackY = useCallback((y: number) => {
         const el = stackElRef.current;
@@ -156,12 +145,16 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
 
             const video = videoElRef.current;
             if (video && metadataReadyRef.current) {
-                const time = leaveFromTimeRef.current * (1 - eased);
+                const hasDuration = Number.isFinite(video.duration) && video.duration > 0;
+                const snapTarget = hasDuration ? snapRef.current * video.duration : leaveFromTimeRef.current;
+                const time = leaveFromTimeRef.current + (snapTarget - leaveFromTimeRef.current) * eased;
                 currentTimeRef.current = time;
-                try {
-                    video.currentTime = time;
-                } catch {
-                    /* ignore */
+                if (!video.seeking) {
+                    try {
+                        video.currentTime = time;
+                    } catch {
+                        /* ignore */
+                    }
                 }
             }
 
@@ -196,7 +189,6 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
             enterFromYRef.current = currentYRef.current;
             enterFromTimeRef.current = currentTimeRef.current;
             enterStartRef.current = performance.now();
-            if (!shouldMountVideo) setShouldMountVideo(true);
             if (phaseRef.current === 'broken') return;
             if (metadataReadyRef.current) {
                 setPhaseBoth('active');
@@ -205,7 +197,7 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
             }
             scheduleHover();
         },
-        [enabled, scheduleHover, seedFromEvent, setPhaseBoth, shouldMountVideo, stopRaf]
+        [enabled, scheduleHover, seedFromEvent, setPhaseBoth, stopRaf]
     );
 
     const onPointerMove = useCallback(
@@ -237,10 +229,13 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
 
     const onVideoLoadedMetadata = useCallback(() => {
         metadataReadyRef.current = true;
+        setMetadataReady(true);
         const video = videoElRef.current;
-        if (video) {
+        if (video && Number.isFinite(video.duration) && video.duration > 0) {
+            const initial = phaseRef.current === 'idle' ? snapRef.current * video.duration : currentTimeRef.current;
+            currentTimeRef.current = initial;
             try {
-                video.currentTime = currentTimeRef.current;
+                video.currentTime = initial;
             } catch {
                 /* ignore */
             }
@@ -252,6 +247,7 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
 
     const onVideoError = useCallback(() => {
         metadataReadyRef.current = false;
+        setMetadataReady(false);
         setPhaseBoth('broken');
         stopRaf();
     }, [setPhaseBoth, stopRaf]);
@@ -261,6 +257,18 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
             if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
         };
     }, []);
+
+    useEffect(() => {
+        if (shouldMountVideo) return;
+        hoveredRef.current = false;
+        enterStartRef.current = null;
+        leaveStartRef.current = null;
+        stopRaf();
+        currentTimeRef.current = 0;
+        currentYRef.current = 0;
+        writeStackY(0);
+        if (phaseRef.current !== 'idle') setPhaseBoth('idle');
+    }, [shouldMountVideo, stopRaf, setPhaseBoth, writeStackY]);
 
     useEffect(() => {
         if (!enabled || !videoUrl || !shouldMountVideo) return;
@@ -283,6 +291,7 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
         return () => {
             cancelled = true;
             if (createdUrl) URL.revokeObjectURL(createdUrl);
+            setBlobSrc(undefined);
         };
     }, [enabled, shouldMountVideo, videoUrl, setPhaseBoth]);
 
@@ -296,8 +305,29 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
         videoElRef.current = el;
         if (!el) {
             metadataReadyRef.current = false;
+            setMetadataReady(false);
         }
     }, []);
+
+    useEffect(() => {
+        if (!registerSnap) return;
+        return registerSnap(cardId, (s) => {
+            snapRef.current = s;
+            if (phaseRef.current !== 'idle') return;
+            if (!metadataReadyRef.current) return;
+            const video = videoElRef.current;
+            if (!video) return;
+            if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+            if (video.seeking) return;
+            const target = s * video.duration;
+            currentTimeRef.current = target;
+            try {
+                video.currentTime = target;
+            } catch {
+                /* ignore */
+            }
+        });
+    }, [cardId, registerSnap]);
 
     return {
         rootRef,
@@ -306,6 +336,7 @@ export const useHoverVideoScrub = ({ videoUrl, shouldPrefetch }: Params): Result
         shouldMountVideo: enabled && shouldMountVideo,
         videoSrc: blobSrc,
         phase,
+        metadataReady,
         onPointerEnter,
         onPointerMove,
         onPointerLeave,

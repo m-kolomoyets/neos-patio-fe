@@ -21,6 +21,16 @@ const isSlowConnection = (): boolean => {
     return conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g';
 };
 
+const supportsHover = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(hover: hover)').matches;
+};
+
+const prefersReducedMotion = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+};
+
 export const FeaturedPatios: React.FC = () => {
     const { data, isLoading } = useQuery(getFeaturedPatiosQueryOptions());
     const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -29,12 +39,17 @@ export const FeaturedPatios: React.FC = () => {
     const [intersectingIds, setIntersectingIds] = useState<ReadonlySet<string>>(() => {
         return new Set();
     });
+    const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotion);
+    const [staticCapable] = useState<boolean>(() => {
+        return supportsHover() && !isSlowConnection();
+    });
+    const videoCapable = staticCapable && !reducedMotion;
     const rafIdRef = useRef<number | null>(null);
     const { ref: headerRef, flag: isHeaderStuck } = useStickyStuck({
         rootSelector: HOME_SCROLL_ROOT_SELECTOR,
     });
 
-    useCarouselParallax({ viewportRef, dataKey: data });
+    const { registerSnap } = useCarouselParallax({ viewportRef, dataKey: data });
 
     const updateScrollEdges = useCallback(() => {
         const viewport = viewportRef.current;
@@ -68,9 +83,21 @@ export const FeaturedPatios: React.FC = () => {
     }, [updateScrollEdges, handleScroll, data]);
 
     useEffect(() => {
+        if (typeof window === 'undefined' || !window.matchMedia) return;
+        const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const onChange = () => {
+            return setReducedMotion(mq.matches);
+        };
+        mq.addEventListener('change', onChange);
+        return () => {
+            mq.removeEventListener('change', onChange);
+        };
+    }, []);
+
+    useEffect(() => {
         const viewport = viewportRef.current;
         if (!viewport || !data?.length) return;
-        if (isSlowConnection()) return;
+        if (!videoCapable) return;
 
         const observer = new IntersectionObserver(
             (entries) => {
@@ -103,10 +130,11 @@ export const FeaturedPatios: React.FC = () => {
         return () => {
             return observer.disconnect();
         };
-    }, [data]);
+    }, [data, videoCapable]);
 
-    const prefetchIds = useMemo<ReadonlySet<string>>(() => {
-        if (!data?.length || intersectingIds.size === 0) return new Set();
+    const renderWindowIds = useMemo<ReadonlySet<string>>(() => {
+        if (!videoCapable) return new Set<string>();
+        if (!data?.length || intersectingIds.size === 0) return new Set<string>();
         const result = new Set<string>();
         const indexById = new Map(
             data.map((p, i) => {
@@ -121,7 +149,7 @@ export const FeaturedPatios: React.FC = () => {
             if (idx < data.length - 1) result.add(data[idx + 1].id);
         }
         return result;
-    }, [data, intersectingIds]);
+    }, [data, intersectingIds, videoCapable]);
 
     const scrollByPage = useCallback((direction: 1 | -1) => {
         const viewport = viewportRef.current;
@@ -180,7 +208,8 @@ export const FeaturedPatios: React.FC = () => {
                                   <FeaturedPatioCard
                                       key={patio.id}
                                       patio={patio}
-                                      shouldPrefetch={prefetchIds.has(patio.id)}
+                                      shouldMountVideo={renderWindowIds.has(patio.id)}
+                                      registerSnap={registerSnap}
                                   />
                               );
                           })}

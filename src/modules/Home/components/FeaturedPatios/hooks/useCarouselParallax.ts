@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
-const MAX_X_PX = 48;
+type SnapCallback = (_s: number) => void;
 
 type Params = {
     viewportRef: React.RefObject<HTMLDivElement | null>;
@@ -8,11 +8,15 @@ type Params = {
 };
 
 type CardPair = {
+    id: string;
     card: HTMLElement;
-    stack: HTMLElement;
     left: number;
     width: number;
-    lastTx: number;
+    lastS: number;
+};
+
+export type CarouselParallaxApi = {
+    registerSnap: (_id: string, _cb: SnapCallback) => () => void;
 };
 
 const prefersReducedMotion = (): boolean => {
@@ -24,8 +28,10 @@ const clamp = (v: number, min: number, max: number) => {
     return Math.max(min, Math.min(max, v));
 };
 
-export const useCarouselParallax = ({ viewportRef, dataKey }: Params): void => {
+export const useCarouselParallax = ({ viewportRef, dataKey }: Params): CarouselParallaxApi => {
     const pairsRef = useRef<CardPair[]>([]);
+    const callbacksRef = useRef<Map<string, SnapCallback>>(new Map());
+    const lastSnapRef = useRef<Map<string, number>>(new Map());
     const rafIdRef = useRef<number | null>(null);
     const reducedRef = useRef<boolean>(false);
 
@@ -46,6 +52,7 @@ export const useCarouselParallax = ({ viewportRef, dataKey }: Params): void => {
         const viewport = viewportRef.current;
         if (!viewport) return;
         const viewportWidth = viewport.clientWidth;
+        if (viewportWidth === 0) return;
         const viewportCenter = viewport.scrollLeft + viewportWidth / 2;
         const halfViewport = viewportWidth / 2;
         const pairs = pairsRef.current;
@@ -55,10 +62,12 @@ export const useCarouselParallax = ({ viewportRef, dataKey }: Params): void => {
             const cardCenter = pair.left + pair.width / 2;
             const delta = cardCenter - viewportCenter;
             const n = clamp(delta / halfViewport, -1, 1);
-            const tx = Math.round(-n * MAX_X_PX * 100) / 100;
-            if (tx === pair.lastTx) continue;
-            pair.lastTx = tx;
-            pair.stack.style.setProperty('--tx', String(tx));
+            const s = Math.round(((n + 1) / 2) * 10000) / 10000;
+            if (s === pair.lastS) continue;
+            pair.lastS = s;
+            lastSnapRef.current.set(pair.id, s);
+            const cb = callbacksRef.current.get(pair.id);
+            if (cb) cb(s);
         }
     }, [viewportRef]);
 
@@ -77,14 +86,14 @@ export const useCarouselParallax = ({ viewportRef, dataKey }: Params): void => {
         const cards = Array.from(viewport.querySelectorAll<HTMLElement>('[data-card-id]'));
         const pairs: CardPair[] = [];
         for (const card of cards) {
-            const stack = card.querySelector<HTMLElement>('[data-stack]');
-            if (!stack) continue;
+            const id = card.dataset.cardId;
+            if (!id) continue;
             pairs.push({
+                id,
                 card,
-                stack,
                 left: card.offsetLeft,
                 width: card.offsetWidth,
-                lastTx: Number.NaN,
+                lastS: Number.NaN,
             });
         }
         pairsRef.current = pairs;
@@ -110,4 +119,16 @@ export const useCarouselParallax = ({ viewportRef, dataKey }: Params): void => {
             }
         };
     }, [measure, scheduleUpdate, viewportRef]);
+
+    const registerSnap = useCallback((id: string, cb: SnapCallback): (() => void) => {
+        callbacksRef.current.set(id, cb);
+        const last = lastSnapRef.current.get(id);
+        if (last !== undefined) cb(last);
+        return () => {
+            const current = callbacksRef.current.get(id);
+            if (current === cb) callbacksRef.current.delete(id);
+        };
+    }, []);
+
+    return { registerSnap };
 };

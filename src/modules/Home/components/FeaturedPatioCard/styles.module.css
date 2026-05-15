@@ -110,12 +110,11 @@
 }
 
 .stack {
-    --tx: 0;
     --ty: 0;
 
     position: absolute;
     inset: 0;
-    transform: translate(calc(var(--tx) * 1px), calc(var(--ty) * 1px)) scale(1.25);
+    transform: translateY(calc(var(--ty) * 1px)) scale(1.25);
     will-change: transform;
     pointer-events: none;
 }
