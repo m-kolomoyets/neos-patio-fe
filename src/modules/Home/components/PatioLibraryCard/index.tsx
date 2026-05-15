@@ -8,6 +8,7 @@ import { useSpotlight } from '@/hooks/useSpotlight';
 import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
 import { useHomeNavigate } from '../../hooks/useHomeRouteApi';
+import { useParallax } from './hooks/useParallax';
 import s from './styles.module.css';
 
 type Props = {
@@ -17,12 +18,14 @@ type Props = {
 export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
     const navigate = useHomeNavigate();
     const spotlightRef = useSpotlight<HTMLElement>();
+    const { cardRef, imgRef } = useParallax();
 
     const setArticleRef = useCallback(
         (el: HTMLElement | null) => {
             spotlightRef(el);
+            cardRef(el);
         },
-        [spotlightRef]
+        [spotlightRef, cardRef]
     );
 
     const navigateToPatio = () => {
@@ -50,7 +53,7 @@ export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
             onKeyDown={handleKeyDown}
         >
             <div className={s.media}>
-                <img className={s.image} src={patio.previewHighUrl} alt={patio.name} loading="lazy" />
+                <img ref={imgRef} className={s.image} src={patio.previewHighUrl} alt={patio.name} loading="lazy" />
             </div>
             <div className={s.body}>
                 <header className={s.top}>
