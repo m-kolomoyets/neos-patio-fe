@@ -160,15 +160,6 @@
     font-weight: 600;
     min-width: 0;
     flex: 1 1 auto;
-    /* line-clamp: 2;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    display: -webkit-box;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: normal;
-    overflow-wrap: break-word;
-    hyphens: auto; */
 }
 
 .footer {
