@@ -1,9 +1,6 @@
 .wrap {
     --spot-radius: 200px;
-
-    /* --image-width: 110px; */
-
-    --image-width: 150px;
+    --image-width: 110px;
 
     position: relative;
     overflow: hidden;
@@ -95,9 +92,9 @@
 }
 
 .image {
-    width: 145%;
+    width: 100%;
     height: 100%;
-    left: -20%;
+    object-fit: cover;
     display: block;
 }
 
@@ -149,7 +146,7 @@
     font-weight: 600;
     min-width: 0;
     flex: 1 1 auto;
-    line-clamp: 2;
+    /* line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     display: -webkit-box;
@@ -157,7 +154,7 @@
     text-overflow: ellipsis;
     white-space: normal;
     overflow-wrap: break-word;
-    hyphens: auto;
+    hyphens: auto; */
 }
 
 .footer {

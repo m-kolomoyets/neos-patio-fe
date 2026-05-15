@@ -1,12 +1,11 @@
 import type { Patio } from '@/services/patios/types';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import ArrowTopRight24Icon from '@/icons/arrow-top-right_24.svg?react';
 import MapPinIcon from '@/icons/map-pin_24.svg?react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import { Button } from '@/components/ui/Button';
-import { DepthImage } from '@/components/ui/DepthImage';
 import { Typography } from '@/components/ui/Typography';
 import { useHomeNavigate } from '../../hooks/useHomeRouteApi';
 import s from './styles.module.css';
@@ -18,11 +17,9 @@ type Props = {
 export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
     const navigate = useHomeNavigate();
     const spotlightRef = useSpotlight<HTMLElement>();
-    const [articleEl, setArticleEl] = useState<HTMLElement | null>(null);
 
     const setArticleRef = useCallback(
         (el: HTMLElement | null) => {
-            setArticleEl(el);
             spotlightRef(el);
         },
         [spotlightRef]
@@ -53,21 +50,14 @@ export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
             onKeyDown={handleKeyDown}
         >
             <div className={s.media}>
-                {/* <img className={s.image} src={patio.previewHighUrl} alt={patio.name} loading="lazy" /> */}
-                <DepthImage
-                    className={s.image}
-                    src={patio.previewHighUrl}
-                    alt={patio.name}
-                    loading="lazy"
-                    interactionEl={articleEl}
-                />
+                <img className={s.image} src={patio.previewHighUrl} alt={patio.name} loading="lazy" />
             </div>
             <div className={s.body}>
                 <header className={s.top}>
                     <div className={s['title-wrap']}>
                         <Typography
                             variant="text-md"
-                            className={clsx(s.name, 'truncate_')}
+                            className={clsx(s.name, 'truncate')}
                             title={patio.name}
                             render={<h3 />}
                         >
