@@ -1,7 +1,8 @@
 import type { Patio } from '@/services/patios/types';
 import { useCallback } from 'react';
 import ArrowTopRight24Icon from '@/icons/arrow-top-right_24.svg?react';
-import MapPinIcon from '@/icons/map-pin_24.svg?react';
+import Id24Icon from '@/icons/id_24.svg?react';
+import MapPin24Icon from '@/icons/map-pin_24.svg?react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
 import { useSpotlight } from '@/hooks/useSpotlight';
@@ -60,12 +61,7 @@ export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
             <div className={s.body}>
                 <header className={s.top}>
                     <div className={s['title-wrap']}>
-                        <Typography
-                            variant="text-md"
-                            className={clsx(s.name, 'truncate')}
-                            title={patio.name}
-                            render={<h3 />}
-                        >
+                        <Typography variant="text-md" className={s.name} title={patio.name} render={<h3 />}>
                             {patio.name}
                         </Typography>
                         <Button
@@ -90,15 +86,15 @@ export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
                     <Typography className={s.author} variant="text-sm" render={<p />}>
                         by Neos
                     </Typography>
-                    <Typography className={s.id} variant="text-sm" render={<p />}>
-                        ID {patio.id}
-                    </Typography>
                 </header>
                 <footer className={s.footer}>
                     <Typography variant="text-sm" className={clsx(s.country, 'truncate')} render={<p />}>
-                        <MapPinIcon aria-hidden />
+                        <MapPin24Icon className={s.icon} aria-hidden />
                         <span className="sr-only">Country</span>
                         {patio.country}
+                    </Typography>
+                    <Typography className={s.id} variant="text-sm" render={<p />}>
+                        <Id24Icon className={s.icon} aria-label="ID" /> {patio.id}
                     </Typography>
                 </footer>
             </div>
