@@ -103,6 +103,7 @@
     scroll-behavior: smooth;
     container-type: inline-size;
     container-name: featured-track;
+    border-radius: var(--radius-2xl);
 }
 
 .track {
