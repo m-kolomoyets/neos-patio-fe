@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { HOME_SCROLL_ROOT_SELECTOR } from '../../../constants';
 
-const PARALLAX_RANGE_PCT = 15;
+const PARALLAX_RANGE_PCT = 25;
 const IO_ROOT_MARGIN = '20% 0px';
 
 type Entry = {

@@ -53,6 +53,8 @@ export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
             onKeyDown={handleKeyDown}
         >
             <div className={s.media}>
+                <div className={clsx(s.decor, s.top)} aria-hidden />
+                <div className={clsx(s.decor, s.bottom)} aria-hidden />
                 <img ref={imgRef} className={s.image} src={patio.previewHighUrl} alt={patio.name} loading="lazy" />
             </div>
             <div className={s.body}>

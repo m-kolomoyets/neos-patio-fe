@@ -1,6 +1,7 @@
 .wrap {
     --spot-radius: 200px;
-    --image-width: 110px;
+    --image-width: 184px;
+    --image-height: 110px;
 
     position: relative;
     overflow: hidden;
@@ -68,27 +69,47 @@
 .media {
     position: relative;
     width: var(--image-width);
-    height: var(--image-width);
+    height: var(--image-height);
     flex-shrink: 0;
     z-index: 2;
     border-radius: var(--radius-md);
     overflow: hidden;
     transition: box-shadow 250ms ease;
+}
+
+.media::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    isolation: isolate;
+    z-index: 3;
     box-shadow:
-        1px 3px 3px hsl(var(--color-hsl-black) / 0.1) inset,
-        1px 1.5px 4px hsl(var(--color-hsl-black) / 0.2) inset,
-        0 -1px 1px hsl(26deg 0.2% 8.8 / 0.4) inset,
-        0 -3px 3px hsl(var(--color-hsl-black) / 0.2) inset,
+        1px 4px 6px hsl(var(--color-hsl-black) / 0.2) inset,
+        1px 4px 6px hsl(var(--color-hsl-black) / 0.4) inset,
+        0 -1px 1px hsl(26deg 0.2% 8.8 / 0.8) inset,
+        0 -3px 3px hsl(var(--color-hsl-black) / 0.4) inset,
         0 0 2px 1px hsl(var(--color-hsl-white) / 0.15);
 }
 
-.wrap:is(:hover, :focus-within) .media {
-    box-shadow:
-        0 0 2px 1px hsl(var(--color-hsl-white) / 0.15),
-        1px 3px 3px hsl(var(--color-hsl-black) / 0.1) inset,
-        1px 1.5px 4px hsl(var(--color-hsl-black) / 0.2) inset,
-        0 -1px 1px hsl(26deg 0.2% 8.8 / 0.4) inset,
-        0 -3px 3px hsl(var(--color-hsl-black) / 0.2) inset;
+.media::after {
+    --decor-gradient-start: hsl(var(--color-hsl-white) / 0.4);
+    --decor-gradient-end: hsl(var(--color-hsl-white) / 0);
+
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: 2;
+    background: linear-gradient(
+        to bottom,
+        var(--decor-gradient-start) 0%,
+        var(--decor-gradient-end) 40%,
+        var(--decor-gradient-end) 60%,
+        var(--decor-gradient-start) 100%
+    );
+    background-blend-mode: overlay;
+    mask: linear-gradient(black, transparent, transparent, black);
 }
 
 .image {

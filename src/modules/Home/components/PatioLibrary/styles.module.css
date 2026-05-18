@@ -11,7 +11,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: calc(var(--gap-5) + var(--gap-0-5)) var(--gap-8);
+    padding: calc(var(--gap-5) + var(--gap-0-5)) var(--gap-6);
     gap: var(--gap-4);
     top: 0;
     z-index: 10;
@@ -64,9 +64,9 @@
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--gap-3);
-    padding-inline: var(--gap-8);
+    padding-inline: var(--gap-4);
 }
 
 .groups {
