@@ -116,7 +116,7 @@
     position: absolute;
     inset: -15% 0;
     width: 100%;
-    height: 130%;
+    height: 140%;
     object-fit: cover;
     display: block;
 }
@@ -156,7 +156,7 @@
 .title-wrap {
     display: flex;
     width: 100%;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: var(--gap-1);
     min-width: 0;

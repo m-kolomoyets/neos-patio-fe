@@ -1,0 +1,9 @@
+.wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-1);
+    padding: calc(var(--gap-1) - var(--gap-px)) calc(var(--gap-2) - var(--gap-px));
+    border-radius: var(--radius-md);
+    border: 1px solid hsl(var(--color-hsl-white) / 0.1);
+    background-color: hsl(var(--color-hsl-white) / 0.08);
+}

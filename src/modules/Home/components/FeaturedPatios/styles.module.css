@@ -3,6 +3,7 @@
     flex-direction: column;
     width: 100%;
     min-width: 0;
+    padding-top: var(--gap-6);
 }
 
 .header {
@@ -61,7 +62,9 @@
 }
 
 .skip-button {
-    position: relative;
+    position: absolute;
+    top: var(--gap-4);
+    right: var(--gap-4);
     z-index: 1;
     flex-shrink: 0;
     opacity: 0;
@@ -106,7 +109,7 @@
     position: relative;
     display: flex;
     gap: var(--gap-3);
-    padding-bottom: var(--gap-6);
+    padding-bottom: 0;
     width: max-content;
 }
 

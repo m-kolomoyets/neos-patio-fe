@@ -2,41 +2,29 @@
     --spot-radius: 200px;
 
     position: relative;
-    flex: 0 0 calc((100cqi - var(--gap-3) * 2) / 3);
-    border-radius: var(--radius-4xl);
+    flex: 0 0 100cqi;
+    border-radius: var(--radius-2xl);
     overflow: hidden;
     scroll-snap-align: start;
     scroll-snap-stop: always;
-    max-height: 488px;
+    height: 428px;
     isolation: isolate;
-    padding: var(--gap-3);
-    transition: background 200ms ease-in-out;
 }
 
 .wrap::before {
     content: "";
     position: absolute;
     inset: 0;
-    opacity: 0;
     border-radius: inherit;
-    padding: 1px;
-    background: var(--stroke-surface);
-    mask:
-        linear-gradient(var(--color-base-black) 0 0) content-box,
-        linear-gradient(var(--color-base-black) 0 0);
-    mask-composite: exclude;
-    pointer-events: none;
-    transition: opacity 250ms ease;
-}
-
-.wrap:is(:hover, :focus-within) {
-    background: var(--surface-thick);
-    backdrop-filter: blur(56px);
-    box-shadow: 0 0 3px 2px hsl(var(--color-hsl-white) / 0.15) inset;
-}
-
-.wrap:is(:hover, :focus-within)::before {
-    opacity: 1;
+    isolation: isolate;
+    z-index: 3;
+    background: linear-gradient(
+        to bottom,
+        hsl(var(--color-hsl-black) / 0.2) 0%,
+        hsl(var(--color-hsl-black) / 0) 20%,
+        hsl(var(--color-hsl-black) / 0) 50%,
+        hsl(var(--color-hsl-black) / 0.8) 100%
+    );
 }
 
 .wrap::after {
@@ -67,46 +55,31 @@
 }
 
 .media {
+    position: relative;
     overflow: hidden;
     width: 100%;
+    height: 100%;
     border-radius: var(--radius-2xl);
-    z-index: 2;
-    box-shadow:
-        0 0 2px 1px hsl(var(--color-hsl-white) / 0.15),
-        1px 3px 3px hsl(var(--color-hsl-black) / 0.1) inset,
-        1px 1.5px 4px hsl(var(--color-hsl-black) / 0.2) inset,
-        0 -1px 1px hsl(26deg 0.2% 8.8 / 0.4) inset,
-        0 -3px 3px hsl(var(--color-hsl-black) / 0.2) inset;
 }
 
-.decor {
+.media::after {
     --decor-gradient-start: hsl(var(--color-hsl-white) / 0.2);
     --decor-gradient-end: hsl(var(--color-hsl-white) / 0);
 
+    content: "";
     position: absolute;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 30%;
-    backdrop-filter: blur(2px);
+    inset: 0;
+    border-radius: inherit;
     z-index: 2;
+    background: linear-gradient(
+        to bottom,
+        var(--decor-gradient-end) 0%,
+        var(--decor-gradient-end) 60%,
+        var(--decor-gradient-start) 100%
+    );
     background-blend-mode: overlay;
-}
-
-.decor.top {
-    background: linear-gradient(to bottom, var(--decor-gradient-start), var(--decor-gradient-end));
-    mask: linear-gradient(black, black, transparent);
-    border-top-left-radius: var(--radius-2xl);
-    border-top-right-radius: var(--radius-2xl);
-    top: 0;
-}
-
-.decor.bottom {
-    background: linear-gradient(to top, var(--decor-gradient-start), var(--decor-gradient-end));
-    mask: linear-gradient(transparent, black, black);
-    border-bottom-left-radius: var(--radius-2xl);
-    border-bottom-right-radius: var(--radius-2xl);
-    bottom: 0;
+    backdrop-filter: blur(2px);
+    mask: linear-gradient(transparent, transparent, transparent, black, black);
 }
 
 .stack {
@@ -157,10 +130,16 @@
 }
 
 .content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--gap-3) var(--gap-2);
+    padding: var(--gap-6);
     gap: var(--gap-4);
 }
 
@@ -174,12 +153,16 @@
 .titles {
     display: flex;
     flex-direction: column;
-    gap: var(--gap-1);
     color: var(--color-base-white);
+}
+
+.title {
+    margin-bottom: var(--gap-2);
 }
 
 .subtitle {
     color: hsl(var(--color-hsl-white) / 0.7);
+    margin-bottom: var(--gap-6);
 }
 
 .open-button {
@@ -190,6 +173,19 @@
 
 .wrap:is(:hover, :focus-within) .open-button {
     opacity: 1;
+}
+
+.meta {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2);
+}
+
+.meta .icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: hsl(var(--color-hsl-white) / 0.6);
 }
 
 @media (max-width: 1024px) {

@@ -2,7 +2,6 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: var(--gap-5);
     margin-bottom: var(--gap-8);
 }
 

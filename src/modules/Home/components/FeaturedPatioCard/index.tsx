@@ -1,12 +1,11 @@
 import type { Patio } from '@/services/patios/types';
 import type { CarouselParallaxApi } from '../FeaturedPatios/hooks/useCarouselParallax';
 import { memo, useCallback, useState } from 'react';
-import ArrowTopRight24Icon from '@/icons/arrow-top-right_24.svg?react';
+import MapPin24Icon from '@/icons/map-pin_24.svg?react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
 import { useSpotlight } from '@/hooks/useSpotlight';
-import { AspectRatio } from '@/components/ui/AspectRatio';
-import { Button } from '@/components/ui/Button';
+import { Tag } from '@/components/ui/Tag';
 import { Typography } from '@/components/ui/Typography';
 import { useHoverVideoScrub } from './hooks/useHoverVideoScrub';
 import s from './styles.module.css';
@@ -51,16 +50,20 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
     const showVideoLayer = metadataReady && phase !== 'broken';
 
     return (
-        <article
+        <Link
+            to="/patios/$id"
+            params={{ id: patio.id }}
             ref={setRootRef}
-            className={s.wrap}
+            className={clsx(s.wrap, 'focus-primary')}
+            aria-label={`Open ${patio.name}`}
+            title={`Open ${patio.name}`}
             data-card-id={patio.id}
             data-phase={phase}
             onPointerEnter={onPointerEnter}
             onPointerMove={onPointerMove}
             onPointerLeave={onPointerLeave}
         >
-            <AspectRatio ratio={381 / 408} className={s.media}>
+            <div className={s.media}>
                 <div className={clsx(s.decor, s.top)} aria-hidden />
                 <div className={clsx(s.decor, s.bottom)} aria-hidden />
                 <div ref={stackRef} className={s.stack} data-stack>
@@ -100,30 +103,31 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
                         />
                     ) : null}
                 </div>
-            </AspectRatio>
+            </div>
             <footer className={s.content}>
                 <div className={s.titles}>
-                    <Typography variant="text-md" render={<h3 />}>
+                    <Typography className={s.title} variant="display-md" render={<h3 />}>
                         {patio.name}
                     </Typography>
-                    <Typography className={s.subtitle} variant="text-sm" render={<p />}>
+                    <Typography className={s.subtitle} variant="text-lg" render={<p />}>
                         by {patio.author}
                     </Typography>
+                    <ul className={s.meta}>
+                        <Tag render={<li />}>
+                            <Typography variant="text-md" render={<span />}>
+                                ID {patio.id}
+                            </Typography>
+                        </Tag>
+                        <Tag render={<li />}>
+                            <MapPin24Icon className={s.icon} aria-hidden />
+                            <Typography variant="text-md" render={<span />}>
+                                {patio.country}
+                            </Typography>
+                        </Tag>
+                    </ul>
                 </div>
-                <Button
-                    variant="surface"
-                    size="md"
-                    title={`Open ${patio.name}`}
-                    className={s['open-button']}
-                    nativeButton={false}
-                    render={<Link to="/patios/$id" params={{ id: patio.id }} />}
-                >
-                    Open
-                    <span className="sr-only">{patio.name}</span>
-                    <ArrowTopRight24Icon aria-hidden />
-                </Button>
             </footer>
-        </article>
+        </Link>
     );
 };
 

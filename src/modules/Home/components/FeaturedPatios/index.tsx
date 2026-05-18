@@ -3,12 +3,9 @@ import ChevronLeftIcon from '@/icons/chevrone-left_24.svg?react';
 import ChevronRightIcon from '@/icons/chevrone-right_24.svg?react';
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { useStickyStuck } from '@/hooks/useStickyStuck';
 import { getFeaturedPatiosQueryOptions } from '@/services/patios/queries';
 import { Button } from '@/components/ui/Button';
 import { ScrollArea } from '@/components/ui/ScrollArea';
-import { Typography } from '@/components/ui/Typography';
-import { HOME_SCROLL_ROOT_SELECTOR } from '../../constants';
 import { useCarouselParallax } from './hooks/useCarouselParallax';
 import { FeaturedPatioCard } from '../FeaturedPatioCard';
 import s from './styles.module.css';
@@ -45,9 +42,6 @@ export const FeaturedPatios: React.FC = () => {
     });
     const videoCapable = staticCapable && !reducedMotion;
     const rafIdRef = useRef<number | null>(null);
-    const { ref: headerRef, flag: isHeaderStuck } = useStickyStuck({
-        rootSelector: HOME_SCROLL_ROOT_SELECTOR,
-    });
 
     const { registerSnap } = useCarouselParallax({ viewportRef, dataKey: data });
 
@@ -184,14 +178,9 @@ export const FeaturedPatios: React.FC = () => {
 
     return (
         <section className={s.wrap}>
-            <div ref={headerRef} className={s.header} data-stuck={isHeaderStuck || undefined}>
-                <Typography variant="display-xs" className={s.title} render={<h2 />}>
-                    Featured Patios
-                </Typography>
-                <Button className={s['skip-button']} variant="brand" size="md" onClick={handleSkipButtonClick}>
-                    Go to search bar
-                </Button>
-            </div>
+            <Button className={s['skip-button']} variant="brand" size="md" onClick={handleSkipButtonClick}>
+                Go to search bar
+            </Button>
             <ScrollArea
                 className={s.scroll}
                 orientation="horizontal"
