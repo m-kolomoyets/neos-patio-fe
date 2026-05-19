@@ -24,7 +24,7 @@
 
 .control-button {
     position: absolute;
-    top: 45%;
+    top: 50%;
     transform: translateY(-50%);
     width: 2.5rem;
     height: 2.5rem;
@@ -41,7 +41,7 @@
 
 .scroll {
     position: relative;
-    padding-inline: var(--gap-5);
+    padding-inline: var(--gap-6);
 }
 
 .viewport {

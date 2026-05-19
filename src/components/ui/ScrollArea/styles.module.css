@@ -24,7 +24,6 @@
     transition: opacity 0.15s ease-in-out;
 }
 
-.scrollbar[data-hovering],
 .scrollbar[data-scrolling] {
     opacity: 1;
 }
