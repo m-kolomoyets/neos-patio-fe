@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import { Container } from '@/components/ui/Container';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { HOME_SCROLL_ROOT_CLASS } from './constants';
 import { ActionBar } from './components/ActionsBar';
@@ -13,7 +12,7 @@ const Home: React.FC = () => {
     return (
         <div className={s.wrap}>
             <HomeBackground />
-            <Container>
+            <div>
                 <main className={s.main}>
                     <ScrollArea
                         className={s.scroll}
@@ -25,7 +24,7 @@ const Home: React.FC = () => {
                     <AlphabetIndex />
                     <ActionBar />
                 </main>
-            </Container>
+            </div>
         </div>
     );
 };

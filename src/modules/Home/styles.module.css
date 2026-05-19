@@ -12,8 +12,7 @@
 .main {
     position: relative;
     flex: 1;
-    width: 100%;
-    max-width: 1280px;
+    width: calc(100vw - 160px);
     height: calc(100vh - var(--home-content-offset-y) * 2);
     margin: 0 auto;
     display: flex;
@@ -51,12 +50,18 @@
 }
 
 .scroll :global(.scroll-area-scrollbar-vertical) {
-    transform: translateX(20px);
+    top: calc(50% - 84px) !important;
+    right: 4px !important;
+    height: 168px;
+    padding: 4px;
+    width: 16px;
+    border-radius: var(--radius-full);
+    background: hsl(var(--color-hsl-white) / 0.12);
 }
 
 .scroll :global(.scroll-area-scrollbar-vertical .scroll-area-thumb) {
     opacity: 1;
-    background: hsl(var(--color-hsl-white) / 0.4);
+    background: hsl(var(--color-hsl-white) / 0.5);
     background-blend-mode: lighten;
 }
 
