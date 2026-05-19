@@ -24,7 +24,7 @@
 
 .control-button {
     position: absolute;
-    top: 50%;
+    top: 52%;
     transform: translateY(-50%);
     width: 2.5rem;
     height: 2.5rem;
@@ -32,11 +32,11 @@
 }
 
 .control-button[data-direction="prev"] {
-    left: 0.375rem;
+    left: 2.5rem;
 }
 
 .control-button[data-direction="next"] {
-    right: 0.5625rem;
+    right: 2.5rem;
 }
 
 .scroll {
