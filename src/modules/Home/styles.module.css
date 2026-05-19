@@ -50,11 +50,14 @@
 }
 
 .scroll :global(.scroll-area-scrollbar-vertical) {
-    top: calc(50% - 84px) !important;
+    --scrollbar-height: 168px;
+    --scrollbar-width: 16px;
+
+    top: calc(50% - var(--scrollbar-height) / 2) !important;
     right: 4px !important;
-    height: 168px;
-    padding: 4px;
-    width: 16px;
+    height: var(--scrollbar-height);
+    padding: var(--gap-1);
+    width: var(--scrollbar-width);
     border-radius: var(--radius-full);
     background: hsl(var(--color-hsl-white) / 0.12);
 }
