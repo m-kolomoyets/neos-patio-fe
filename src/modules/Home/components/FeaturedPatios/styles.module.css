@@ -6,61 +6,6 @@
     padding-top: var(--gap-6);
 }
 
-.header {
-    position: sticky;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--gap-8);
-    padding-bottom: var(--gap-4);
-    gap: var(--gap-4);
-    color: var(--color-base-white);
-    top: 0;
-    z-index: 10;
-}
-
-.header::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    opacity: 0;
-    box-shadow:
-        0 4px 8px 0 hsl(var(--color-hsl-black) / 0.06),
-        0 0 4px 0 hsl(var(--color-hsl-black) / 0.04);
-    transition: opacity 0.2s ease;
-    pointer-events: none;
-
-    /* NOTE: surface-regular in index.css */
-
-    background: var(--surface-regular);
-    background-blend-mode: normal, luminosity;
-    backdrop-filter: blur(100px);
-}
-
-.header[data-stuck="true"]::after {
-    opacity: 1;
-}
-
-@supports (container-type: scroll-state) {
-    .header {
-        container-type: scroll-state;
-    }
-
-    @container scroll-state(stuck: top) {
-        .header::after {
-            opacity: 1;
-        }
-    }
-}
-
-.title {
-    position: relative;
-    z-index: 1;
-    color: var(--color-base-white);
-    font-weight: 600;
-}
-
 .skip-button {
     position: absolute;
     top: var(--gap-4);
@@ -83,6 +28,7 @@
     transform: translateY(-50%);
     width: 2.5rem;
     height: 2.5rem;
+    z-index: 2;
 }
 
 .control-button[data-direction="prev"] {
@@ -99,27 +45,39 @@
 }
 
 .viewport {
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
+    overflow: hidden;
     container-type: inline-size;
     container-name: featured-track;
     border-radius: var(--radius-2xl);
 }
 
 .track {
-    position: relative;
     display: flex;
     gap: var(--gap-3);
-    padding-bottom: 0;
-    width: max-content;
+    touch-action: pan-y pinch-zoom;
+}
+
+.slide {
+    flex: 0 0 100cqi;
+    min-width: 0;
 }
 
 .skeleton-card {
-    flex: 0 0 calc((100cqi - var(--gap-3) * 2) / 3);
+    flex: 0 0 100cqi;
     aspect-ratio: 4 / 5;
     border-radius: var(--radius-3xl);
     background: var(--surface-thin);
     animation: pulse 1.4s ease-in-out infinite;
+}
+
+@media (max-width: 1024px) {
+    .slide {
+        flex: 0 0 calc((100cqi - var(--gap-3)) / 2);
+    }
+
+    .skeleton-card {
+        flex: 0 0 calc((100cqi - var(--gap-3)) / 2);
+    }
 }
 
 @keyframes pulse {

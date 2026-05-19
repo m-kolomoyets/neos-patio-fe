@@ -8,13 +8,9 @@ const Y_EPSILON = 0.5;
 
 type Phase = 'idle' | 'loading' | 'active' | 'rewinding' | 'broken';
 
-type SnapRegistrar = (_id: string, _cb: (_s: number) => void) => () => void;
-
 type Params = {
-    cardId: string;
     videoUrl: string | undefined;
     shouldMountVideo: boolean;
-    registerSnap?: SnapRegistrar;
 };
 
 type Result = {
@@ -36,7 +32,7 @@ const easeOutCubic = (t: number) => {
     return 1 - Math.pow(1 - t, 3);
 };
 
-export const useHoverVideoScrub = ({ cardId, videoUrl, shouldMountVideo, registerSnap }: Params): Result => {
+export const useHoverVideoScrub = ({ videoUrl, shouldMountVideo }: Params): Result => {
     const enabled = shouldMountVideo && Boolean(videoUrl);
     const [phase, setPhase] = useState<Phase>('idle');
     const [metadataReady, setMetadataReady] = useState(false);
@@ -60,7 +56,6 @@ export const useHoverVideoScrub = ({ cardId, videoUrl, shouldMountVideo, registe
     const enterFromYRef = useRef(0);
     const enterFromTimeRef = useRef(0);
     const phaseRef = useRef<Phase>('idle');
-    const snapRef = useRef(0);
 
     const setPhaseBoth = useCallback((p: Phase) => {
         phaseRef.current = p;
@@ -145,8 +140,7 @@ export const useHoverVideoScrub = ({ cardId, videoUrl, shouldMountVideo, registe
 
             const video = videoElRef.current;
             if (video && metadataReadyRef.current) {
-                const hasDuration = Number.isFinite(video.duration) && video.duration > 0;
-                const snapTarget = hasDuration ? snapRef.current * video.duration : leaveFromTimeRef.current;
+                const snapTarget = 0;
                 const time = leaveFromTimeRef.current + (snapTarget - leaveFromTimeRef.current) * eased;
                 currentTimeRef.current = time;
                 if (!video.seeking) {
@@ -232,7 +226,7 @@ export const useHoverVideoScrub = ({ cardId, videoUrl, shouldMountVideo, registe
         setMetadataReady(true);
         const video = videoElRef.current;
         if (video && Number.isFinite(video.duration) && video.duration > 0) {
-            const initial = phaseRef.current === 'idle' ? snapRef.current * video.duration : currentTimeRef.current;
+            const initial = phaseRef.current === 'idle' ? 0 : currentTimeRef.current;
             currentTimeRef.current = initial;
             try {
                 video.currentTime = initial;
@@ -308,26 +302,6 @@ export const useHoverVideoScrub = ({ cardId, videoUrl, shouldMountVideo, registe
             setMetadataReady(false);
         }
     }, []);
-
-    useEffect(() => {
-        if (!registerSnap) return;
-        return registerSnap(cardId, (s) => {
-            snapRef.current = s;
-            if (phaseRef.current !== 'idle') return;
-            if (!metadataReadyRef.current) return;
-            const video = videoElRef.current;
-            if (!video) return;
-            if (!Number.isFinite(video.duration) || video.duration <= 0) return;
-            if (video.seeking) return;
-            const target = s * video.duration;
-            currentTimeRef.current = target;
-            try {
-                video.currentTime = target;
-            } catch {
-                /* ignore */
-            }
-        });
-    }, [cardId, registerSnap]);
 
     return {
         rootRef,

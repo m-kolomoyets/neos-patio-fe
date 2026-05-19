@@ -92,7 +92,7 @@
         0 0 2px 1px hsl(var(--color-hsl-white) / 0.15);
 }
 
-.media::after {
+/* .media::after {
     --decor-gradient-start: hsl(var(--color-hsl-white) / 0.4);
     --decor-gradient-end: hsl(var(--color-hsl-white) / 0);
 
@@ -110,7 +110,7 @@
     );
     background-blend-mode: overlay;
     mask: linear-gradient(black, transparent, transparent, black);
-}
+} */
 
 .image {
     position: absolute;

@@ -1,5 +1,4 @@
 import type { Patio } from '@/services/patios/types';
-import type { CarouselParallaxApi } from '../FeaturedPatios/hooks/useCarouselParallax';
 import { memo, useCallback, useState } from 'react';
 import MapPin24Icon from '@/icons/map-pin_24.svg?react';
 import { Link } from '@tanstack/react-router';
@@ -13,10 +12,9 @@ import s from './styles.module.css';
 type Props = {
     patio: Patio;
     shouldMountVideo?: boolean;
-    registerSnap?: CarouselParallaxApi['registerSnap'];
 };
 
-const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = false, registerSnap }) => {
+const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = false }) => {
     const [highLoaded, setHighLoaded] = useState(false);
     const {
         rootRef,
@@ -32,10 +30,8 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
         onVideoLoadedMetadata,
         onVideoError,
     } = useHoverVideoScrub({
-        cardId: patio.id,
         videoUrl: patio.videoUrl,
         shouldMountVideo,
-        registerSnap,
     });
 
     const spotlightRef = useSpotlight<HTMLElement>();

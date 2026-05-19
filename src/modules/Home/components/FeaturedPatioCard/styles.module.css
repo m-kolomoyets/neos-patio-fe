@@ -2,11 +2,10 @@
     --spot-radius: 200px;
 
     position: relative;
-    flex: 0 0 100cqi;
+    display: block;
+    width: 100%;
     border-radius: var(--radius-2xl);
     overflow: hidden;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
     height: 428px;
     isolation: isolate;
 }
@@ -87,7 +86,7 @@
 
     position: absolute;
     inset: 0;
-    transform: translateY(calc(var(--ty) * 1px)) scale(1.25);
+    transform: translateY(calc((var(--ty) + var(--parallax-y, 0)) * 1px)) scale(1.25);
     will-change: transform;
     pointer-events: none;
 }
@@ -186,10 +185,4 @@
     height: 18px;
     flex-shrink: 0;
     color: hsl(var(--color-hsl-white) / 0.6);
-}
-
-@media (max-width: 1024px) {
-    .wrap {
-        flex: 0 0 calc((100cqi - var(--gap-3)) / 2);
-    }
 }
