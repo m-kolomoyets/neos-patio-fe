@@ -92,26 +92,6 @@
         0 0 2px 1px hsl(var(--color-hsl-white) / 0.12);
 }
 
-/* .media::after {
-    --decor-gradient-start: hsl(var(--color-hsl-white) / 0.4);
-    --decor-gradient-end: hsl(var(--color-hsl-white) / 0);
-
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    z-index: 2;
-    background: linear-gradient(
-        to bottom,
-        var(--decor-gradient-start) 0%,
-        var(--decor-gradient-end) 40%,
-        var(--decor-gradient-end) 60%,
-        var(--decor-gradient-start) 100%
-    );
-    background-blend-mode: overlay;
-    mask: linear-gradient(black, transparent, transparent, black);
-} */
-
 .image {
     position: absolute;
     inset: -15% 0;
