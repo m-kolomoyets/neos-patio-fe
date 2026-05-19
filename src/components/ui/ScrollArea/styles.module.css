@@ -42,8 +42,8 @@
 .thumb {
     flex: 1;
     width: 6px;
-    background-color: hsl(var(--color-hsl-white) / 0.7);
-    opacity: 0.15;
+    background-color: hsl(var(--color-hsl-white) / 0.3);
+    opacity: 0.1;
     border-radius: var(--radius-full);
     transition:
         background-color 0.15s ease-in-out,
@@ -51,7 +51,7 @@
 }
 
 .thumb:hover {
-    opacity: 0.3;
+    opacity: 0.2;
 }
 
 .corner {
