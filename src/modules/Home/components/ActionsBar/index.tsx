@@ -1,12 +1,14 @@
 import type { Patio } from '@/services/patios/types';
 import React from 'react';
 import Search24Icon from '@/icons/search_24.svg?react';
+import VrHeadset20Icon from '@/icons/vr-headset_20.svg?react';
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'motion/react';
 import { getPatiosListAllQueryOptions } from '@/services/patios/queries';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { Button } from '@/components/ui/Button';
+import { XRConnectDialog } from '@/components/XRConnectDialog';
 import { SEARCH_TRIGGER_ID } from './constants';
 import { useHomeNavigate } from '../../hooks/useHomeRouteApi';
 import { useActionBarSearch } from './hooks/useActionBarSearch';
@@ -83,7 +85,14 @@ export const ActionBar: React.FC = () => {
                         <div className={s.actions}>
                             <Button id={SEARCH_TRIGGER_ID} variant="surface" size="xl" isIcon onClick={openSearch}>
                                 <Search24Icon />
+                                <span className="sr-only">Open search bar</span>
                             </Button>
+                            <XRConnectDialog>
+                                <Button variant="surface" size="xl" isIcon>
+                                    <VrHeadset20Icon />
+                                    <span className="sr-only">Open XR connect modal</span>
+                                </Button>
+                            </XRConnectDialog>
                             <ConnectWalletButton />
                         </div>
                     </motion.div>
