@@ -5,6 +5,7 @@ import VrHeadset20Icon from '@/icons/vr-headset_20.svg?react';
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'motion/react';
+import { useAccount } from 'wagmi';
 import { getPatiosListAllQueryOptions } from '@/services/patios/queries';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { Button } from '@/components/ui/Button';
@@ -26,6 +27,8 @@ const stateTransition = { duration: 0.2, ease: [0.4, 0, 0.2, 1] as [number, numb
 export const ActionBar: React.FC = () => {
     const navigate = useHomeNavigate();
     const { isSearchOpened, openSearch, query, setQuery, wrapRef } = useActionBarSearch();
+
+    const { isConnected } = useAccount();
 
     const {
         data: patios,
@@ -87,12 +90,14 @@ export const ActionBar: React.FC = () => {
                                 <Search24Icon />
                                 <span className="sr-only">Open search bar</span>
                             </Button>
-                            <XRConnectDialog>
-                                <Button variant="surface" size="xl" isIcon>
-                                    <VrHeadset20Icon />
-                                    <span className="sr-only">Open XR connect modal</span>
-                                </Button>
-                            </XRConnectDialog>
+                            {isConnected ? (
+                                <XRConnectDialog>
+                                    <Button variant="surface" size="xl" isIcon>
+                                        <VrHeadset20Icon />
+                                        <span className="sr-only">Open XR connect modal</span>
+                                    </Button>
+                                </XRConnectDialog>
+                            ) : null}
                             <ConnectWalletButton />
                         </div>
                     </motion.div>
