@@ -102,10 +102,10 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
             </div>
             <footer className={s.content}>
                 <div className={s.titles}>
-                    <Typography className={s.title} variant="display-md" render={<h3 />}>
+                    <Typography className={s.title} variant="text-xl" render={<h3 />}>
                         {patio.name}
                     </Typography>
-                    <Typography className={s.subtitle} variant="text-lg" render={<p />}>
+                    <Typography className={s.subtitle} variant="text-sm" render={<p />}>
                         by {patio.author}
                     </Typography>
                     <ul className={s.meta}>

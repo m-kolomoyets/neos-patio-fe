@@ -1,5 +1,5 @@
 .wrap {
-    color: var(--color-base-white);
+    color: inherit;
     letter-spacing: 0;
 }
 
