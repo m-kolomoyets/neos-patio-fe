@@ -41,7 +41,14 @@ const prefersReducedMotion = (): boolean => {
 
 const buildOptions = (reducedMotion: boolean): EmblaOptionsType => {
     if (reducedMotion) {
-        return { loop: false, align: 'start', dragFree: false, containScroll: 'trimSnaps', duration: 0 };
+        return {
+            loop: false,
+            align: 'start',
+            dragFree: false,
+            containScroll: 'trimSnaps',
+            duration: 0,
+            skipSnaps: true,
+        };
     }
     return { loop: true, align: 'start', dragFree: false, containScroll: 'trimSnaps' };
 };

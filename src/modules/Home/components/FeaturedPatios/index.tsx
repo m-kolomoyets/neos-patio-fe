@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/Button';
 import { useCarouselParallax } from './hooks/useCarouselParallax';
 import { useCarouselVideoIntro } from './hooks/useCarouselVideoIntro';
 import { useFeaturedCarousel } from './hooks/useFeaturedCarousel';
-import { CarouselDots } from './components/CarouselDots';
 import { FeaturedPatioCard } from '../FeaturedPatioCard';
 import s from './styles.module.css';
 
@@ -16,19 +15,10 @@ export const FeaturedPatios: React.FC = () => {
     const { data, isLoading } = useQuery(getFeaturedPatiosQueryOptions());
     const viewportId = useId();
 
-    const {
-        emblaRef,
-        emblaApi,
-        selectedIndex,
-        snapList,
-        scrollPrev,
-        scrollNext,
-        scrollTo,
-        reducedMotion,
-        slidesInViewWithNeighbors,
-    } = useFeaturedCarousel({
-        dataKey: data,
-    });
+    const { emblaRef, emblaApi, snapList, scrollPrev, scrollNext, reducedMotion, slidesInViewWithNeighbors } =
+        useFeaturedCarousel({
+            dataKey: data,
+        });
 
     useCarouselParallax({ emblaApi, enabled: !reducedMotion });
     useCarouselVideoIntro({ emblaApi, enabled: !reducedMotion });
@@ -105,7 +95,6 @@ export const FeaturedPatios: React.FC = () => {
                             <ChevronRightIcon />
                             <span className="sr-only">Next featured patios</span>
                         </Button>
-                        <CarouselDots count={snapList.length} selectedIndex={selectedIndex} onSelect={scrollTo} />
                     </>
                 ) : null}
             </div>

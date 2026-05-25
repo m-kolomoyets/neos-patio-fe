@@ -1,4 +1,5 @@
 .wrap {
+    --slides-pre-view: 2.2;
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -41,7 +42,8 @@
 
 .scroll {
     position: relative;
-    padding-inline: var(--gap-6);
+    padding-right: var(--gap-6);
+    padding-left: var(--gap-3);
 }
 
 .viewport {
@@ -53,12 +55,12 @@
 
 .track {
     display: flex;
-    gap: var(--gap-3);
+    gap: var(--gap-2);
     touch-action: pan-y pinch-zoom;
 }
 
 .slide {
-    flex: 0 0 100cqi;
+    flex: 0 0 calc((100 / var(--slides-pre-view)) * 1cqi);
     min-width: 0;
 }
 
