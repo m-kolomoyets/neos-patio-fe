@@ -42,8 +42,8 @@
 
 .scroll {
     position: relative;
-    padding-right: var(--gap-6);
-    padding-left: var(--gap-3);
+    padding-right: 0;
+    padding-left: var(--gap-5);
 }
 
 .viewport {

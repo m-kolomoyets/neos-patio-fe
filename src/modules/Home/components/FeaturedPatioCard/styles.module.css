@@ -108,15 +108,8 @@
 .stack {
     position: absolute;
     inset: 0;
-    transform: translate3d(calc(var(--parallax-x, 0) * 1px), 0, 0) scale(1.25);
-    will-change: transform;
+    transform: scale(1.25);
     pointer-events: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .stack {
-        transform: scale(1.25);
-    }
 }
 
 .layer {

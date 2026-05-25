@@ -140,7 +140,9 @@ export const useHoverVideoScrub = ({ videoUrl, shouldMountVideo }: Params): Resu
 
             const video = videoElRef.current;
             if (video && metadataReadyRef.current) {
-                const snapTarget = 0;
+                const scrubAttr = video.dataset.scrubTime;
+                const parsed = scrubAttr !== undefined ? Number.parseFloat(scrubAttr) : Number.NaN;
+                const snapTarget = Number.isFinite(parsed) ? parsed : 0;
                 const time = leaveFromTimeRef.current + (snapTarget - leaveFromTimeRef.current) * eased;
                 currentTimeRef.current = time;
                 if (!video.seeking) {
@@ -180,6 +182,10 @@ export const useHoverVideoScrub = ({ videoUrl, shouldMountVideo }: Params): Resu
             leaveStartRef.current = null;
             stopRaf();
             seedFromEvent(e);
+            const video = videoElRef.current;
+            if (video && Number.isFinite(video.currentTime)) {
+                currentTimeRef.current = video.currentTime;
+            }
             enterFromYRef.current = currentYRef.current;
             enterFromTimeRef.current = currentTimeRef.current;
             enterStartRef.current = performance.now();
@@ -225,14 +231,8 @@ export const useHoverVideoScrub = ({ videoUrl, shouldMountVideo }: Params): Resu
         metadataReadyRef.current = true;
         setMetadataReady(true);
         const video = videoElRef.current;
-        if (video && Number.isFinite(video.duration) && video.duration > 0) {
-            const initial = phaseRef.current === 'idle' ? 0 : currentTimeRef.current;
-            currentTimeRef.current = initial;
-            try {
-                video.currentTime = initial;
-            } catch {
-                /* ignore */
-            }
+        if (video && Number.isFinite(video.currentTime)) {
+            currentTimeRef.current = video.currentTime;
         }
         if (hoveredRef.current && phaseRef.current === 'loading') {
             setPhaseBoth('active');

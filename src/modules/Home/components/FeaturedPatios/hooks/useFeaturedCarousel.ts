@@ -1,6 +1,7 @@
 import type { EmblaCarouselType, EmblaOptionsType } from 'embla-carousel';
 import { useCallback, useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
+import { computeActiveSet } from '../utils/computeActiveSet';
 
 type Params = {
     dataKey: unknown;
@@ -119,18 +120,7 @@ export const useFeaturedCarousel = ({ dataKey }: Params): Result => {
                 return;
             }
             const looped = emblaApi.internalEngine().options.loop === true;
-            const next = new Set<number>();
-            for (const idx of inView) {
-                for (let offset = -NEIGHBOR_RADIUS; offset <= NEIGHBOR_RADIUS; offset++) {
-                    const target = idx + offset;
-                    if (target >= 0 && target < total) {
-                        next.add(target);
-                    } else if (looped) {
-                        next.add(((target % total) + total) % total);
-                    }
-                }
-            }
-            setSlidesInViewWithNeighbors(next);
+            setSlidesInViewWithNeighbors(computeActiveSet(inView, total, NEIGHBOR_RADIUS, looped));
         };
         emblaApi.on('slidesInView', sync);
         emblaApi.on('reInit', sync);
