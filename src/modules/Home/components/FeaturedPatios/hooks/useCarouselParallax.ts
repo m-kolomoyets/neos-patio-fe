@@ -20,7 +20,7 @@ export const useCarouselParallax = ({ emblaApi, enabled }: Params): void => {
 
         if (!enabled) {
             for (const node of emblaApi.slideNodes()) {
-                node.style.removeProperty('--parallax-y');
+                node.style.removeProperty('--parallax-x');
             }
             return;
         }
@@ -37,7 +37,7 @@ export const useCarouselParallax = ({ emblaApi, enabled }: Params): void => {
                 const diff = looped ? wrapDiff(rawDiff) : rawDiff;
                 const clamped = Math.max(-1, Math.min(1, diff));
                 const translate = clamped * MAX_TRANSLATE_PX;
-                node.style.setProperty('--parallax-y', translate.toFixed(2));
+                node.style.setProperty('--parallax-x', translate.toFixed(2));
             }
         };
 
@@ -54,7 +54,7 @@ export const useCarouselParallax = ({ emblaApi, enabled }: Params): void => {
             emblaApi.off('settle', apply);
             emblaApi.off('slidesInView', apply);
             for (const node of emblaApi.slideNodes()) {
-                node.style.removeProperty('--parallax-y');
+                node.style.removeProperty('--parallax-x');
             }
         };
     }, [emblaApi, enabled]);
