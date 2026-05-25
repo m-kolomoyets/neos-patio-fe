@@ -3,7 +3,6 @@
 
     position: relative;
     display: block;
-    border-radius: var(--radius-2xl);
     height: 512px;
     margin: 2px;
     padding: var(--gap-3);
@@ -102,7 +101,6 @@
         hsl(var(--color-hsl-black) / 0) 60%,
         hsl(var(--color-hsl-black) / 0.5) 100%
     );
-    mix-blend-mode: multiply, multiply;
 }
 
 .stack {
