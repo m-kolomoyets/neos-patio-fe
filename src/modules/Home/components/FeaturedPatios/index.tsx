@@ -1,10 +1,11 @@
-import { useId } from 'react';
+import { useId, useRef } from 'react';
 import ChevronLeftIcon from '@/icons/chevrone-left_24.svg?react';
 import ChevronRightIcon from '@/icons/chevrone-right_24.svg?react';
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { getFeaturedPatiosQueryOptions } from '@/services/patios/queries';
 import { Button } from '@/components/ui/Button';
+import { useCarouselMagneticScrub } from './hooks/useCarouselMagneticScrub';
 import { useCarouselVideoScrub } from './hooks/useCarouselVideoScrub';
 import { useFeaturedCarousel } from './hooks/useFeaturedCarousel';
 import { FeaturedPatioCard } from '../FeaturedPatioCard';
@@ -14,12 +15,24 @@ export const FeaturedPatios: React.FC = () => {
     const { data, isLoading } = useQuery(getFeaturedPatiosQueryOptions());
     const viewportId = useId();
 
-    const { emblaRef, emblaApi, snapList, scrollPrev, scrollNext, reducedMotion, slidesInViewWithNeighbors } =
-        useFeaturedCarousel({
-            dataKey: data,
-        });
+    const prevButtonRef = useRef<HTMLButtonElement>(null);
+    const nextButtonRef = useRef<HTMLButtonElement>(null);
+
+    const {
+        emblaRef,
+        emblaApi,
+        snapList,
+        scrollPrev,
+        scrollNext,
+        reducedMotion,
+        videoCapable,
+        slidesInViewWithNeighbors,
+    } = useFeaturedCarousel({
+        dataKey: data,
+    });
 
     useCarouselVideoScrub({ emblaApi, enabled: !reducedMotion });
+    useCarouselMagneticScrub({ emblaApi, prevRef: prevButtonRef, nextRef: nextButtonRef, enabled: videoCapable });
 
     const hasMultipleSlides = snapList.length > 1;
     const totalSlides = data?.length ?? 0;
@@ -68,6 +81,7 @@ export const FeaturedPatios: React.FC = () => {
                 {hasMultipleSlides ? (
                     <>
                         <Button
+                            ref={prevButtonRef}
                             isIcon
                             variant="surface"
                             size="md"
@@ -81,6 +95,7 @@ export const FeaturedPatios: React.FC = () => {
                             <span className="sr-only">Previous featured patios</span>
                         </Button>
                         <Button
+                            ref={nextButtonRef}
                             isIcon
                             variant="surface"
                             size="md"

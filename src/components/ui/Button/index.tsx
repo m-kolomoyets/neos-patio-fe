@@ -12,10 +12,12 @@ export const Button: React.FC<ButtonProps> = ({
     children,
     disabled = false,
     isLoading = false,
+    ref,
     ...rest
 }) => {
     return (
         <BaseButton
+            ref={ref}
             className={clsx(s.wrap, 'focus-primary', className, {
                 'surface-thin': variant === 'surface',
             })}
