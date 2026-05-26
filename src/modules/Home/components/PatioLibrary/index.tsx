@@ -10,6 +10,7 @@ import { useGroupedPatios } from '../../hooks/useGroupedPatios';
 import { usePatioFilters } from '../../hooks/usePatioFilters';
 import { LibraryToolbar } from '../LibraryToolbar';
 import { PatioLibraryCard } from '../PatioLibraryCard';
+import { PatioLibraryCardSkeleton } from '../PatioLibraryCardSkeleton';
 import s from './styles.module.css';
 
 const SkeletonGrid: React.FC<{ count: number }> = ({ count }) => {
@@ -73,7 +74,7 @@ export const PatioLibrary: React.FC = () => {
                     })}
                     {isFetchingNextPage
                         ? Array.from({ length: 4 }).map((_, i) => {
-                              return <div key={`skeleton-next-${i}`} className={s['skeleton-card']} />;
+                              return <PatioLibraryCardSkeleton key={`skeleton-next-${i}`} />;
                           })
                         : null}
                 </div>
