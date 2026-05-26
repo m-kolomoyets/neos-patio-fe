@@ -6,6 +6,7 @@
     width: 100%;
     min-width: 0;
     padding-top: var(--gap-6);
+    margin-bottom: var(--gap-4);
 }
 
 .skip-button {
