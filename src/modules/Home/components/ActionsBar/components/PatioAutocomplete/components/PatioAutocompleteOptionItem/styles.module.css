@@ -62,8 +62,8 @@
 }
 
 .wrap:is([data-highlighted], :focus-visible, :hover) {
-    background: var(--surface-thick);
-    background-blend-mode: normal, luminosity;
+    background: hsl(var(--color-hsl-black) / 0.2);
+    background-blend-mode: luminosity;
     backdrop-filter: blur(20px);
     box-shadow: 0 0 3px 2px hsl(var(--color-hsl-black) / 0.05) inset;
 }

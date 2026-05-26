@@ -124,7 +124,7 @@
     background-image: url("/images/x.svg");
     background-repeat: no-repeat;
     background-position: center;
-    background-size: 12px;
+    background-size: 8px;
     cursor: pointer;
     transition: background-color 0.2s ease-in-out;
 }

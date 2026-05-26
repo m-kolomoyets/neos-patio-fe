@@ -6,6 +6,7 @@
     min-height: 64px;
     z-index: 10;
     isolation: isolate;
+    border-radius: var(--radius-full);
 }
 
 .default-state {

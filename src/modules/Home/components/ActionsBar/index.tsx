@@ -51,7 +51,7 @@ export const ActionBar: React.FC = () => {
     };
 
     return (
-        <div ref={wrapRef} className={s.shell}>
+        <div ref={wrapRef} className={clsx(s.shell, 'surface-regular')}>
             <AnimatePresence mode="popLayout" initial={false}>
                 {isSearchOpened ? (
                     <motion.div
@@ -77,7 +77,7 @@ export const ActionBar: React.FC = () => {
                 ) : (
                     <motion.div
                         key="default"
-                        className={clsx(s['default-state'], 'surface-regular')}
+                        className={clsx(s['default-state'])}
                         variants={stateVariants}
                         initial="initial"
                         animate="animate"

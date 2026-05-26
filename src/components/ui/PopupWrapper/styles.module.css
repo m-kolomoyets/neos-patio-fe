@@ -3,14 +3,15 @@
     background: var(--surface-thin);
     border-radius: var(--radius-xl);
     overflow: hidden;
-    backdrop-filter: blur(24px);
+    backdrop-filter: blur(32px);
     transform-origin: var(--transform-origin);
+    border: 1px solid hsl(var(--color-hsl-white) / 0.1);
     transition:
         transform 150ms,
         opacity 150ms;
 }
 
-.wrap::before {
+/* .wrap::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -22,7 +23,7 @@
         linear-gradient(var(--color-base-black) 0 0);
     mask-composite: exclude;
     pointer-events: none;
-}
+} */
 
 .wrap[data-starting-style],
 .wrap[data-ending-style] {
