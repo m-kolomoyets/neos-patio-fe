@@ -99,7 +99,7 @@
     background: none;
 }
 
-.wrap[data-button-variant="brand"]:not(:disabled):is(:hover, [data-popup-open], [data-state="open"])::after {
+.wrap[data-button-variant="brand"]:not(:disabled):hover::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -113,11 +113,16 @@
     backdrop-filter: blur(24px);
 }
 
-.wrap[data-button-variant="surface"]:not(:disabled):is(:hover, [data-popup-open], [data-state="open"]) {
+.wrap[data-button-variant="surface"]:not(:disabled):hover {
     background: var(--gradient-bottom-shine-primary);
     background-blend-mode: normal, normal, luminosity;
     overflow: hidden;
     backdrop-filter: blur(24px);
+}
+
+.wrap[data-button-variant="surface"]:not(:disabled):is(:active, [data-popup-open], [data-state="open"]) {
+    background: var(--surface-regular);
+    backdrop-filter: blur(40px);
 }
 
 .wrap[data-button-variant="link"] {

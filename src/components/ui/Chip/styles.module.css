@@ -57,12 +57,12 @@
 }
 
 .wrap[data-pressed] {
-    background: var(--color-brand-yellow-600);
+    background: var(--color-brand-600);
     backdrop-filter: blur(100px);
 }
 
 .wrap[data-pressed]:not(:disabled):hover {
-    background: var(--color-brand-yellow-700);
+    background: var(--color-brand-700);
 }
 
 .wrap:disabled {
