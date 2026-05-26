@@ -113,7 +113,14 @@
         radial-gradient(ellipse 56.05% 54.1% at 50% 100%, hsl(0deg 0% 71.6% / 0.65) 0%, hsl(0deg 0% 36.9% / 0) 100%),
         linear-gradient(hsl(var(--color-hsl-white) / 0.08), hsl(var(--color-hsl-white) / 0.08)),
         linear-gradient(hsl(var(--color-hsl-black) / 0.4), hsl(var(--color-hsl-black) / 0.4));
-
+    --gradient-bottom-shine-brand:
+        radial-gradient(
+            ellipse 59.72% 55.84% at 50% 88.89%,
+            hsl(var(--color-hsl-white) / 0.2) 0%,
+            hsl(var(--color-hsl-white) / 0) 100%
+        ),
+        linear-gradient(var(--color-brand-600), var(--color-brand-600)),
+        linear-gradient(hsl(var(--color-hsl-black) / 0.04), hsl(var(--color-hsl-black) / 0.04));
     /* Gaps */
     --gap-px: 1px;
     --gap-0-5: 0.125rem;
@@ -162,12 +169,12 @@
 
     /* Focus Ring */
     --ring-offset-color: var(--color-base-white);
-    --ring-color: var(--color-brand-500);
+    --ring-color: var(--color-base-white);
     --ring-inset: ;
 
     /* stylelint-disable-next-line length-zero-no-unit */
     --ring-offset-width: 0px;
-    --ring-width: 2px;
+    --ring-width: 1px;
     --ring-offset-shadow: var(--ring-inset) 0 0 0 calc(var(--ring-offset-width)) var(--ring-offset-color);
     --ring-shadow: var(--ring-inset) 0 0 0 calc(var(--ring-width) + var(--ring-offset-width)) var(--ring-color);
 

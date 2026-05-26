@@ -20,6 +20,10 @@
         opacity 0.2s ease-in-out;
 }
 
+.wrap > * {
+    z-index: 5;
+}
+
 .wrap > svg {
     width: var(--button-icon-size);
     height: var(--button-icon-size);
@@ -64,15 +68,49 @@
 }
 
 .wrap[data-button-variant="brand"] {
+    background: none;
+}
+
+.wrap[data-button-variant="brand"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: var(--color-brand-600);
+    isolation: isolate;
+    z-index: -2;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.wrap[data-button-variant="brand"]:focus-visible {
+    --ring-offset-color: var(--color-base-white);
+    --ring-color: var(--color-brand-700);
+    --ring-offset-width: 1px;
+    --ring-width: 1px;
+    --ring-offset-shadow: var(--ring-inset) 0 0 0 calc(var(--ring-offset-width)) var(--ring-offset-color);
+    --ring-shadow: var(--ring-inset) 0 0 0 calc(var(--ring-width) + var(--ring-offset-width)) var(--ring-color);
+}
+
+.wrap[data-button-variant="brand"]:not(:disabled):is(:active, [data-popup-open], [data-state="open"]) {
     background-color: var(--color-brand-700);
 }
 
-.wrap[data-button-variant="brand"]:not(:disabled):is(:hover, [data-popup-open], [data-state="open"]) {
-    background-color: var(--color-brand-800);
+.wrap[data-button-variant="brand"]:not(:disabled):is(:active, [data-popup-open], [data-state="open"])::after {
+    background: none;
 }
 
-.wrap[data-button-variant="brand"]:not(:disabled):active {
-    background-color: var(--color-brand-900);
+.wrap[data-button-variant="brand"]:not(:disabled):is(:hover, [data-popup-open], [data-state="open"])::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    isolation: isolate;
+    z-index: -1;
+
+    border-radius: inherit;
+    background: var(--gradient-bottom-shine-brand);
+    background-blend-mode: normal, normal, luminosity;
+    overflow: hidden;
+    backdrop-filter: blur(24px);
 }
 
 .wrap[data-button-variant="surface"]:not(:disabled):is(:hover, [data-popup-open], [data-state="open"]) {
