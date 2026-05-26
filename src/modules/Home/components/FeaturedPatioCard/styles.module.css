@@ -196,8 +196,8 @@
 }
 
 .meta .icon {
-    width: 18px;
-    height: 18px;
+    width: 1rem;
+    height: 1rem;
     flex-shrink: 0;
     color: hsl(var(--color-hsl-white) / 0.6);
 }

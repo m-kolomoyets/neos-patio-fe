@@ -110,14 +110,14 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
                     </Typography>
                     <ul className={s.meta}>
                         <Tag render={<li />}>
-                            <Typography variant="text-md" render={<span />}>
-                                ID {patio.id}
+                            <MapPin24Icon className={s.icon} aria-hidden />
+                            <Typography variant="text-sm" render={<span />}>
+                                {patio.country}
                             </Typography>
                         </Tag>
                         <Tag render={<li />}>
-                            <MapPin24Icon className={s.icon} aria-hidden />
-                            <Typography variant="text-md" render={<span />}>
-                                {patio.country}
+                            <Typography variant="text-sm" render={<span />}>
+                                ID {patio.id}
                             </Typography>
                         </Tag>
                     </ul>

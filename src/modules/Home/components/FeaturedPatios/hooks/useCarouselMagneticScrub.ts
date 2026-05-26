@@ -11,7 +11,7 @@ type Params = {
 
 const RADIUS_PX = 225;
 // Max scrub offset as a fraction of video duration at full proximity (cursor on a button).
-const MAX_OFFSET = 0.6;
+const MAX_OFFSET = 0.2;
 const LERP_K = 0.15;
 const OFFSET_EPSILON = 1e-4;
 const SEEK_MIN_DELTA_SEC = 0.01;
