@@ -24,9 +24,6 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
         videoSrc,
         phase,
         metadataReady,
-        onPointerEnter,
-        onPointerMove,
-        onPointerLeave,
         onVideoLoadedMetadata,
         onVideoError,
     } = useHoverVideoScrub({
@@ -55,9 +52,6 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
             title={`Open ${patio.name}`}
             data-card-id={patio.id}
             data-phase={phase}
-            onPointerEnter={onPointerEnter}
-            onPointerMove={onPointerMove}
-            onPointerLeave={onPointerLeave}
         >
             <div className={s.media}>
                 <div className={clsx(s.decor, s.top)} aria-hidden />
