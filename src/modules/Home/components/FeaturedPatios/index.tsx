@@ -5,7 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { getFeaturedPatiosQueryOptions } from '@/services/patios/queries';
 import { Button } from '@/components/ui/Button';
-import { useCarouselMagneticScrub } from './hooks/useCarouselMagneticScrub';
+// import { useCarouselMagneticScrub } from './hooks/useCarouselMagneticScrub';
+import { useCarouselProximityAutoplay } from './hooks/useCarouselProximityAutoplay';
 import { useCarouselVideoScrub } from './hooks/useCarouselVideoScrub';
 import { useFeaturedCarousel } from './hooks/useFeaturedCarousel';
 import { FeaturedPatioCard } from '../FeaturedPatioCard';
@@ -32,7 +33,8 @@ export const FeaturedPatios: React.FC = () => {
     });
 
     useCarouselVideoScrub({ emblaApi, enabled: !reducedMotion });
-    useCarouselMagneticScrub({ emblaApi, prevRef: prevButtonRef, nextRef: nextButtonRef, enabled: videoCapable });
+    // useCarouselMagneticScrub({ emblaApi, prevRef: prevButtonRef, nextRef: nextButtonRef, enabled: videoCapable });
+    useCarouselProximityAutoplay({ emblaApi, prevRef: prevButtonRef, nextRef: nextButtonRef, enabled: videoCapable });
 
     const hasMultipleSlides = snapList.length > 1;
     const totalSlides = data?.length ?? 0;
