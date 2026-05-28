@@ -1,5 +1,6 @@
 .wrap {
-    --home-content-offset-y: 5rem;
+    --home-content-offset-y: 3.5rem;
+    --home-content-offset-x: 3.5rem;
 
     position: relative;
     min-height: 100svh;
@@ -12,7 +13,7 @@
 .main {
     position: relative;
     flex: 1;
-    width: calc(100vw - 160px);
+    width: calc(100vw - var(--home-content-offset-x) * 2);
     height: calc(100vh - var(--home-content-offset-y) * 2);
     margin: 0 auto;
     display: flex;
