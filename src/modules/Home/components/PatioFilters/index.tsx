@@ -48,7 +48,7 @@ export const PatioFilters: React.FC = () => {
     );
 
     return (
-        <Popover.Root>
+        <Popover.Root modal>
             <span className={libraryToolbarStyles['trigger-wrap']}>
                 <Popover.Trigger
                     render={

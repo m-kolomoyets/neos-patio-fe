@@ -2,7 +2,7 @@ import type { PatiosListFilters } from '@/services/patios/queryKeys';
 import type { Patio } from '@/services/patios/types';
 import type { PatioGroup } from '../utils/groupPatios';
 import { useMemo } from 'react';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { getGroupedPatiosQueryOptions, getPatiosListInfiniteQueryOptions } from '@/services/patios/queries';
 import { groupByAlpha, groupByContinent } from '../utils/groupPatios';
 
@@ -13,6 +13,7 @@ export type UseGroupedPatiosResult = {
     items: Patio[] | null;
     groups: PatioGroup[] | null;
     isLoading: boolean;
+    isFetched: boolean;
     isError: boolean;
     refetch: () => void;
     hasNextPage: boolean | null;
@@ -57,6 +58,7 @@ export const useGroupedPatios = (filters: PatiosListFilters): UseGroupedPatiosRe
     const flatQuery = useInfiniteQuery({
         ...getPatiosListInfiniteQueryOptions(filters),
         enabled: flatEnabled,
+        placeholderData: keepPreviousData,
     });
 
     const groupedQuery = useQuery(getGroupedPatiosQueryOptions(filters, groupFn, groupedEnabled));
@@ -78,13 +80,14 @@ export const useGroupedPatios = (filters: PatiosListFilters): UseGroupedPatiosRe
             items,
             groups: null,
             isLoading: flatQuery.isLoading,
+            isFetched: flatQuery.isFetched,
             isError: flatQuery.isError,
-            refetch: () => {
+            refetch() {
                 flatQuery.refetch();
             },
             hasNextPage: flatQuery.hasNextPage,
             isFetchingNextPage: flatQuery.isFetchingNextPage,
-            fetchNextPage: () => {
+            fetchNextPage() {
                 flatQuery.fetchNextPage();
             },
         };
@@ -95,8 +98,9 @@ export const useGroupedPatios = (filters: PatiosListFilters): UseGroupedPatiosRe
         items: null,
         groups: groupedQuery.data ?? null,
         isLoading: groupedQuery.isLoading,
+        isFetched: groupedQuery.isFetched,
         isError: groupedQuery.isError,
-        refetch: () => {
+        refetch() {
             groupedQuery.refetch();
         },
         hasNextPage: null,

@@ -1,3 +1,4 @@
+import type { GroupingMode } from '../../hooks/useGroupedPatios';
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useStickyStuck } from '@/hooks/useStickyStuck';
@@ -13,19 +14,9 @@ import { PatioLibraryCard } from '../PatioLibraryCard';
 import { PatioLibraryCardSkeleton } from '../PatioLibraryCardSkeleton';
 import s from './styles.module.css';
 
-const SkeletonGrid: React.FC<{ count: number }> = ({ count }) => {
-    return (
-        <div className={s.grid}>
-            {Array.from({ length: count }).map((_, i) => {
-                return <div key={i} className={s['skeleton-card']} />;
-            })}
-        </div>
-    );
-};
-
 export const PatioLibrary: React.FC = () => {
     const { filters } = usePatioFilters();
-    const { mode, items, groups, isLoading, isError, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    const { mode, items, groups, isError, refetch, hasNextPage, isFetched, isFetchingNextPage, fetchNextPage } =
         useGroupedPatios({
             ...filters,
             // NOTE: Search should work for search autocomplete only
@@ -39,12 +30,33 @@ export const PatioLibrary: React.FC = () => {
         threshold: 0.75,
     });
 
-    const isEmpty = mode === 'flat' ? (items?.length ?? 0) === 0 : (groups?.length ?? 0) === 0;
+    const hasCurrentData = mode === 'flat' ? (items?.length ?? 0) > 0 : (groups?.length ?? 0) > 0;
+    const isEmpty = !hasCurrentData;
+
+    const [snapshot, setSnapshot] = React.useState<{
+        mode: GroupingMode;
+        items: typeof items;
+        groups: typeof groups;
+    } | null>(null);
+    const [trackedData, setTrackedData] = React.useState<{ items: typeof items; groups: typeof groups }>({
+        items,
+        groups,
+    });
+
+    if (trackedData.items !== items || trackedData.groups !== groups) {
+        setTrackedData({ items, groups });
+        if (isFetched && !isError && hasCurrentData) {
+            setSnapshot({ mode, items, groups });
+        }
+    }
+
+    const useSnapshot = !hasCurrentData && !(isFetched && isEmpty) && snapshot !== null;
+    const displayMode = useSnapshot ? snapshot.mode : mode;
+    const displayItems = useSnapshot ? snapshot.items : items;
+    const displayGroups = useSnapshot ? snapshot.groups : groups;
 
     let body: React.ReactNode;
-    if (isLoading) {
-        body = <SkeletonGrid count={12} />;
-    } else if (isError) {
+    if (isFetched && isError) {
         body = (
             <div className={s.error}>
                 <Typography variant="text-md">Failed to load patios.</Typography>
@@ -59,17 +71,17 @@ export const PatioLibrary: React.FC = () => {
                 </Button>
             </div>
         );
-    } else if (isEmpty) {
+    } else if (isFetched && isEmpty && !useSnapshot) {
         body = (
             <div className={s.empty}>
                 <Typography variant="text-md">No patios found.</Typography>
             </div>
         );
-    } else if (mode === 'flat' && items) {
+    } else if (displayMode === 'flat' && displayItems) {
         body = (
             <>
                 <div className={s.grid}>
-                    {items.map((patio) => {
+                    {displayItems.map((patio) => {
                         return <PatioLibraryCard key={patio.id} patio={patio} />;
                     })}
                     {isFetchingNextPage
@@ -86,15 +98,15 @@ export const PatioLibrary: React.FC = () => {
                 ) : null}
             </>
         );
-    } else if (groups) {
+    } else if (displayGroups) {
         body = (
             <div className={s.groups}>
-                {groups.map((group) => {
+                {displayGroups.map((group) => {
                     return (
                         <section
                             key={group.key}
                             className={s.group}
-                            data-letter={mode === 'alpha' ? group.key : undefined}
+                            data-letter={displayMode === 'alpha' ? group.key : undefined}
                         >
                             <Typography variant="text-md" render={<h3 />} className={s['group-title']}>
                                 {group.title}
