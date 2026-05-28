@@ -69,10 +69,17 @@
 }
 
 .grid {
+    --grid-columns: 3;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(var(--grid-columns), 1fr);
     gap: var(--gap-3);
     padding-inline: var(--gap-6);
+}
+
+@media screen and (min-width: 1728px) {
+    .grid {
+        --grid-columns: 4;
+    }
 }
 
 .groups {
