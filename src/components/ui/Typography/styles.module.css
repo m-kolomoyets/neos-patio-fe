@@ -1,6 +1,9 @@
 .wrap {
     color: inherit;
     letter-spacing: 0;
+    transition:
+        font-size 0.2s ease,
+        line-height 0.2s ease;
 }
 
 .wrap[data-typography-variant="display-2xl"] {

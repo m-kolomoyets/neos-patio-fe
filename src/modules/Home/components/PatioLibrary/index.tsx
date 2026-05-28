@@ -124,7 +124,7 @@ export const PatioLibrary: React.FC = () => {
     return (
         <section className={s.wrap}>
             <header ref={headerRef} className={s.header} data-stuck={isHeaderStuck || undefined}>
-                <Typography variant="display-xs" className={s.title} render={<h2 />}>
+                <Typography variant={isHeaderStuck ? 'display-xs' : 'text-xl'} className={s.title} render={<h2 />}>
                     Patio Library
                 </Typography>
                 <LibraryToolbar className={s.toolbar} />
