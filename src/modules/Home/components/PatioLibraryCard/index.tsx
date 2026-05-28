@@ -1,22 +1,15 @@
-import type { Patio } from '@/services/patios/types';
+import type { PatioLibraryCardProps } from './types';
 import { useCallback } from 'react';
-import ArrowTopRight24Icon from '@/icons/arrow-top-right_24.svg?react';
 import Id24Icon from '@/icons/id_24.svg?react';
 import MapPin24Icon from '@/icons/map-pin_24.svg?react';
-import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
 import { useSpotlight } from '@/hooks/useSpotlight';
-import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
 import { useHomeNavigate } from '../../hooks/useHomeRouteApi';
 import { useParallax } from './hooks/useParallax';
 import s from './styles.module.css';
 
-type Props = {
-    patio: Patio;
-};
-
-export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
+export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => {
     const navigate = useHomeNavigate();
     const spotlightRef = useSpotlight<HTMLElement>();
     const { cardRef, imgRef } = useParallax();
@@ -47,9 +40,10 @@ export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
     return (
         <article
             ref={setArticleRef}
-            className={s.wrap}
+            className={clsx(s.wrap, 'focus-primary')}
             data-card-id={patio.id}
             role="button"
+            tabIndex={0}
             onClick={navigateToPatio}
             onKeyDown={handleKeyDown}
         >
@@ -64,24 +58,6 @@ export const PatioLibraryCard: React.FC<Props> = ({ patio }) => {
                         <Typography variant="text-md" className={s.name} title={patio.name} render={<h3 />}>
                             {patio.name}
                         </Typography>
-                        <Button
-                            className={s.cta}
-                            variant="surface"
-                            size="sm"
-                            isIcon
-                            title={`Open ${patio.name}`}
-                            nativeButton={false}
-                            render={<Link to="/patios/$id" params={{ id: patio.id }} />}
-                            onClick={(event) => {
-                                event.stopPropagation();
-                            }}
-                            onKeyDown={(event) => {
-                                event.stopPropagation();
-                            }}
-                        >
-                            <ArrowTopRight24Icon aria-hidden />
-                            <span className="sr-only">Open {patio.name}</span>
-                        </Button>
                     </div>
                     <Typography className={s.author} variant="text-sm" render={<p />}>
                         by Neos

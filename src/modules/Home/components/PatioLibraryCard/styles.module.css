@@ -148,20 +148,6 @@
     min-width: 0;
 }
 
-.title-wrap .cta {
-    opacity: 0;
-    padding: var(--gap-1);
-    flex-shrink: 0;
-    width: 1.5rem;
-    min-height: 1.5rem;
-    height: 1.5rem;
-    transition: opacity 200ms ease-in-out;
-}
-
-.wrap:is(:hover, :focus-within) .title-wrap .cta {
-    opacity: 1;
-}
-
 .name {
     color: var(--color-base-white);
     font-weight: 600;
