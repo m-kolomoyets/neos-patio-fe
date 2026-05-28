@@ -70,6 +70,7 @@
 
 .grid {
     --grid-columns: 3;
+
     display: grid;
     grid-template-columns: repeat(var(--grid-columns), 1fr);
     gap: var(--gap-3);
