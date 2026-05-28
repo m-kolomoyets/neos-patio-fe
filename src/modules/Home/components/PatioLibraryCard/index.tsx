@@ -55,7 +55,7 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
             <div className={s.body}>
                 <header className={s.top}>
                     <div className={s['title-wrap']}>
-                        <Typography variant="text-md" className={s.name} title={patio.name} render={<h3 />}>
+                        <Typography variant="text-sm" className={s.name} title={patio.name} render={<h3 />}>
                             {patio.name}
                         </Typography>
                     </div>
