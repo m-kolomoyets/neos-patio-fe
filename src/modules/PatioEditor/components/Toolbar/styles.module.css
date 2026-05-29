@@ -1,0 +1,60 @@
+.bar {
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 0.75rem;
+    background: rgb(20 20 24 / 0.85);
+    backdrop-filter: blur(8px);
+}
+
+.button {
+    padding: 0.4rem 0.75rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: rgb(255 255 255 / 0.7);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition:
+        background 120ms ease,
+        color 120ms ease;
+}
+
+.button:hover {
+    background: rgb(255 255 255 / 0.08);
+    color: white;
+}
+
+.button[data-active="true"] {
+    background: rgb(255 255 255 / 0.18);
+    color: white;
+}
+
+.button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.divider {
+    width: 1px;
+    margin: 0.25rem 0.125rem;
+    background: rgb(255 255 255 / 0.18);
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    padding: 0 0.625rem;
+    font-size: 0.75rem;
+    color: rgb(255 255 255 / 0.65);
+    font-variant-numeric: tabular-nums;
+}
+
+.status[data-status="saved"] {
+    color: rgb(132 204 22);
+}

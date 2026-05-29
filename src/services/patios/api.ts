@@ -1,4 +1,4 @@
-import type { ListPatiosParams, ListPatiosResponse, Patio } from './types';
+import type { ListPatiosParams, ListPatiosResponse, Patio, PlacedObject } from './types';
 import { sleep } from '@/lib/utils/sleep';
 import { PATIOS_FIXTURES } from './fixtures';
 
@@ -161,4 +161,16 @@ export const getPatio = async (id: string): Promise<Patio | null> => {
             return p.id === id;
         }) ?? null
     );
+};
+
+export const updatePatioObjects = async (id: string, objects: PlacedObject[]): Promise<Patio | null> => {
+    await sleep(MOCK_DELAY_MS);
+    const patio = PATIOS_FIXTURES.find((p) => {
+        return p.id === id;
+    });
+    if (!patio) return null;
+    patio.objects = objects.map((o) => {
+        return { ...o };
+    });
+    return patio;
 };

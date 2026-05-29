@@ -1,14 +1,6 @@
 import { createLazyFileRoute } from '@tanstack/react-router';
-import { Typography } from '@/components/ui/Typography';
-
-const PatioDetailStub: React.FC = () => {
-    return (
-        <main style={{ padding: '4rem', minHeight: '100svh' }}>
-            <Typography variant="display-md">Patio detail · coming soon</Typography>
-        </main>
-    );
-};
+import PatioEditor from '@/modules/PatioEditor';
 
 export const Route = createLazyFileRoute('/patios/$id')({
-    component: PatioDetailStub,
+    component: PatioEditor,
 });

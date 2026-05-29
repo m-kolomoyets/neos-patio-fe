@@ -16,6 +16,18 @@ export type PatioType = (typeof PATIO_TYPES)[number];
 export const SORT_KEYS = ['id', 'newest', 'nearest', 'popular', 'name'] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
 
+export type PatioBounds = [west: number, south: number, east: number, north: number];
+
+export type PlacedObject = {
+    id: string;
+    modelId: string;
+    lng: number;
+    lat: number;
+    alt: number;
+    yawRad: number;
+    scale: number;
+};
+
 export type Patio = {
     id: string;
     name: string;
@@ -26,6 +38,8 @@ export type Patio = {
     createdAt: string;
     popularity: number;
     coords: { lat: number; lng: number };
+    bounds: PatioBounds;
+    objects: PlacedObject[];
     isFeatured: boolean;
     videoUrl?: string;
     previewLowUrl?: string;
