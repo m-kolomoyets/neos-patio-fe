@@ -49,18 +49,6 @@ const PatioEditor: React.FC = () => {
 
     return (
         <main className={s.wrap}>
-            <header className={s.header}>
-                <Typography variant="display-md">{patio.name}</Typography>
-                <Typography variant="text-md">
-                    {patio.country} · bounds [
-                    {patio.bounds
-                        .map((n) => {
-                            return n.toFixed(4);
-                        })
-                        .join(', ')}
-                    ]
-                </Typography>
-            </header>
             <section className={s.surface}>
                 <EditorProvider
                     initialObjects={patio.objects}

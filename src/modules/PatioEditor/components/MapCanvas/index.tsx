@@ -46,14 +46,37 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ bounds }) => {
                 mapStyle={{
                     version: 8,
                     sources: {
-                        osm: {
+                        'esri-satellite': {
                             type: 'raster',
-                            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                            tiles: [
+                                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                            ],
                             tileSize: 256,
-                            attribution: '© OpenStreetMap',
+                            maxzoom: 19,
+                            attribution: 'Imagery © Esri',
+                        },
+                        'esri-transport': {
+                            type: 'raster',
+                            tiles: [
+                                'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
+                            ],
+                            tileSize: 256,
+                            maxzoom: 19,
+                        },
+                        'esri-labels': {
+                            type: 'raster',
+                            tiles: [
+                                'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+                            ],
+                            tileSize: 256,
+                            maxzoom: 19,
                         },
                     },
-                    layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+                    layers: [
+                        { id: 'esri-satellite', type: 'raster', source: 'esri-satellite' },
+                        { id: 'esri-transport', type: 'raster', source: 'esri-transport' },
+                        { id: 'esri-labels', type: 'raster', source: 'esri-labels' },
+                    ],
                 }}
                 initialViewState={{
                     longitude: center.lng,
