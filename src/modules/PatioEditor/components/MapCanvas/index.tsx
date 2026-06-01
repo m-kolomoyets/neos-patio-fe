@@ -4,6 +4,16 @@ import { useCallback, useContext, useMemo } from 'react';
 import { QueryClientContext } from '@tanstack/react-query';
 import { Map, NavigationControl } from 'react-map-gl/maplibre';
 import { Canvas } from 'react-three-map/maplibre';
+import {
+    BUILDINGS_MIN_ZOOM,
+    BUILDINGS_SOURCE_LAYER,
+    DEFAULT_BEARING,
+    DEFAULT_PITCH,
+    DEFAULT_ZOOM,
+    MAP_CONFIG,
+    MAP_LAYER_IDS,
+    MAP_SOURCE_IDS,
+} from './constants';
 import { EditorContext, useEditorDispatch } from '../../context/EditorContext';
 import { ObjectsLayer } from '../ObjectsLayer';
 import { SelectionRaycaster } from '../ObjectsLayer/SelectionRaycaster';
@@ -15,10 +25,6 @@ import s from './styles.module.css';
 type MapCanvasProps = {
     bounds: PatioBounds;
 };
-
-const DEFAULT_PITCH = 45;
-const DEFAULT_BEARING = 0;
-const DEFAULT_ZOOM = 15;
 
 export const MapCanvas: React.FC<MapCanvasProps> = ({ bounds }) => {
     const [west, south, east, north] = bounds;
@@ -71,11 +77,33 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ bounds }) => {
                             tileSize: 256,
                             maxzoom: 19,
                         },
+                        [MAP_SOURCE_IDS.vector]: {
+                            type: 'vector',
+                            url: MAP_CONFIG.vectorTilesUrl,
+                        },
+                        [MAP_SOURCE_IDS.terrainDem]: {
+                            type: 'raster-dem',
+                            url: MAP_CONFIG.terrainDemUrl,
+                            encoding: 'mapbox',
+                        },
                     },
                     layers: [
                         { id: 'esri-satellite', type: 'raster', source: 'esri-satellite' },
                         { id: 'esri-transport', type: 'raster', source: 'esri-transport' },
                         { id: 'esri-labels', type: 'raster', source: 'esri-labels' },
+                        {
+                            id: MAP_LAYER_IDS.buildings,
+                            type: 'fill-extrusion',
+                            source: MAP_SOURCE_IDS.vector,
+                            'source-layer': BUILDINGS_SOURCE_LAYER,
+                            minzoom: BUILDINGS_MIN_ZOOM,
+                            paint: {
+                                'fill-extrusion-color': '#aaa',
+                                'fill-extrusion-height': ['get', 'render_height'],
+                                'fill-extrusion-base': ['get', 'render_min_height'],
+                                'fill-extrusion-opacity': 0.85,
+                            },
+                        },
                     ],
                 }}
                 initialViewState={{
