@@ -44,6 +44,7 @@
 .scroll .scroll-viewport,
 .main::after {
     border-radius: 2.5rem;
+    corner-shape: superellipse(1.5);
 }
 
 .scroll .scroll-viewport {
