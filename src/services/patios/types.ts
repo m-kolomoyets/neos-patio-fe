@@ -21,10 +21,15 @@ export type PatioBounds = [west: number, south: number, east: number, north: num
 export type PlacedObject = {
     id: string;
     modelId: string;
-    lng: number;
-    lat: number;
-    alt: number;
-    yawRad: number;
+    // Local Cartesian scene coordinates in meters, anchored at the patio bounds center.
+    // x = east, y = up, z = south (raw three.js scene axes, no conversion).
+    x: number;
+    y: number;
+    z: number;
+    // Euler rotation in radians, three.js XYZ order.
+    rotX: number;
+    rotY: number;
+    rotZ: number;
     scale: number;
 };
 

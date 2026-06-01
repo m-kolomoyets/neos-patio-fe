@@ -1,3 +1,4 @@
+import type { PatioBounds } from '@/services/patios/types';
 import { MercatorCoordinate } from 'maplibre-gl';
 import { Vector3 } from 'three';
 
@@ -5,6 +6,12 @@ export type LngLatAlt = {
     lng: number;
     lat: number;
     alt?: number;
+};
+
+// Scene render origin: the patio bounds center at altitude 0.
+export const boundsAnchor = (bounds: PatioBounds): LngLatAlt => {
+    const [west, south, east, north] = bounds;
+    return { lng: (west + east) / 2, lat: (south + north) / 2, alt: 0 };
 };
 
 const toMerc = ({ lng, lat, alt = 0 }: LngLatAlt) => {
@@ -24,16 +31,4 @@ export const geoToScene = (origin: LngLatAlt, point: LngLatAlt): Vector3 => {
         (pointMerc.z - originMerc.z) / scale,
         (pointMerc.y - originMerc.y) / scale
     );
-};
-
-export const sceneToGeo = (origin: LngLatAlt, vec: Vector3): LngLatAlt => {
-    const originMerc = toMerc(origin);
-    const scale = originMerc.meterInMercatorCoordinateUnits();
-    const merc = new MercatorCoordinate(
-        originMerc.x + vec.x * scale,
-        originMerc.y + vec.z * scale,
-        originMerc.z + vec.y * scale
-    );
-    const ll = merc.toLngLat();
-    return { lng: ll.lng, lat: ll.lat, alt: merc.toAltitude() };
 };

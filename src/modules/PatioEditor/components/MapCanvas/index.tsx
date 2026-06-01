@@ -125,7 +125,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ bounds }) => {
                         <QueryClientContext value={queryClient}>
                             <ambientLight intensity={0.8} />
                             <directionalLight position={[10, 20, 10]} intensity={1} />
-                            <ObjectsLayer anchor={center} />
+                            <ObjectsLayer />
                             <SelectionRaycaster />
                         </QueryClientContext>
                     </EditorContext>

@@ -1,28 +1,18 @@
 import type { Object3D } from 'three';
 import type { TransformControls as TransformControlsImpl } from 'three-stdlib';
 import type { PlacedObject } from '@/services/patios/types';
-import type { EditorMode } from '../../types';
-import type { LngLatAlt } from '../../utils/geoSceneProjection';
 import { useEffect, useMemo, useState } from 'react';
 import { TransformControls, useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useMap } from 'react-three-map/maplibre';
 import { Box3, BoxHelper, Color, Matrix4, Vector3 } from 'three';
 import { SkeletonUtils } from 'three-stdlib';
-import { geoToScene, sceneToGeo } from '../../utils/geoSceneProjection';
 import { useEditorDispatch, useEditorState } from '../../context/EditorContext';
 import { EDITOR_OBJECT_USERDATA_KEY } from './SelectionRaycaster';
 
 type ObjectMeshProps = {
     object: PlacedObject;
-    anchor: LngLatAlt;
     gltfUrl: string;
-};
-
-const AXIS_VISIBILITY: Record<EditorMode, { showX: boolean; showY: boolean; showZ: boolean }> = {
-    translate: { showX: true, showY: false, showZ: true },
-    rotate: { showX: false, showY: true, showZ: false },
-    scale: { showX: true, showY: true, showZ: true },
 };
 
 const setMapInteractions = (map: maplibregl.Map, enabled: boolean) => {
@@ -42,7 +32,7 @@ const setMapInteractions = (map: maplibregl.Map, enabled: boolean) => {
 
 const OUTLINE_COLOR = new Color('#ffffff');
 
-export const ObjectMesh: React.FC<ObjectMeshProps> = ({ object, anchor, gltfUrl }) => {
+export const ObjectMesh: React.FC<ObjectMeshProps> = ({ object, gltfUrl }) => {
     const dispatch = useEditorDispatch();
     const { selectedId, mode } = useEditorState();
     const map = useMap();
@@ -57,10 +47,6 @@ export const ObjectMesh: React.FC<ObjectMeshProps> = ({ object, anchor, gltfUrl 
         const box = new Box3().setFromObject(cloned);
         return -box.min.y;
     }, [cloned]);
-    const position = useMemo(() => {
-        return geoToScene(anchor, { lng: object.lng, lat: object.lat, alt: object.alt }).toArray();
-    }, [anchor, object.lng, object.lat, object.alt]);
-
     const [target, setTarget] = useState<Object3D | null>(null);
     const [controls, setControls] = useState<TransformControlsImpl | null>(null);
     const isSelected = selectedId === object.id;
@@ -136,15 +122,13 @@ export const ObjectMesh: React.FC<ObjectMeshProps> = ({ object, anchor, gltfUrl 
         };
     }, [isSelected, target, scene3d]);
 
-    const axes = AXIS_VISIBILITY[mode];
-
     return (
         <>
             <group
                 ref={setTarget}
-                position={position}
+                position={[object.x, object.y, object.z]}
                 scale={object.scale}
-                rotation={[0, object.yawRad, 0]}
+                rotation={[object.rotX, object.rotY, object.rotZ]}
                 userData={{ [EDITOR_OBJECT_USERDATA_KEY]: object.id }}
             >
                 <primitive object={cloned} position={[0, baseOffsetY, 0]} />
@@ -156,19 +140,20 @@ export const ObjectMesh: React.FC<ObjectMeshProps> = ({ object, anchor, gltfUrl 
                     domElement={mapCanvas}
                     enabled={isSelected}
                     mode={mode}
-                    showX={axes.showX}
-                    showY={axes.showY}
-                    showZ={axes.showZ}
+                    showX
+                    showY
+                    showZ
                     onMouseUp={() => {
-                        const geo = sceneToGeo(anchor, target.position);
                         dispatch({
                             type: 'transform',
                             id: object.id,
                             patch: {
-                                lng: geo.lng,
-                                lat: geo.lat,
-                                alt: geo.alt,
-                                yawRad: target.rotation.y,
+                                x: target.position.x,
+                                y: target.position.y,
+                                z: target.position.z,
+                                rotX: target.rotation.x,
+                                rotY: target.rotation.y,
+                                rotZ: target.rotation.z,
                                 scale: target.scale.x,
                             },
                         });

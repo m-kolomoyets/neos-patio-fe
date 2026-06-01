@@ -1,9 +1,11 @@
 import type { PatioBounds, PlacedObject } from '@/services/patios/types';
 import type { EditorMode } from '../types';
+import type { SceneBounds } from '../utils/boundsClamp';
 import type { HistoryStacks } from '../utils/undoRedoHistory';
 import { createContext, useMemo, useReducer } from 'react';
 import { useSafeContext } from '@/hooks/useSafeContext';
-import { clampToBounds } from '../utils/boundsClamp';
+import { clampToSceneBounds, deriveSceneBounds } from '../utils/boundsClamp';
+import { boundsAnchor, geoToScene } from '../utils/geoSceneProjection';
 import {
     canRedo as canRedoStacks,
     canUndo as canUndoStacks,
@@ -21,6 +23,7 @@ type EditorState = {
     mode: EditorMode;
     mapCenter: LngLat;
     bounds: PatioBounds;
+    sceneBounds: SceneBounds;
     history: HistoryStacks<PlacedObject[]>;
 };
 
@@ -34,21 +37,24 @@ type EditorAction =
     | { type: 'undo' }
     | { type: 'redo' };
 
-const DEFAULT_ALT = 0;
-const DEFAULT_YAW_RAD = 0;
+const DEFAULT_Y = 0;
+const DEFAULT_ROT = 0;
 const DEFAULT_SCALE = 1;
 
 const reducer = (state: EditorState, action: EditorAction): EditorState => {
     switch (action.type) {
         case 'add': {
-            const clamped = clampToBounds(state.bounds, state.mapCenter);
+            const scene = geoToScene(boundsAnchor(state.bounds), state.mapCenter);
+            const clamped = clampToSceneBounds(state.sceneBounds, { x: scene.x, z: scene.z });
             const next: PlacedObject = {
                 id: crypto.randomUUID(),
                 modelId: action.modelId,
-                lng: clamped.lng,
-                lat: clamped.lat,
-                alt: DEFAULT_ALT,
-                yawRad: DEFAULT_YAW_RAD,
+                x: clamped.x,
+                y: DEFAULT_Y,
+                z: clamped.z,
+                rotX: DEFAULT_ROT,
+                rotY: DEFAULT_ROT,
+                rotZ: DEFAULT_ROT,
                 scale: DEFAULT_SCALE,
             };
             return {
@@ -74,8 +80,8 @@ const reducer = (state: EditorState, action: EditorAction): EditorState => {
                 objects: state.objects.map((o) => {
                     if (o.id !== action.id) return o;
                     const merged = { ...o, ...action.patch };
-                    const clamped = clampToBounds(state.bounds, { lng: merged.lng, lat: merged.lat });
-                    return { ...merged, lng: clamped.lng, lat: clamped.lat };
+                    const clamped = clampToSceneBounds(state.sceneBounds, { x: merged.x, z: merged.z });
+                    return { ...merged, x: clamped.x, z: clamped.z };
                 }),
                 history: pushHistory(state.history, state.objects),
             };
@@ -145,6 +151,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({
         mode: 'translate',
         mapCenter: initialMapCenter,
         bounds,
+        sceneBounds: deriveSceneBounds(bounds),
         history: createEmptyHistory<PlacedObject[]>(),
     });
 
