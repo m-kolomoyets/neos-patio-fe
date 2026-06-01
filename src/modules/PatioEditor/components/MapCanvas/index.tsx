@@ -2,8 +2,9 @@ import type { ViewStateChangeEvent } from 'react-map-gl/maplibre';
 import type { PatioBounds } from '@/services/patios/types';
 import { useCallback, useContext, useMemo } from 'react';
 import { QueryClientContext } from '@tanstack/react-query';
-import { Map, NavigationControl } from 'react-map-gl/maplibre';
+import { Map } from 'react-map-gl/maplibre';
 import { Canvas } from 'react-three-map/maplibre';
+import { EDITOR_MAP_ID } from '../../constants';
 import {
     BUILDINGS_MIN_ZOOM,
     BUILDINGS_SOURCE_LAYER,
@@ -106,6 +107,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ bounds }) => {
                         },
                     ],
                 }}
+                id={EDITOR_MAP_ID}
                 initialViewState={{
                     longitude: center.lng,
                     latitude: center.lat,
@@ -113,13 +115,13 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ bounds }) => {
                     pitch: DEFAULT_PITCH,
                     bearing: DEFAULT_BEARING,
                 }}
+                maxPitch={85}
                 maxBounds={[west, south, east, north]}
                 attributionControl={false}
                 canvasContextAttributes={{ antialias: true }}
                 style={{ width: '100%', height: '100%' }}
                 onMove={handleMove}
             >
-                <NavigationControl position="top-right" visualizePitch />
                 <Canvas latitude={center.lat} longitude={center.lng}>
                     <EditorContext value={editorCtx}>
                         <QueryClientContext value={queryClient}>

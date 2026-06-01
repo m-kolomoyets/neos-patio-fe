@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
+import { MapProvider } from 'react-map-gl/maplibre';
 import { getPatioQueryOptions } from '@/services/patios/queries';
 import { Typography } from '@/components/ui/Typography';
 import { EditorProvider } from './context/EditorContext';
@@ -9,6 +10,7 @@ import { CatalogPanel } from './components/CatalogPanel';
 import { MapCanvas } from './components/MapCanvas';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { Toolbar } from './components/Toolbar';
+import { ViewCube } from './components/ViewCube';
 import s from './styles.module.css';
 
 type EditorShellProps = {
@@ -20,12 +22,13 @@ const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds }) => {
     const { status } = useAutosavePatio(patioId);
 
     return (
-        <>
+        <MapProvider>
             <MapCanvas bounds={bounds} />
             <CatalogPanel />
             <Toolbar saveStatus={status} />
             <PropertiesPanel />
-        </>
+            <ViewCube />
+        </MapProvider>
     );
 };
 
