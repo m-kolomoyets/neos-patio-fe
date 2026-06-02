@@ -55,6 +55,7 @@
 .popup {
     min-width: 14rem;
     padding: var(--gap-1);
+    background: var(--surface-regular) !important;
 }
 
 .item {

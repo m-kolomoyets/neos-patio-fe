@@ -61,7 +61,7 @@ export const ZoomControl = memo(function ZoomControl({
                 </button>
             </div>
             <Menu.Portal>
-                <Menu.Positioner side="top" align="end" sideOffset={8}>
+                <Menu.Positioner side="left" align="start" sideOffset={48} alignOffset={-10}>
                     <Menu.Popup render={<PopupWrapper className={s.popup} />}>
                         <Menu.Item
                             className={s.item}

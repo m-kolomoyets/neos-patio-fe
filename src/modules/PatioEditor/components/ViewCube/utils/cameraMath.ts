@@ -54,7 +54,7 @@ export const resolveSnapOrientation = (target: CubeTarget, currentBearing: numbe
 export const orbitCamera = (start: SnapOrientation, dx: number, dy: number, sensitivity: number): SnapOrientation => {
     return {
         bearing: normalizeBearing(start.bearing + dx * sensitivity),
-        pitch: clampPitch(start.pitch + dy * sensitivity),
+        pitch: clampPitch(start.pitch - dy * sensitivity),
     };
 };
 
