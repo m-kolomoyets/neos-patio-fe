@@ -3,6 +3,7 @@ import ArrowLeftIcon from '@/icons/arrow-left_24.svg?react';
 import ArrowRightIcon from '@/icons/arrow-right_24.svg?react';
 import ArrowUpIcon from '@/icons/arrow-up_24.svg?react';
 import HomeIcon from '@/icons/home_24.svg?react';
+import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { useEditorState } from '../../context/EditorContext';
 import { useCubeInteraction } from './hooks/useCubeInteraction';
@@ -38,62 +39,66 @@ export const ViewCube: React.FC = () => {
     if (!map) return null;
 
     return (
-        <div className={s.wrap}>
-            <div className={s.scene} data-dragging={isDragging || undefined} {...handlers}>
-                {selectedFace ? (
-                    // Flattened "selected face" abstraction: drawn flat regardless of the
-                    // real ~85° camera pitch, with step arrows (no roll/corner arrows — maplibre has no roll).
-                    // Buttons stop pointer propagation so the scene drag gesture leaves their clicks intact.
-                    <div className={s.flattened}>
-                        <button
-                            type="button"
-                            className={`${s.arrow} ${s['arrow-up']}`}
-                            aria-label="Top view"
-                            onPointerDown={(e) => {
-                                e.stopPropagation();
-                            }}
-                            onClick={goTop}
-                        >
-                            <ArrowUpIcon />
-                        </button>
-                        <button
-                            type="button"
-                            className={`${s.arrow} ${s['arrow-left']}`}
-                            aria-label="Step left"
-                            onPointerDown={(e) => {
-                                e.stopPropagation();
-                            }}
-                            onClick={() => {
-                                stepBy(-1);
-                            }}
-                        >
-                            <ArrowLeftIcon />
-                        </button>
-                        <div className={s['flat-face']}>
-                            <span className={s.label}>{FACE_LABELS[selectedFace]}</span>
-                        </div>
-                        <button
-                            type="button"
-                            className={`${s.arrow} ${s['arrow-right']}`}
-                            aria-label="Step right"
-                            onPointerDown={(e) => {
-                                e.stopPropagation();
-                            }}
-                            onClick={() => {
-                                stepBy(1);
-                            }}
-                        >
-                            <ArrowRightIcon />
-                        </button>
-                    </div>
-                ) : (
-                    <CubeView map={map} />
-                )}
-            </div>
-            <div className={s.controls}>
-                <Button isIcon variant="surface" size="md" aria-label="Home view" onClick={goHome} className={s.home}>
+        <div className={clsx(s.wrap, 'surface-regular')}>
+            <div className={s.top}>
+                <Button isIcon variant="link" size="sm" aria-label="Home view" onClick={goHome} className={s.home}>
                     <HomeIcon />
                 </Button>
+            </div>
+            <div className={s['scene-container']}>
+                <div className={s.scene} data-dragging={isDragging || undefined} {...handlers}>
+                    {selectedFace ? (
+                        // Flattened "selected face" abstraction: drawn flat regardless of the
+                        // real ~85° camera pitch, with step arrows (no roll/corner arrows — maplibre has no roll).
+                        // Buttons stop pointer propagation so the scene drag gesture leaves their clicks intact.
+                        <div className={s.flattened}>
+                            <button
+                                type="button"
+                                className={`${s.arrow} ${s['arrow-up']}`}
+                                aria-label="Top view"
+                                onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                }}
+                                onClick={goTop}
+                            >
+                                <ArrowUpIcon />
+                            </button>
+                            <button
+                                type="button"
+                                className={`${s.arrow} ${s['arrow-left']}`}
+                                aria-label="Step left"
+                                onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                }}
+                                onClick={() => {
+                                    stepBy(-1);
+                                }}
+                            >
+                                <ArrowLeftIcon />
+                            </button>
+                            <div className={s['flat-face']}>
+                                <span className={s.label}>{FACE_LABELS[selectedFace]}</span>
+                            </div>
+                            <button
+                                type="button"
+                                className={`${s.arrow} ${s['arrow-right']}`}
+                                aria-label="Step right"
+                                onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                }}
+                                onClick={() => {
+                                    stepBy(1);
+                                }}
+                            >
+                                <ArrowRightIcon />
+                            </button>
+                        </div>
+                    ) : (
+                        <CubeView map={map} />
+                    )}
+                </div>
+            </div>
+            <div className={s.controls}>
                 <LiveZoomControl
                     map={map}
                     bounds={bounds}

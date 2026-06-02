@@ -4,19 +4,14 @@
     align-items: center;
     gap: var(--gap-0-5);
     padding: var(--gap-0-5);
-    border-radius: var(--radius-xl);
-    background: var(--surface-thin);
-    border: 1px solid hsl(var(--color-hsl-white) / 0.1);
-    backdrop-filter: blur(32px);
-    color: var(--color-base-white);
 }
 
 .step {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 1.5rem;
+    height: 1.5rem;
     padding: 0;
     border: none;
     border-radius: var(--radius-lg);
@@ -37,14 +32,14 @@
 
 /* Percentage readout doubles as the popover trigger. */
 .readout {
-    min-width: 3.25rem;
-    height: 1.75rem;
+    min-width: 2.625rem;
+    height: 1.5rem;
     padding: 0 var(--gap-1);
     border: none;
     border-radius: var(--radius-lg);
     background: none;
     color: inherit;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     text-align: center;

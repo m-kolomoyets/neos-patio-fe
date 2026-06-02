@@ -6,6 +6,7 @@ import MinusIcon from '@/icons/minus_24.svg?react';
 import PlusIcon from '@/icons/plus_24.svg?react';
 import RefreshIcon from '@/icons/refresh-ccw-one-arrow_24.svg?react';
 import { Menu } from '@base-ui/react/menu';
+import clsx from 'clsx';
 import { OptionItem } from '@/components/ui/OptionItem';
 import { PopupWrapper } from '@/components/ui/PopupWrapper';
 import { Separator } from '@/components/ui/Separator';
@@ -37,7 +38,7 @@ export const ZoomControl = memo(function ZoomControl({
             <div className={s.stepper}>
                 <button
                     type="button"
-                    className={s.step}
+                    className={clsx(s.step, 'focus-primary')}
                     aria-label="Zoom out"
                     onClick={() => {
                         onStepZoom(-1);
@@ -45,12 +46,12 @@ export const ZoomControl = memo(function ZoomControl({
                 >
                     <MinusIcon />
                 </button>
-                <Menu.Trigger className={s.readout} aria-label="Zoom options">
+                <Menu.Trigger className={clsx(s.readout, 'focus-primary')} aria-label="Zoom options">
                     {percent}%
                 </Menu.Trigger>
                 <button
                     type="button"
-                    className={s.step}
+                    className={clsx(s.step, 'focus-primary')}
                     aria-label="Zoom in"
                     onClick={() => {
                         onStepZoom(1);
