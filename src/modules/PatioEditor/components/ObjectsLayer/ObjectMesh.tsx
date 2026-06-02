@@ -32,12 +32,22 @@ const setMapInteractions = (map: maplibregl.Map, enabled: boolean) => {
 
 const OUTLINE_COLOR = new Color('#ffffff');
 
+type ObjectChangeListener = () => void;
+
+type ObjectChangeEmitter = {
+    addEventListener: (_type: 'objectChange', _listener: ObjectChangeListener) => void;
+    removeEventListener: (_type: 'objectChange', _listener: ObjectChangeListener) => void;
+};
+
 export const ObjectMesh: React.FC<ObjectMeshProps> = ({ object, gltfUrl }) => {
     const dispatch = useEditorDispatch();
     const { selectedId, mode } = useEditorState();
     const map = useMap();
     const scene3d = useThree((s) => {
         return s.scene;
+    });
+    const invalidate = useThree((s) => {
+        return s.invalidate;
     });
     const { scene } = useGLTF(gltfUrl);
     const cloned = useMemo(() => {
@@ -109,18 +119,20 @@ export const ObjectMesh: React.FC<ObjectMeshProps> = ({ object, gltfUrl }) => {
         helper.material.depthTest = false;
         helper.material.transparent = true;
         scene3d.add(helper);
-        let raf = 0;
-        const tick = () => {
+        helper.update();
+        invalidate();
+        const onObjectChange = () => {
             helper.update();
-            raf = requestAnimationFrame(tick);
+            invalidate();
         };
-        tick();
+        const events = controls as unknown as ObjectChangeEmitter | null;
+        events?.addEventListener('objectChange', onObjectChange);
         return () => {
-            cancelAnimationFrame(raf);
+            events?.removeEventListener('objectChange', onObjectChange);
             scene3d.remove(helper);
             helper.dispose();
         };
-    }, [isSelected, target, scene3d]);
+    }, [isSelected, target, scene3d, controls, invalidate]);
 
     return (
         <>

@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { MapProvider } from 'react-map-gl/maplibre';
 import { getPatioQueryOptions } from '@/services/patios/queries';
@@ -36,13 +35,7 @@ const PatioEditor: React.FC = () => {
     const { id } = usePatioEditorParams();
     const { data: patio } = useSuspenseQuery(getPatioQueryOptions(id));
 
-    const initialMapCenter = useMemo(() => {
-        if (!patio) return null;
-        const [west, south, east, north] = patio.bounds;
-        return { lng: (west + east) / 2, lat: (south + north) / 2 };
-    }, [patio]);
-
-    if (!patio || !initialMapCenter) {
+    if (!patio) {
         return (
             <main className={s.wrap}>
                 <Typography variant="display-md">Patio not found</Typography>
@@ -53,11 +46,7 @@ const PatioEditor: React.FC = () => {
     return (
         <main className={s.wrap}>
             <section className={s.surface}>
-                <EditorProvider
-                    initialObjects={patio.objects}
-                    initialMapCenter={initialMapCenter}
-                    bounds={patio.bounds}
-                >
+                <EditorProvider initialObjects={patio.objects} bounds={patio.bounds}>
                     <EditorShell patioId={patio.id} bounds={patio.bounds} />
                 </EditorProvider>
             </section>

@@ -21,19 +21,17 @@ type EditorState = {
     objects: PlacedObject[];
     selectedId: string | null;
     mode: EditorMode;
-    mapCenter: LngLat;
     bounds: PatioBounds;
     sceneBounds: SceneBounds;
     history: HistoryStacks<PlacedObject[]>;
 };
 
 type EditorAction =
-    | { type: 'add'; modelId: string }
+    | { type: 'add'; modelId: string; center: LngLat }
     | { type: 'remove'; id: string }
     | { type: 'transform'; id: string; patch: Partial<Omit<PlacedObject, 'id' | 'modelId'>> }
     | { type: 'select'; id: string | null }
     | { type: 'setMode'; mode: EditorMode }
-    | { type: 'setMapCenter'; center: LngLat }
     | { type: 'undo' }
     | { type: 'redo' };
 
@@ -44,7 +42,7 @@ const DEFAULT_SCALE = 1;
 const reducer = (state: EditorState, action: EditorAction): EditorState => {
     switch (action.type) {
         case 'add': {
-            const scene = geoToScene(boundsAnchor(state.bounds), state.mapCenter);
+            const scene = geoToScene(boundsAnchor(state.bounds), action.center);
             const clamped = clampToSceneBounds(state.sceneBounds, { x: scene.x, z: scene.z });
             const next: PlacedObject = {
                 id: crypto.randomUUID(),
@@ -118,8 +116,6 @@ const reducer = (state: EditorState, action: EditorAction): EditorState => {
             return { ...state, selectedId: action.id };
         case 'setMode':
             return { ...state, mode: action.mode };
-        case 'setMapCenter':
-            return { ...state, mapCenter: action.center };
         default:
             return state;
     }
@@ -135,21 +131,14 @@ EditorContext.displayName = 'EditorContext';
 
 type EditorProviderProps = React.PropsWithChildren<{
     initialObjects: PlacedObject[];
-    initialMapCenter: LngLat;
     bounds: PatioBounds;
 }>;
 
-export const EditorProvider: React.FC<EditorProviderProps> = ({
-    initialObjects,
-    initialMapCenter,
-    bounds,
-    children,
-}) => {
+export const EditorProvider: React.FC<EditorProviderProps> = ({ initialObjects, bounds, children }) => {
     const [state, dispatch] = useReducer(reducer, {
         objects: initialObjects,
         selectedId: null,
         mode: 'translate',
-        mapCenter: initialMapCenter,
         bounds,
         sceneBounds: deriveSceneBounds(bounds),
         history: createEmptyHistory<PlacedObject[]>(),

@@ -1,4 +1,5 @@
 import type { ZoomControlProps } from './types';
+import { memo } from 'react';
 import ExpandIcon from '@/icons/arrows-expand_24.svg?react';
 import HomeIcon from '@/icons/home_24.svg?react';
 import MinusIcon from '@/icons/minus_24.svg?react';
@@ -19,15 +20,18 @@ import s from './styles.module.css';
  * `PopupWrapper`/`OptionItem` primitives) bundles zoom in/out, zoom-to-fit, the
  * 50/100/200% presets, and the Home set/reset actions. All handlers ease via
  * the parent's shared 400ms `easeTo`; this component holds no camera logic.
+ *
+ * Memoized so it skips re-render on pan/orbit frames (its props are stable) and
+ * only re-renders when the zoom `percent` changes — see {@link LiveZoomControl}.
  */
-export const ZoomControl: React.FC<ZoomControlProps> = ({
+export const ZoomControl = memo(function ZoomControl({
     percent,
     onStepZoom,
     onZoomToPercent,
     onZoomToFit,
     onSetHome,
     onResetHome,
-}) => {
+}: ZoomControlProps) {
     return (
         <Menu.Root>
             <div className={s.stepper}>
@@ -106,4 +110,4 @@ export const ZoomControl: React.FC<ZoomControlProps> = ({
             </Menu.Portal>
         </Menu.Root>
     );
-};
+});

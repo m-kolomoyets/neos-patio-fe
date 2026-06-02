@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import { useMap } from 'react-three-map/maplibre';
 import { Matrix4, Raycaster, Vector3 } from 'three';
-import { useEditorDispatch, useEditorState } from '../../context/EditorContext';
+import { useEditorDispatch } from '../../context/EditorContext';
 
 export const EDITOR_OBJECT_USERDATA_KEY = 'editorObjectId';
 
@@ -20,7 +20,6 @@ const findEditorObjectId = (obj: Object3D | null): string | null => {
 export const SelectionRaycaster: React.FC = () => {
     const map = useMap();
     const dispatch = useEditorDispatch();
-    const { mode } = useEditorState();
     const scene = useThree((s) => {
         return s.scene;
     });
@@ -29,8 +28,9 @@ export const SelectionRaycaster: React.FC = () => {
     });
 
     useEffect(() => {
-        // Suppress selection clicks while user drags a gizmo (mode change wouldn't matter,
-        // but we want to ignore clicks that fall on TransformControls geometry).
+        // The click handler reads the live camera matrix off `camera.userData` each
+        // click, so it never needs re-registering on mode change — only on the stable
+        // map/scene/camera/dispatch identities.
         const raycaster = new Raycaster();
         const inv = new Matrix4();
         const origin = new Vector3();
@@ -65,7 +65,7 @@ export const SelectionRaycaster: React.FC = () => {
         return () => {
             map.off('click', handle);
         };
-    }, [map, scene, camera, dispatch, mode]);
+    }, [map, scene, camera, dispatch]);
 
     return null;
 };

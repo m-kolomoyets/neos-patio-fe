@@ -1,39 +1,21 @@
-import type { CameraState, CameraTarget } from '../types';
-import { useCallback, useEffect, useState } from 'react';
+import type { CameraTarget } from '../types';
+import { useCallback } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
 import { EDITOR_MAP_ID } from '../../../constants';
 import { CAMERA_EASE_MS } from '../constants';
 
-const INITIAL_CAMERA: CameraState = { bearing: 0, pitch: 0, zoom: 0 };
-
 /**
- * Bridges the ViewCube widget to the maplibre camera.
+ * Bridges the ViewCube widget to the maplibre camera writers.
  *
- * Reads `{ bearing, pitch, zoom }` live from the `<Map>` (registered under
- * {@link EDITOR_MAP_ID}) by subscribing to its `move` event — which also fires
- * on rotate/pitch/zoom — and exposes writers for snapping (`easeTo`, animated)
- * and dragging (`jumpTo`, instant). Camera state lives here as ephemeral local
- * state and never touches the EditorContext reducer / undo history.
+ * Resolves the `<Map>` (registered under {@link EDITOR_MAP_ID}) and exposes
+ * writers for snapping (`easeTo`, animated) and dragging (`jumpTo`, instant) —
+ * none of which subscribe to map movement, so the ViewCube shell does not
+ * re-render per frame. The live `{ bearing, pitch, zoom }` is read by the leaf
+ * components via {@link useCameraState}, isolating the per-frame churn there.
  */
 export const useMapCamera = () => {
     const maps = useMap();
     const map = maps[EDITOR_MAP_ID] ?? null;
-    const [camera, setCamera] = useState<CameraState>(INITIAL_CAMERA);
-
-    useEffect(() => {
-        if (!map) return undefined;
-
-        const sync = () => {
-            setCamera({ bearing: map.getBearing(), pitch: map.getPitch(), zoom: map.getZoom() });
-        };
-
-        sync();
-        map.on('move', sync);
-
-        return () => {
-            map.off('move', sync);
-        };
-    }, [map]);
 
     /** Animated camera move (snap, arrows, home, zoom presets). */
     const easeTo = useCallback(
@@ -66,5 +48,5 @@ export const useMapCamera = () => {
         [map]
     );
 
-    return { map, camera, easeTo, jumpTo, fitBounds };
+    return { map, easeTo, jumpTo, fitBounds };
 };

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useModelsQuery } from '@/services/models/queries';
 import { useEditorState } from '../../context/EditorContext';
 import { ObjectMesh } from './ObjectMesh';
@@ -6,13 +7,15 @@ export const ObjectsLayer: React.FC = () => {
     const { objects } = useEditorState();
     const { data: models } = useModelsQuery();
 
-    if (!models) return null;
+    const modelById = useMemo(() => {
+        return new Map(
+            (models ?? []).map((m) => {
+                return [m.id, m];
+            })
+        );
+    }, [models]);
 
-    const modelById = new Map(
-        models.map((m) => {
-            return [m.id, m];
-        })
-    );
+    if (!models) return null;
 
     return (
         <>
