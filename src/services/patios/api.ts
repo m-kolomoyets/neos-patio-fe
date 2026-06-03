@@ -154,13 +154,11 @@ export const listFeaturedPatios = async (): Promise<Patio[]> => {
     });
 };
 
-export const getPatio = async (id: string): Promise<Patio | null> => {
+export const getPatio = async (id: string): Promise<Patio> => {
     await sleep(MOCK_DELAY_MS);
-    return (
-        PATIOS_FIXTURES.find((p) => {
-            return p.id === id;
-        }) ?? null
-    );
+    return PATIOS_FIXTURES.find((p) => {
+        return p.id === id;
+    })!;
 };
 
 export const updatePatioObjects = async (id: string, objects: PlacedObject[]): Promise<Patio | null> => {

@@ -1,6 +1,9 @@
+import ChevronRightIcon from '@/icons/chevrone-right_24.svg?react';
 import { useGLTF } from '@react-three/drei';
+import clsx from 'clsx';
 import { useMap } from 'react-map-gl/maplibre';
 import { useModelsQuery } from '@/services/models/queries';
+import { Typography } from '@/components/ui/Typography';
 import { EDITOR_MAP_ID } from '../../constants';
 import { CATALOG_PANEL_INSET_PX } from './constants';
 import { useEditorDispatch } from '../../context/EditorContext';
@@ -13,7 +16,6 @@ export const CatalogPanel: React.FC = () => {
 
     return (
         <aside className={s.panel}>
-            <h3 className={s.title}>Catalog</h3>
             {isLoading ? <p className={s.status}>Loading models…</p> : null}
             {data ? (
                 <ul className={s.list}>
@@ -23,6 +25,7 @@ export const CatalogPanel: React.FC = () => {
                                 <button
                                     type="button"
                                     className={s.item}
+                                    title={`Add ${model.name} to the scene`}
                                     onMouseEnter={() => {
                                         useGLTF.preload(model.gltfUrl);
                                     }}
@@ -42,7 +45,17 @@ export const CatalogPanel: React.FC = () => {
                                     }}
                                 >
                                     <img src={model.previewUrl} alt="" className={s.thumb} loading="lazy" />
-                                    <span className={s.label}>{model.name}</span>
+                                    <span className={s['label-wrap']}>
+                                        <Typography
+                                            className={clsx(s.label, 'truncate')}
+                                            variant="text-xs"
+                                            render={<span />}
+                                        >
+                                            {model.name}
+                                        </Typography>
+                                        <ChevronRightIcon className={s.icon} />
+                                    </span>
+                                    <span className="sr-only">Add {model.name} to the scene</span>
                                 </button>
                             </li>
                         );

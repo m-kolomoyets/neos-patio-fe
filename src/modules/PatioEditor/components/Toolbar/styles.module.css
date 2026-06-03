@@ -1,28 +1,45 @@
 .bar {
     position: absolute;
-    top: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
+    top: var(--gap-2);
+    right: var(--gap-2);
     z-index: 2;
     display: flex;
-    gap: 0.25rem;
-    padding: 0.25rem;
-    border-radius: 0.75rem;
-    background: rgb(20 20 24 / 0.85);
-    backdrop-filter: blur(8px);
+    align-items: center;
+    gap: var(--gap-4);
+    padding: var(--gap-2);
+    border-radius: var(--radius-full);
 }
 
-.button {
-    padding: 0.4rem 0.75rem;
-    border: 0;
-    border-radius: 0.5rem;
-    background: transparent;
-    color: rgb(255 255 255 / 0.7);
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition:
-        background 120ms ease,
-        color 120ms ease;
+.bar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--stroke-surface);
+    mask:
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.button-group {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-1);
+    height: 28px;
+    flex-shrink: 0;
+    flex-grow: 0;
+}
+
+.button.button {
+    padding: var(--gap-1);
+    width: 28px;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    flex-grow: 0;
 }
 
 .button:hover {
@@ -57,4 +74,16 @@
 
 .status[data-status="saved"] {
     color: rgb(132 204 22);
+}
+
+.bar .connect-wallet,
+.bar .connect-wallet :global(.web3-avatar),
+.bar .connect-wallet > button {
+    width: 36px;
+    height: 36px;
+    min-height: 0;
+    max-height: 100%;
+    flex-shrink: 0;
+    flex-grow: 0;
+    padding: 0;
 }

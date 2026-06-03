@@ -5,9 +5,9 @@ import { Typography } from '@/components/ui/Typography';
 import { EditorProvider } from './context/EditorContext';
 import { useAutosavePatio } from './hooks/useAutosavePatio';
 import { usePatioEditorParams } from './hooks/usePatioEditorRouteApi';
-import { CatalogPanel } from './components/CatalogPanel';
 import { MapCanvas } from './components/MapCanvas';
 import { PropertiesPanel } from './components/PropertiesPanel';
+import { Sidebar } from './components/Sidebar';
 import { Toolbar } from './components/Toolbar';
 import { ViewCube } from './components/ViewCube';
 import s from './styles.module.css';
@@ -23,7 +23,7 @@ const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds }) => {
     return (
         <MapProvider>
             <MapCanvas bounds={bounds} />
-            <CatalogPanel />
+            <Sidebar />
             <Toolbar saveStatus={status} />
             <PropertiesPanel />
             <ViewCube />

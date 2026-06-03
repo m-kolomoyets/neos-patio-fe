@@ -1,16 +1,25 @@
 import type { AutosaveStatus } from '../../hooks/useAutosavePatio';
-import type { EditorMode } from '../../types';
-import { useEditorDispatch, useEditorHistoryFlags, useEditorState } from '../../context/EditorContext';
+import RedoIcon from '@/icons/redo_24.svg?react';
+import UndoIcon from '@/icons/undo_24.svg?react';
+// import type { EditorMode } from '../../types';
+import clsx from 'clsx';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
+import { Button } from '@/components/ui/Button';
+import {
+    useEditorDispatch,
+    useEditorHistoryFlags,
+    // useEditorState
+} from '../../context/EditorContext';
 import s from './styles.module.css';
 
-const MODES: { mode: EditorMode; label: string }[] = [
-    { mode: 'translate', label: 'Move' },
-    { mode: 'rotate', label: 'Rotate' },
-    { mode: 'scale', label: 'Scale' },
-];
+// const MODES: { mode: EditorMode; label: string }[] = [
+//     { mode: 'translate', label: 'Move' },
+//     { mode: 'rotate', label: 'Rotate' },
+//     { mode: 'scale', label: 'Scale' },
+// ];
 
 const STATUS_LABEL: Record<AutosaveStatus, string> = {
-    idle: '',
+    idle: 'Saved',
     saving: 'Saving…',
     saved: 'Saved',
 };
@@ -20,13 +29,13 @@ type ToolbarProps = {
 };
 
 export const Toolbar: React.FC<ToolbarProps> = ({ saveStatus }) => {
-    const { mode } = useEditorState();
+    // const { mode } = useEditorState();
     const dispatch = useEditorDispatch();
     const { canUndo, canRedo } = useEditorHistoryFlags();
 
     return (
-        <div className={s.bar}>
-            {MODES.map((entry) => {
+        <div className={clsx(s.bar, 'surface-regular')}>
+            {/* {MODES.map((entry) => {
                 return (
                     <button
                         key={entry.mode}
@@ -41,32 +50,41 @@ export const Toolbar: React.FC<ToolbarProps> = ({ saveStatus }) => {
                     </button>
                 );
             })}
-            <span className={s.divider} />
-            <button
-                type="button"
-                className={s.button}
-                disabled={!canUndo}
-                onClick={() => {
-                    dispatch({ type: 'undo' });
-                }}
-            >
-                Undo
-            </button>
-            <button
-                type="button"
-                className={s.button}
-                disabled={!canRedo}
-                onClick={() => {
-                    dispatch({ type: 'redo' });
-                }}
-            >
-                Redo
-            </button>
-            {saveStatus !== 'idle' ? (
-                <span className={s.status} data-status={saveStatus}>
-                    {STATUS_LABEL[saveStatus]}
-                </span>
-            ) : null}
+            <span className={s.divider} /> */}
+            <span className={s.status} data-status={saveStatus}>
+                {STATUS_LABEL[saveStatus]}
+            </span>
+            <div className={s['button-group']}>
+                <Button
+                    disabled={!canUndo}
+                    className={s.button}
+                    variant="link"
+                    title="Undo"
+                    size="sm"
+                    isIcon
+                    onClick={() => {
+                        dispatch({ type: 'undo' });
+                    }}
+                >
+                    <UndoIcon />
+                    <span className="sr-only">Undo</span>
+                </Button>
+                <Button
+                    disabled={!canRedo}
+                    className={s.button}
+                    variant="link"
+                    title="Redo"
+                    size="sm"
+                    isIcon
+                    onClick={() => {
+                        dispatch({ type: 'redo' });
+                    }}
+                >
+                    <RedoIcon />
+                    <span className="sr-only">Redo</span>
+                </Button>
+            </div>
+            <ConnectWalletButton className={s['connect-wallet']} />
         </div>
     );
 };

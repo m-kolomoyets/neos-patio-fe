@@ -12,14 +12,7 @@ const buildAsset = (name: string, dirName?: string): Pick<Model3D, 'gltfUrl' | '
     };
 };
 
-const MODELS_FIXTURES: Model3D[] = [
-    { id: 'duck', name: 'Duck', ...buildAsset('Duck') },
-    { id: 'avocado', name: 'Avocado', ...buildAsset('Avocado') },
-    { id: 'box-animated', name: 'Animated Box', ...buildAsset('BoxAnimated') },
-    { id: 'damaged-helmet', name: 'Damaged Helmet', ...buildAsset('DamagedHelmet') },
-    { id: 'lantern', name: 'Lantern', ...buildAsset('Lantern') },
-    { id: 'water-bottle', name: 'Water Bottle', ...buildAsset('WaterBottle') },
-];
+const MODELS_FIXTURES: Model3D[] = [{ id: 'lantern', name: 'Lantern', ...buildAsset('Lantern') }];
 
 export const listModels = async (): Promise<Model3D[]> => {
     await sleep(MOCK_DELAY_MS);

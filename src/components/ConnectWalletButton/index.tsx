@@ -1,12 +1,14 @@
 import Logout24Icon from '@/icons/logout_24.svg?react';
 import User24Icon from '@/icons/user_24.svg?react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import clsx from 'clsx';
 import { useDisconnect } from 'wagmi';
 import { Avatar } from 'web3-avatar-react';
+import { WithClassName } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import s from './styles.module.css';
 
-export const ConnectWalletButton: React.FC = () => {
+export const ConnectWalletButton: React.FC<WithClassName> = ({ className }) => {
     const { disconnect } = useDisconnect();
     return (
         <ConnectButton.Custom>
@@ -25,7 +27,7 @@ export const ConnectWalletButton: React.FC = () => {
                                 userSelect: 'none',
                             },
                         })}
-                        className={s.wrap}
+                        className={clsx(s.wrap, className)}
                     >
                         {(() => {
                             if (!connected) {
@@ -72,7 +74,7 @@ export const ConnectWalletButton: React.FC = () => {
                                         void disconnect();
                                     }}
                                 >
-                                    <Avatar address={account.address} className={s.avatar} />
+                                    <Avatar address={account.address} className={clsx(s.avatar, 'web3-avatar')} />
                                     <span className="sr-only">Logout</span>
                                     <span className={s['logout-overlay']} aria-hidden>
                                         <Logout24Icon className={s.icon} />
