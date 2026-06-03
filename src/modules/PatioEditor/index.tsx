@@ -4,6 +4,7 @@ import { getPatioQueryOptions } from '@/services/patios/queries';
 import { Typography } from '@/components/ui/Typography';
 import { EditorProvider } from './context/EditorContext';
 import { useAutosavePatio } from './hooks/useAutosavePatio';
+// import { useIdleRotation } from './hooks/useIdleRotation';
 import { usePatioEditorParams } from './hooks/usePatioEditorRouteApi';
 import { MapCanvas } from './components/MapCanvas';
 import { PropertiesPanel } from './components/PropertiesPanel';
@@ -17,6 +18,12 @@ type EditorShellProps = {
     bounds: [number, number, number, number];
 };
 
+/** Drives the ambient idle-orbit; renders nothing. Must live inside MapProvider. */
+// const IdleOrbit: React.FC = () => {
+//     useIdleRotation();
+//     return null;
+// };
+
 const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds }) => {
     const { status } = useAutosavePatio(patioId);
 
@@ -27,6 +34,7 @@ const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds }) => {
             <Toolbar saveStatus={status} />
             <PropertiesPanel />
             <ViewCube />
+            {/* <IdleOrbit /> */}
         </MapProvider>
     );
 };
