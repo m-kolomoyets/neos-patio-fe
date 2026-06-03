@@ -38,9 +38,9 @@ export const Input: React.FC<InputProps & { ref?: React.Ref<HTMLInputElement> }>
             data-variant={variant}
             onMouseDown={handleMouseDown}
         >
-            {leftAddon ? <span className={s.addon}>{leftAddon}</span> : null}
+            {leftAddon ? <span className={clsx(s.addon, 'input-left-addon')}>{leftAddon}</span> : null}
             <BaseInput className={s.input} ref={inputRef} {...rest} />
-            {rightAddon ? <span className={s.addon}>{rightAddon}</span> : null}
+            {rightAddon ? <span className={clsx(s.addon, 'input-right-addon')}>{rightAddon}</span> : null}
         </div>
     );
 };

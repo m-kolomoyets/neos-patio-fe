@@ -72,10 +72,6 @@
     font-variant-numeric: tabular-nums;
 }
 
-.status[data-status="saved"] {
-    color: rgb(132 204 22);
-}
-
 .bar .connect-wallet,
 .bar .connect-wallet :global(.web3-avatar),
 .bar .connect-wallet > button {

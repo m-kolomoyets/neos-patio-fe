@@ -1,34 +1,48 @@
 import type { PlacedObject } from '@/services/patios/types';
 import { Suspense, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
+import clsx from 'clsx';
+import { NumericFormat } from 'react-number-format';
 import { Box3, Vector3 } from 'three';
 import { useModelsQuery } from '@/services/models/queries';
+import { Input } from '@/components/ui/Input';
+import { Tabs } from '@/components/ui/Tabs';
+import { Typography } from '@/components/ui/Typography';
 import { useEditorDispatch, useEditorState } from '../../context/EditorContext';
+import { EditorMode } from '../../types';
 import s from './styles.module.css';
 
 const RAD_TO_DEG = 180 / Math.PI;
 const DEG_TO_RAD = Math.PI / 180;
 
+const MODES: { mode: EditorMode; label: string }[] = [
+    { mode: 'translate', label: 'Move' },
+    { mode: 'rotate', label: 'Rotate' },
+    { mode: 'scale', label: 'Scale' },
+];
+
 type FieldConfig = {
     key: string;
-    label: string;
+    label?: string;
     step: number;
     fromObject(_o: PlacedObject): number;
     toPatch(_v: number): Partial<PlacedObject>;
 };
 
 type FieldGroup = {
+    value: string;
     title: string;
     fields: FieldConfig[];
 };
 
 const GROUPS: FieldGroup[] = [
     {
+        value: 'translate',
         title: 'Position',
         fields: [
             {
                 key: 'x',
-                label: 'X (m)',
+                label: 'X',
                 step: 0.1,
                 fromObject: (o) => {
                     return o.x;
@@ -39,7 +53,7 @@ const GROUPS: FieldGroup[] = [
             },
             {
                 key: 'y',
-                label: 'Y (m)',
+                label: 'Y',
                 step: 0.1,
                 fromObject: (o) => {
                     return o.y;
@@ -50,7 +64,7 @@ const GROUPS: FieldGroup[] = [
             },
             {
                 key: 'z',
-                label: 'Z (m)',
+                label: 'Z',
                 step: 0.1,
                 fromObject: (o) => {
                     return o.z;
@@ -62,11 +76,12 @@ const GROUPS: FieldGroup[] = [
         ],
     },
     {
+        value: 'rotate',
         title: 'Rotation',
         fields: [
             {
                 key: 'rotXDeg',
-                label: 'X (°)',
+                label: 'X',
                 step: 1,
                 fromObject: (o) => {
                     return o.rotX * RAD_TO_DEG;
@@ -77,7 +92,7 @@ const GROUPS: FieldGroup[] = [
             },
             {
                 key: 'rotYDeg',
-                label: 'Y (°)',
+                label: 'Y',
                 step: 1,
                 fromObject: (o) => {
                     return o.rotY * RAD_TO_DEG;
@@ -88,7 +103,7 @@ const GROUPS: FieldGroup[] = [
             },
             {
                 key: 'rotZDeg',
-                label: 'Z (°)',
+                label: 'Z',
                 step: 1,
                 fromObject: (o) => {
                     return o.rotZ * RAD_TO_DEG;
@@ -101,17 +116,16 @@ const GROUPS: FieldGroup[] = [
     },
 ];
 
-const SCALE_FIELD: FieldConfig = {
-    key: 'scale',
-    label: 'Uniform',
-    step: 0.1,
-    fromObject: (o) => {
-        return o.scale;
-    },
-    toPatch: (v) => {
-        return { scale: v };
-    },
-};
+// const SCALE_FIELD: FieldConfig = {
+//     key: 'scale',
+//     step: 0.1,
+//     fromObject: (o) => {
+//         return o.scale;
+//     },
+//     toPatch: (v) => {
+//         return { scale: v };
+//     },
+// };
 
 type EditableFieldProps = {
     field: FieldConfig;
@@ -121,20 +135,20 @@ type EditableFieldProps = {
 const EditableField: React.FC<EditableFieldProps> = ({ field, object }) => {
     const dispatch = useEditorDispatch();
     return (
-        <div className={s.row}>
-            <span className={s.label}>{field.label}</span>
-            <input
-                type="number"
-                className={s.input}
-                step={field.step}
-                value={Number(field.fromObject(object).toFixed(6))}
-                onChange={(e) => {
-                    const next = Number(e.target.value);
-                    if (!Number.isFinite(next)) return;
-                    dispatch({ type: 'transform', id: object.id, patch: field.toPatch(next) });
-                }}
-            />
-        </div>
+        <NumericFormat
+            className={s.input}
+            size="sm"
+            leftAddon={field.label}
+            step={field.step}
+            customInput={Input}
+            value={Number(field.fromObject(object).toFixed(2))}
+            onValueChange={({ floatValue }) => {
+                if (!Number.isFinite(floatValue)) {
+                    return;
+                }
+                dispatch({ type: 'transform', id: object.id, patch: field.toPatch(floatValue ?? 0) });
+            }}
+        />
     );
 };
 
@@ -154,26 +168,24 @@ const Dimensions: React.FC<DimensionsProps> = ({ gltfUrl, scale }) => {
     }, [scene]);
     const dims = [size.x, size.y, size.z];
     return (
-        <>
-            {DIMENSION_LABELS.map((label, i) => {
+        <div className={s.dimensions}>
+            {DIMENSION_LABELS.map((_, i) => {
                 return (
-                    <div key={label} className={s.row}>
-                        <span className={s.label}>{label}</span>
-                        <input
-                            type="number"
-                            className={s.input}
-                            value={Number((dims[i] * scale).toFixed(3))}
-                            readOnly
-                        />
-                    </div>
+                    <NumericFormat
+                        className={s.input}
+                        size="sm"
+                        value={Number((dims[i] * scale).toFixed(3))}
+                        customInput={Input}
+                        readOnly
+                    />
                 );
             })}
-        </>
+        </div>
     );
 };
 
 export const PropertiesPanel: React.FC = () => {
-    const { objects, selectedId } = useEditorState();
+    const { objects, selectedId, mode } = useEditorState();
     const dispatch = useEditorDispatch();
     const { data: models } = useModelsQuery();
 
@@ -187,31 +199,56 @@ export const PropertiesPanel: React.FC = () => {
     })?.gltfUrl;
 
     return (
-        <aside className={s.panel}>
-            <h3 className={s.title}>Properties</h3>
-            {GROUPS.map((group) => {
-                return (
-                    <section key={group.title} className={s.group}>
-                        <h4 className={s['group-title']}>{group.title}</h4>
-                        {group.fields.map((field) => {
-                            return <EditableField key={field.key} field={field} object={selected} />;
-                        })}
-                    </section>
-                );
-            })}
-            {gltfUrl && (
-                <section className={s.group}>
-                    <h4 className={s['group-title']}>Model Dimensions</h4>
-                    <Suspense fallback={<div className={s.label}>Loading…</div>}>
-                        <Dimensions gltfUrl={gltfUrl} scale={selected.scale} />
-                    </Suspense>
-                </section>
-            )}
-            <section className={s.group}>
+        <aside className={clsx(s.panel, 'surface-regular')}>
+            <Tabs.Root
+                value={mode}
+                onValueChange={(value) => {
+                    dispatch({ type: 'setMode', mode: value as EditorMode });
+                }}
+            >
+                <Tabs.List className={s.tabs}>
+                    {MODES.map((mode) => {
+                        return (
+                            <Tabs.Tab className={s.tab} key={mode.mode} value={mode.mode}>
+                                {mode.label}
+                            </Tabs.Tab>
+                        );
+                    })}
+                    <Tabs.Indicator />
+                </Tabs.List>
+                {GROUPS.map((group) => {
+                    return (
+                        <Tabs.Panel key={group.value} value={group.value}>
+                            <section className={s.group}>
+                                <Typography variant="text-xs" className={s['group-title']} render={<h4 />}>
+                                    {group.title}
+                                </Typography>
+                                <div className={s.fields}>
+                                    {group.fields.map((field) => {
+                                        return <EditableField key={field.key} field={field} object={selected} />;
+                                    })}
+                                </div>
+                            </section>
+                        </Tabs.Panel>
+                    );
+                })}
+                <Tabs.Panel value="scale">
+                    {gltfUrl && (
+                        <section className={s.group}>
+                            <Typography variant="text-xs" className={s['group-title']} render={<h4 />}>
+                                Dimensions (m)
+                            </Typography>
+                            <Suspense fallback={<div className={s.label}>Loading…</div>}>
+                                <Dimensions gltfUrl={gltfUrl} scale={selected.scale} />
+                            </Suspense>
+                        </section>
+                    )}
+                </Tabs.Panel>
+                {/* <section className={s.group}>
                 <h4 className={s['group-title']}>Scale</h4>
                 <EditableField field={SCALE_FIELD} object={selected} />
-            </section>
-            <button
+            </section> */}
+                {/* <button
                 type="button"
                 className={s.delete}
                 onClick={() => {
@@ -219,7 +256,8 @@ export const PropertiesPanel: React.FC = () => {
                 }}
             >
                 Delete object
-            </button>
+            </button> */}
+            </Tabs.Root>
         </aside>
     );
 };
