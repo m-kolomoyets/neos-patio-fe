@@ -2,6 +2,7 @@ import { useGLTF } from '@react-three/drei';
 import { useMap } from 'react-map-gl/maplibre';
 import { useModelsQuery } from '@/services/models/queries';
 import { EDITOR_MAP_ID } from '../../constants';
+import { CATALOG_PANEL_INSET_PX } from './constants';
 import { useEditorDispatch } from '../../context/EditorContext';
 import s from './styles.module.css';
 
@@ -31,7 +32,12 @@ export const CatalogPanel: React.FC = () => {
                                     onClick={() => {
                                         const map = maps[EDITOR_MAP_ID];
                                         if (!map) return;
-                                        const { lng, lat } = map.getCenter();
+                                        // Sample the center of the *visible* map region: full canvas
+                                        // width minus the catalog panel that occludes the left edge,
+                                        // so the object spawns where the user is actually looking.
+                                        const { clientWidth, clientHeight } = map.getContainer();
+                                        const x = (CATALOG_PANEL_INSET_PX + clientWidth) / 2;
+                                        const { lng, lat } = map.unproject([x, clientHeight / 2]);
                                         dispatch({ type: 'add', modelId: model.id, center: { lng, lat } });
                                     }}
                                 >

@@ -45,9 +45,6 @@ export const MAP_STYLE: StyleSpecification = {
             type: 'raster',
             tiles: [MAP_CONFIG.satelliteTilesUrl],
             tileSize: 512,
-            // MapTiler satellite-v2 serves real imagery to ~z20 globally; maplibre
-            // overzooms past that, so the map stays visible at deep zoom with no
-            // "Map data not yet available" placeholder.
             maxzoom: 20,
             attribution: '© MapTiler © OpenStreetMap contributors',
         },
@@ -73,7 +70,6 @@ export const MAP_STYLE: StyleSpecification = {
         },
     },
     layers: [
-        // { id: 'esri-satellite', type: 'raster', source: 'esri-satellite' },
         { id: MAP_SOURCE_IDS.satellite, type: 'raster', source: MAP_SOURCE_IDS.satellite },
         { id: 'esri-transport', type: 'raster', source: 'esri-transport' },
         { id: 'esri-labels', type: 'raster', source: 'esri-labels' },
