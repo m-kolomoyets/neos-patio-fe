@@ -33,7 +33,7 @@ const RAW_PATIOS: PatioFixture[] = [
         createdAt: '2025-09-12T10:00:00Z',
         popularity: 980,
         // coords: { lat: 48.8584, lng: 2.2945 },
-        coords: { lat: 49.5815, lng: 34.5693 },
+        coords: { lat: 48.6361, lng: -1.5115 },
         isFeatured: true,
     },
     {

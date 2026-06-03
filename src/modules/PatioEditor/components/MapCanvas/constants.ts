@@ -14,10 +14,13 @@ const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
 export const MAP_CONFIG = {
     /** MapTiler openmaptiles vector tiles (carries the `building` source-layer). */
     vectorTilesUrl: `https://api.maptiler.com/tiles/v3/tiles.json?key=${MAPTILER_KEY}`,
+    /** MapTiler satellite raster: consistent global coverage, no ESRI placeholder tiles. */
+    satelliteTilesUrl: `https://api.maptiler.com/maps/hybrid-v4/256/{z}/{x}/{y}@2x.jpg?key=${MAPTILER_KEY}`,
 } as const;
 
 export const MAP_SOURCE_IDS = {
     vector: 'maptiler-vector',
+    satellite: 'maptiler-satellite',
 } as const;
 
 export const MAP_LAYER_IDS = {
@@ -38,12 +41,15 @@ export const BUILDINGS_SOURCE_LAYER = 'building';
 export const MAP_STYLE: StyleSpecification = {
     version: 8,
     sources: {
-        'esri-satellite': {
+        [MAP_SOURCE_IDS.satellite]: {
             type: 'raster',
-            tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-            tileSize: 256,
-            maxzoom: 19,
-            attribution: 'Imagery © Esri',
+            tiles: [MAP_CONFIG.satelliteTilesUrl],
+            tileSize: 512,
+            // MapTiler satellite-v2 serves real imagery to ~z20 globally; maplibre
+            // overzooms past that, so the map stays visible at deep zoom with no
+            // "Map data not yet available" placeholder.
+            maxzoom: 20,
+            attribution: '© MapTiler © OpenStreetMap contributors',
         },
         'esri-transport': {
             type: 'raster',
@@ -51,7 +57,7 @@ export const MAP_STYLE: StyleSpecification = {
                 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
             ],
             tileSize: 256,
-            maxzoom: 19,
+            maxzoom: 18,
         },
         'esri-labels': {
             type: 'raster',
@@ -59,7 +65,7 @@ export const MAP_STYLE: StyleSpecification = {
                 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
             ],
             tileSize: 256,
-            maxzoom: 19,
+            maxzoom: 18,
         },
         [MAP_SOURCE_IDS.vector]: {
             type: 'vector',
@@ -67,7 +73,8 @@ export const MAP_STYLE: StyleSpecification = {
         },
     },
     layers: [
-        { id: 'esri-satellite', type: 'raster', source: 'esri-satellite' },
+        // { id: 'esri-satellite', type: 'raster', source: 'esri-satellite' },
+        { id: MAP_SOURCE_IDS.satellite, type: 'raster', source: MAP_SOURCE_IDS.satellite },
         { id: 'esri-transport', type: 'raster', source: 'esri-transport' },
         { id: 'esri-labels', type: 'raster', source: 'esri-labels' },
         {
