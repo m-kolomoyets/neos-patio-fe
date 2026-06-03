@@ -5,10 +5,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { TransformControls, useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useMap } from 'react-three-map/maplibre';
-import { Box3, BoxHelper, Color, Matrix4, Vector3 } from 'three';
+import { Box3, Matrix4, Vector3 } from 'three';
 import { SkeletonUtils } from 'three-stdlib';
-import { useEditorDispatch, useEditorState } from '../../context/EditorContext';
-import { EDITOR_OBJECT_USERDATA_KEY } from './SelectionRaycaster';
+import { useEditorDispatch, useEditorState } from '../../../../context/EditorContext';
+import { EDITOR_MODEL_USERDATA_KEY, EDITOR_OBJECT_USERDATA_KEY } from '../SelectionRaycaster';
 
 type ObjectMeshProps = {
     object: PlacedObject;
@@ -30,8 +30,6 @@ const setMapInteractions = (map: maplibregl.Map, enabled: boolean) => {
     });
 };
 
-const OUTLINE_COLOR = new Color('#ffffff');
-
 type ObjectChangeListener = () => void;
 
 type ObjectChangeEmitter = {
@@ -43,16 +41,15 @@ export const ObjectMesh: React.FC<ObjectMeshProps> = ({ object, gltfUrl }) => {
     const dispatch = useEditorDispatch();
     const { selectedId, mode } = useEditorState();
     const map = useMap();
-    const scene3d = useThree((s) => {
-        return s.scene;
-    });
     const invalidate = useThree((s) => {
         return s.invalidate;
     });
     const { scene } = useGLTF(gltfUrl);
     const cloned = useMemo(() => {
-        return SkeletonUtils.clone(scene);
-    }, [scene]);
+        const model = SkeletonUtils.clone(scene);
+        model.userData[EDITOR_MODEL_USERDATA_KEY] = object.id;
+        return model;
+    }, [scene, object.id]);
     const baseOffsetY = useMemo(() => {
         const box = new Box3().setFromObject(cloned);
         return -box.min.y;
@@ -113,26 +110,21 @@ export const ObjectMesh: React.FC<ObjectMeshProps> = ({ object, gltfUrl }) => {
         };
     }, [isSelected, map]);
 
+    // The contour outline (SelectionOutline) reads the live scene each render, so
+    // dragging the transform gizmo must keep the demand loop alive — invalidate on
+    // every objectChange so the outline tracks the moving object.
     useEffect(() => {
-        if (!isSelected || !target) return;
-        const helper = new BoxHelper(target, OUTLINE_COLOR);
-        helper.material.depthTest = false;
-        helper.material.transparent = true;
-        scene3d.add(helper);
-        helper.update();
+        if (!isSelected) return;
         invalidate();
         const onObjectChange = () => {
-            helper.update();
             invalidate();
         };
         const events = controls as unknown as ObjectChangeEmitter | null;
         events?.addEventListener('objectChange', onObjectChange);
         return () => {
             events?.removeEventListener('objectChange', onObjectChange);
-            scene3d.remove(helper);
-            helper.dispose();
         };
-    }, [isSelected, target, scene3d, controls, invalidate]);
+    }, [isSelected, controls, invalidate]);
 
     return (
         <>

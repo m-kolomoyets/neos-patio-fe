@@ -6,8 +6,9 @@ import { Canvas } from 'react-three-map/maplibre';
 import { EDITOR_MAP_ID } from '../../constants';
 import { DEFAULT_BEARING, DEFAULT_PITCH, DEFAULT_ZOOM, MAP_STYLE } from './constants';
 import { EditorContext } from '../../context/EditorContext';
+import { SelectionOutline } from '../ObjectsLayer/components/SelectionOutline';
+import { SelectionRaycaster } from '../ObjectsLayer/components/SelectionRaycaster';
 import { ObjectsLayer } from '../ObjectsLayer';
-import { SelectionRaycaster } from '../ObjectsLayer/SelectionRaycaster';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -55,6 +56,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ bounds }) => {
                             <directionalLight position={[10, 20, 10]} intensity={1} />
                             <ObjectsLayer />
                             <SelectionRaycaster />
+                            <SelectionOutline />
                         </QueryClientContext>
                     </EditorContext>
                 </Canvas>

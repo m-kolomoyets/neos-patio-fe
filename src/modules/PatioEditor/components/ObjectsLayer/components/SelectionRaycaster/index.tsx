@@ -3,9 +3,13 @@ import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import { useMap } from 'react-three-map/maplibre';
 import { Matrix4, Raycaster, Vector3 } from 'three';
-import { useEditorDispatch } from '../../context/EditorContext';
+import { useEditorDispatch } from '../../../../context/EditorContext';
 
 export const EDITOR_OBJECT_USERDATA_KEY = 'editorObjectId';
+// Marks the gltf model root (the `<primitive>`), distinct from the wrapper group
+// that carries EDITOR_OBJECT_USERDATA_KEY. Used to outline only the model meshes,
+// never the transform gizmo.
+export const EDITOR_MODEL_USERDATA_KEY = 'editorModelId';
 
 const findEditorObjectId = (obj: Object3D | null): string | null => {
     let node: Object3D | null = obj;

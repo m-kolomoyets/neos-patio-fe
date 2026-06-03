@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useModelsQuery } from '@/services/models/queries';
 import { useEditorState } from '../../context/EditorContext';
-import { ObjectMesh } from './ObjectMesh';
+import { ObjectMesh } from './components/ObjectMesh';
 
 export const ObjectsLayer: React.FC = () => {
     const { objects } = useEditorState();
