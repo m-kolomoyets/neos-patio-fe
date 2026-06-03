@@ -1,10 +1,7 @@
 import type { ZoomControlProps } from './types';
 import { memo } from 'react';
-import ExpandIcon from '@/icons/arrows-expand_24.svg?react';
-import HomeIcon from '@/icons/home_24.svg?react';
 import MinusIcon from '@/icons/minus_24.svg?react';
 import PlusIcon from '@/icons/plus_24.svg?react';
-import RefreshIcon from '@/icons/refresh-ccw-one-arrow_24.svg?react';
 import { Menu } from '@base-ui/react/menu';
 import clsx from 'clsx';
 import { OptionItem } from '@/components/ui/OptionItem';
@@ -68,21 +65,20 @@ export const ZoomControl = memo(function ZoomControl({
                             onClick={() => {
                                 onStepZoom(1);
                             }}
-                            render={<OptionItem leftAddon={<PlusIcon />}>Zoom in</OptionItem>}
+                            render={<OptionItem className={s.item}>Zoom in</OptionItem>}
                         />
                         <Menu.Item
                             className={s.item}
                             onClick={() => {
                                 onStepZoom(-1);
                             }}
-                            render={<OptionItem leftAddon={<MinusIcon />}>Zoom out</OptionItem>}
+                            render={<OptionItem className={s.item}>Zoom out</OptionItem>}
                         />
                         <Menu.Item
                             className={s.item}
                             onClick={onZoomToFit}
-                            render={<OptionItem leftAddon={<ExpandIcon />}>Zoom to fit</OptionItem>}
+                            render={<OptionItem className={s.item}>Zoom to fit</OptionItem>}
                         />
-                        <Separator orientation="horizontal" />
                         {ZOOM_PRESETS.map((preset) => {
                             return (
                                 <Menu.Item
@@ -91,20 +87,20 @@ export const ZoomControl = memo(function ZoomControl({
                                     onClick={() => {
                                         onZoomToPercent(preset);
                                     }}
-                                    render={<OptionItem>{`Zoom to ${preset}%`}</OptionItem>}
+                                    render={<OptionItem className={s.item}>{`Zoom to ${preset}%`}</OptionItem>}
                                 />
                             );
                         })}
-                        <Separator orientation="horizontal" />
+                        <Separator className={s.separator} orientation="horizontal" />
                         <Menu.Item
                             className={s.item}
                             onClick={onSetHome}
-                            render={<OptionItem leftAddon={<HomeIcon />}>Set current view as Home</OptionItem>}
+                            render={<OptionItem className={s.item}>Set current view as Home</OptionItem>}
                         />
                         <Menu.Item
                             className={s.item}
                             onClick={onResetHome}
-                            render={<OptionItem leftAddon={<RefreshIcon />}>Reset Home</OptionItem>}
+                            render={<OptionItem className={s.item}>Reset Home</OptionItem>}
                         />
                     </Menu.Popup>
                 </Menu.Positioner>

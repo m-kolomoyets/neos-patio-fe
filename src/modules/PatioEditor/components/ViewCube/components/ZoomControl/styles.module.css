@@ -53,11 +53,24 @@
 }
 
 .popup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-px);
     min-width: 14rem;
-    padding: var(--gap-1);
+    padding: calc(var(--gap-1) + var(--gap-0-5));
     background: var(--surface-regular) !important;
 }
 
-.item {
-    outline: none;
+.item.item > span {
+    font-size: 0.75rem;
+}
+
+.item:hover {
+    background: var(--surface-thin);
+    background-blend-mode: normal, luminosity;
+}
+
+.separator {
+    backdrop-filter: none;
+    margin-block: var(--gap-1);
 }

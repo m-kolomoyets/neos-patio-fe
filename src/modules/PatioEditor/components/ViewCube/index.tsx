@@ -1,7 +1,7 @@
 import type { CubeFace } from './types';
-import ArrowLeftIcon from '@/icons/arrow-left_24.svg?react';
-import ArrowRightIcon from '@/icons/arrow-right_24.svg?react';
-import ArrowUpIcon from '@/icons/arrow-up_24.svg?react';
+import ArrowLeftFilledIcon from '@/icons/arrow-left-filled_24.svg?react';
+import ArrowRightFilledIcon from '@/icons/arrow-right-filled_24.svg?react';
+import ArrowBottomFilledIcon from '@/icons/arrow-top-filled_24.svg?react';
 import HomeIcon from '@/icons/home_24.svg?react';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
@@ -61,7 +61,7 @@ export const ViewCube: React.FC = () => {
                                 }}
                                 onClick={goTop}
                             >
-                                <ArrowUpIcon />
+                                <ArrowBottomFilledIcon />
                             </button>
                             <button
                                 type="button"
@@ -74,7 +74,7 @@ export const ViewCube: React.FC = () => {
                                     stepBy(-1);
                                 }}
                             >
-                                <ArrowLeftIcon />
+                                <ArrowRightFilledIcon />
                             </button>
                             <div className={s['flat-face']}>
                                 <span className={s.label}>{FACE_LABELS[selectedFace]}</span>
@@ -90,7 +90,7 @@ export const ViewCube: React.FC = () => {
                                     stepBy(1);
                                 }}
                             >
-                                <ArrowRightIcon />
+                                <ArrowLeftFilledIcon />
                             </button>
                         </div>
                     ) : (
