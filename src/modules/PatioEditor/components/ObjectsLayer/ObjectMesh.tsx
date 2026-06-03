@@ -153,8 +153,8 @@ export const ObjectMesh: React.FC<ObjectMeshProps> = ({ object, gltfUrl }) => {
                     enabled={isSelected}
                     mode={mode}
                     showX
-                    showY
-                    showZ
+                    showY={mode !== 'scale'}
+                    showZ={mode !== 'scale'}
                     onMouseUp={() => {
                         dispatch({
                             type: 'transform',
