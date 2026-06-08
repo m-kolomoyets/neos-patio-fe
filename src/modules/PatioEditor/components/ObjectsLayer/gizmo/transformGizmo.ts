@@ -1,5 +1,6 @@
-import type { Cartesian2, Primitive, Scene } from 'cesium';
+import type { Cartesian2, Scene } from 'cesium';
 import type { EditorMode } from '../../../types';
+import type { GizmoHandles } from './handles';
 import type { GizmoAxis, GizmoHandleKind, GizmoTarget, TransformGizmoHandle } from './types';
 import {
     Cartesian3,
@@ -13,7 +14,7 @@ import {
     Transforms,
 } from 'cesium';
 import { closestPointOnAxis, rayPlaneIntersection, scaleRatio, signedAngleAboutAxis } from './dragMath';
-import { createRotateHandles, createScaleHandles, createTranslateHandles } from './handles';
+import { createRotateHandles, createScaleHandles, createTranslateHandles, setDraggedAxis } from './handles';
 import { isGizmoPickId } from './types';
 
 /** On-screen length (px) the gizmo's `1.0` local unit is rescaled to each frame. */
@@ -111,7 +112,7 @@ type ScaleDrag = {
 
 type DragState = TranslateDrag | RotateDrag | ScaleDrag;
 
-const createHandles = (mode: EditorMode): Primitive | null => {
+const createHandles = (mode: EditorMode): GizmoHandles | null => {
     if (mode === 'translate') return createTranslateHandles();
     if (mode === 'rotate') return createRotateHandles();
     if (mode === 'scale') return createScaleHandles();
@@ -147,16 +148,16 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
         if (!scene.isDestroyed()) scene.requestRender();
     };
 
-    const primitive = createHandles(mode);
-    if (primitive) scene.primitives.add(primitive);
+    const handles = createHandles(mode);
+    if (handles) scene.primitives.add(handles.primitive);
 
     // Keep the gizmo pinned to the (possibly mid-drag) target origin, ENU-aligned,
     // and a constant on-screen size — recomputed every frame.
     const onPreRender = () => {
-        if (!primitive) return;
+        if (!handles) return;
         const origin = targetOrigin(target);
         const enu = Transforms.eastNorthUpToFixedFrame(origin);
-        primitive.modelMatrix = Matrix4.multiplyByUniformScale(enu, screenScale(scene, origin), new Matrix4());
+        handles.primitive.modelMatrix = Matrix4.multiplyByUniformScale(enu, screenScale(scene, origin), new Matrix4());
     };
     scene.preRender.addEventListener(onPreRender);
 
@@ -171,7 +172,7 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
     const handler = new ScreenSpaceEventHandler(scene.canvas);
 
     handler.setInputAction((event: ScreenSpaceEventHandler.PositionedEvent) => {
-        const handle = primitive ? pickHandle(event.position) : null;
+        const handle = handles ? pickHandle(event.position) : null;
         if (!handle) return;
 
         const { axis } = handle;
@@ -209,8 +210,11 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
                 moved: false,
             };
         }
+        // Lighten the grabbed axis and hide the other two for the drag.
+        if (handles) setDraggedAxis(handles, axis);
         // Stop the drag from orbiting/panning the camera.
         scene.screenSpaceCameraController.enableInputs = false;
+        requestRender();
     }, ScreenSpaceEventType.LEFT_DOWN);
 
     handler.setInputAction((event: ScreenSpaceEventHandler.MotionEvent) => {
@@ -247,6 +251,9 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
         const { axis, moved } = drag;
         drag = null;
         scene.screenSpaceCameraController.enableInputs = true;
+        // Restore every axis to its base color and visibility.
+        if (handles) setDraggedAxis(handles, null);
+        requestRender();
         // A bare click (no movement) must not commit a no-op history entry.
         if (moved) onDragEnd?.(axis);
     }, ScreenSpaceEventType.LEFT_UP);
@@ -255,7 +262,7 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
         destroy() {
             scene.preRender.removeEventListener(onPreRender);
             handler.destroy();
-            if (primitive && !primitive.isDestroyed()) scene.primitives.remove(primitive);
+            if (handles && !handles.primitive.isDestroyed()) scene.primitives.remove(handles.primitive);
             // Restore camera inputs if torn down mid-drag.
             scene.screenSpaceCameraController.enableInputs = true;
             requestRender();

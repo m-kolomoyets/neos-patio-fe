@@ -12,6 +12,7 @@ import {
     Matrix4,
     PerInstanceColorAppearance,
     Primitive,
+    ShowGeometryInstanceAttribute,
 } from 'cesium';
 import { buildTorusGeometry } from './torusGeometry';
 import { GIZMO_HANDLE_ID } from './types';
@@ -43,6 +44,24 @@ const AXIS_COLOR: Record<GizmoAxis, Color> = {
     x: Color.fromCssColorString('#ff3b53'),
     y: Color.fromCssColorString('#39d353'),
     z: Color.fromCssColorString('#3b82ff'),
+};
+
+/** How far the dragged axis is lightened toward white while a drag is active. */
+const DRAG_HIGHLIGHT_AMOUNT = 0.45;
+
+const AXIS_HIGHLIGHT_COLOR: Record<GizmoAxis, Color> = {
+    x: Color.lerp(AXIS_COLOR.x, Color.WHITE, DRAG_HIGHLIGHT_AMOUNT, new Color()),
+    y: Color.lerp(AXIS_COLOR.y, Color.WHITE, DRAG_HIGHLIGHT_AMOUNT, new Color()),
+    z: Color.lerp(AXIS_COLOR.z, Color.WHITE, DRAG_HIGHLIGHT_AMOUNT, new Color()),
+};
+
+/**
+ * One built handle primitive plus the pick ids of every instance, grouped by axis,
+ * so a drag can recolor/hide instances per axis via `getGeometryInstanceAttributes`.
+ */
+export type GizmoHandles = {
+    primitive: Primitive;
+    idsByAxis: Record<GizmoAxis, GizmoPickId[]>;
 };
 
 /**
@@ -79,7 +98,10 @@ const cylinderInstance = (
     return new GeometryInstance({
         geometry,
         modelMatrix: partMatrix(axis, offset),
-        attributes: { color: ColorGeometryInstanceAttribute.fromColor(AXIS_COLOR[axis]) },
+        attributes: {
+            color: ColorGeometryInstanceAttribute.fromColor(AXIS_COLOR[axis]),
+            show: new ShowGeometryInstanceAttribute(true),
+        },
         id: pickId,
     });
 };
@@ -102,7 +124,10 @@ const boxInstance = (geometry: BoxGeometry, axis: GizmoAxis, kind: GizmoHandleKi
     return new GeometryInstance({
         geometry,
         modelMatrix: partMatrix(axis, CUBE_OFFSET),
-        attributes: { color: ColorGeometryInstanceAttribute.fromColor(AXIS_COLOR[axis]) },
+        attributes: {
+            color: ColorGeometryInstanceAttribute.fromColor(AXIS_COLOR[axis]),
+            show: new ShowGeometryInstanceAttribute(true),
+        },
         id: pickId,
     });
 };
@@ -113,14 +138,27 @@ const torusInstance = (geometry: Geometry, axis: GizmoAxis, kind: GizmoHandleKin
     return new GeometryInstance({
         geometry,
         modelMatrix: partMatrix(axis, 0),
-        attributes: { color: ColorGeometryInstanceAttribute.fromColor(AXIS_COLOR[axis]) },
+        attributes: {
+            color: ColorGeometryInstanceAttribute.fromColor(AXIS_COLOR[axis]),
+            show: new ShowGeometryInstanceAttribute(true),
+        },
         id: pickId,
     });
 };
 
+/** Group instance pick ids by the axis they drive, for per-axis recolor/hide. */
+const groupIdsByAxis = (instances: GeometryInstance[]): Record<GizmoAxis, GizmoPickId[]> => {
+    const idsByAxis: Record<GizmoAxis, GizmoPickId[]> = { x: [], y: [], z: [] };
+    for (const instance of instances) {
+        const id = instance.id as GizmoPickId;
+        idsByAxis[id[GIZMO_HANDLE_ID].axis].push(id);
+    }
+    return idsByAxis;
+};
+
 /** Wrap handle geometry instances in one always-on-top, flat-colored {@link Primitive}. */
-const handlesPrimitive = (instances: GeometryInstance[]): Primitive => {
-    return new Primitive({
+const handlesPrimitive = (instances: GeometryInstance[]): GizmoHandles => {
+    const primitive = new Primitive({
         geometryInstances: instances,
         appearance: new PerInstanceColorAppearance({
             flat: true,
@@ -128,9 +166,32 @@ const handlesPrimitive = (instances: GeometryInstance[]): Primitive => {
             renderState: alwaysOnTopRenderState(),
         }),
         asynchronous: false,
+        // Per-axis attributes are recolored/hidden during a drag.
+        releaseGeometryInstances: false,
         // Rescaled per frame to keep a constant on-screen size; see transformGizmo.
         allowPicking: true,
     });
+    return { primitive, idsByAxis: groupIdsByAxis(instances) };
+};
+
+/**
+ * Reflect a drag in the handles: lighten the dragged axis and hide the other two,
+ * so only the axis under the cursor stays visible while dragging. Pass `null` to
+ * restore every axis to its base color and visibility on release.
+ */
+export const setDraggedAxis = (handles: GizmoHandles, axis: GizmoAxis | null): void => {
+    const { primitive, idsByAxis } = handles;
+    if (!primitive.ready) return;
+    for (const a of AXES) {
+        const dragging = axis !== null && a === axis;
+        const color = dragging ? AXIS_HIGHLIGHT_COLOR[a] : AXIS_COLOR[a];
+        const show = axis === null || dragging;
+        for (const id of idsByAxis[a]) {
+            const attributes = primitive.getGeometryInstanceAttributes(id);
+            attributes.color = ColorGeometryInstanceAttribute.toValue(color);
+            attributes.show = ShowGeometryInstanceAttribute.toValue(show);
+        }
+    }
 };
 
 /**
@@ -138,7 +199,7 @@ const handlesPrimitive = (instances: GeometryInstance[]): Primitive => {
  * about the world ENU axes — heading (blue, up), pitch (red, east), roll (green,
  * north) — each a torus carrying a typed pick id so clicking it grabs that axis.
  */
-export const createRotateHandles = (): Primitive => {
+export const createRotateHandles = (): GizmoHandles => {
     const ring = buildTorusGeometry({
         ringRadius: RING_RADIUS,
         tubeRadius: RING_TUBE_RADIUS,
@@ -157,7 +218,7 @@ export const createRotateHandles = (): Primitive => {
  * east, green north, blue up arrow, each a shaft cylinder plus a cone arrowhead
  * sharing one typed pick id so clicking either part grabs that axis.
  */
-export const createTranslateHandles = (): Primitive => {
+export const createTranslateHandles = (): GizmoHandles => {
     const shaft = new CylinderGeometry({
         length: SHAFT_LENGTH,
         topRadius: SHAFT_RADIUS,
@@ -189,7 +250,7 @@ export const createTranslateHandles = (): Primitive => {
  * scale pick id. The three cubes act uniformly — grabbing any one scales the whole
  * model by a single factor — so they are cosmetically per-axis but never distort.
  */
-export const createScaleHandles = (): Primitive => {
+export const createScaleHandles = (): GizmoHandles => {
     const cube = BoxGeometry.fromDimensions({
         dimensions: new Cartesian3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE),
         vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
