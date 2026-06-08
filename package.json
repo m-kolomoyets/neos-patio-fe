@@ -35,6 +35,7 @@
         "@tanstack/react-router": "^1.168.23",
         "@tanstack/react-virtual": "^3.13.23",
         "@types/three": "^0.184.1",
+        "cesium": "^1.142.0",
         "clsx": "^2.1.1",
         "embla-carousel-react": "^8.6.0",
         "ky": "^1.14.2",
