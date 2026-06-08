@@ -94,3 +94,12 @@ export const scaleRatio = (startDistance: number, currentDistance: number): numb
     if (startDistance < MIN_SCALE_DISTANCE) return 1;
     return currentDistance / startDistance;
 };
+
+/**
+ * Convert a signed cumulative rotation in radians to the whole-degree value shown
+ * in the live readout. Kept cumulative (not wrapped to ±180°) so multi-turn and
+ * back-and-forth drags read correctly, and returning to the start reads `0`.
+ */
+export const radiansToDisplayDegrees = (radians: number): number => {
+    return Math.round((radians * 180) / Math.PI);
+};

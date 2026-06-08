@@ -1,4 +1,4 @@
-import type { Cartesian2, Scene } from 'cesium';
+import type { Cartesian2, Primitive, Scene } from 'cesium';
 import type { EditorMode } from '../../../types';
 import type { GizmoHandles } from './handles';
 import type { GizmoAxis, GizmoHandleKind, GizmoTarget, TransformGizmoHandle } from './types';
@@ -13,8 +13,25 @@ import {
     ScreenSpaceEventType,
     Transforms,
 } from 'cesium';
-import { closestPointOnAxis, rayPlaneIntersection, scaleRatio, signedAngleAboutAxis } from './dragMath';
-import { createRotateHandles, createScaleHandles, createTranslateHandles, setDraggedAxis } from './handles';
+import {
+    closestPointOnAxis,
+    radiansToDisplayDegrees,
+    rayPlaneIntersection,
+    scaleRatio,
+    signedAngleAboutAxis,
+} from './dragMath';
+import {
+    axisRotation,
+    buildRingStrokePrimitive,
+    buildSectorPrimitive,
+    buildSectorStrokePrimitive,
+    createRotateHandles,
+    createScaleHandles,
+    createTranslateHandles,
+    hideHandles,
+    setDraggedAxis,
+    setHoveredAxis,
+} from './handles';
 import { isGizmoPickId } from './types';
 
 /** On-screen length (px) the gizmo's `1.0` local unit is rescaled to each frame. */
@@ -32,6 +49,12 @@ type TransformGizmoOptions = {
     onDragMove?: () => void;
     /** Fired once on release with the dragged axis, so the caller can commit one history entry. */
     onDragEnd?: (_axis: GizmoAxis) => void;
+    /** Rotate mode only: fired on grab so the caller can show the live angle readout. */
+    onRotateStart?: () => void;
+    /** Rotate mode only: fired each move with the signed cumulative angle in whole degrees. */
+    onRotateUpdate?: (_degrees: number) => void;
+    /** Rotate mode only: fired on release so the caller can clear the readout. */
+    onRotateEnd?: () => void;
 };
 
 /** World-space translation (origin) of a target's current `modelMatrix`. */
@@ -44,6 +67,24 @@ const worldAxisDirection = (origin: Cartesian3, axis: GizmoAxis): Cartesian3 => 
     const enu = Transforms.eastNorthUpToFixedFrame(origin);
     const column = Matrix4.getColumn(enu, AXIS_COLUMN[axis], new Cartesian4());
     return Cartesian3.normalize(new Cartesian3(column.x, column.y, column.z), new Cartesian3());
+};
+
+/**
+ * Angle (radians) of a world-space ring-plane vector within the ring's *local* XY
+ * frame, undoing the ENU frame and the per-axis rotation that orient the ring. This
+ * is the local start edge the swept sector is built from, so the fan lines up with
+ * where the cursor grabbed the ring (origin is fixed for a rotate, so it is
+ * computed once at grab).
+ */
+const ringPlaneAngle = (origin: Cartesian3, axis: GizmoAxis, spokeWorld: Cartesian3): number => {
+    const enuRotation = Matrix4.getMatrix3(Transforms.eastNorthUpToFixedFrame(origin), new Matrix3());
+    const ringRotation = Matrix3.multiply(enuRotation, axisRotation(axis), new Matrix3());
+    const local = Matrix3.multiplyByVector(
+        Matrix3.transpose(ringRotation, new Matrix3()),
+        spokeWorld,
+        new Cartesian3()
+    );
+    return Math.atan2(local.y, local.x);
 };
 
 /**
@@ -95,6 +136,10 @@ type RotateDrag = {
     axisDirection: Cartesian3;
     /** origin → previous ring-plane hit, so each move applies an incremental delta. */
     lastSpoke: Cartesian3;
+    /** Signed cumulative angle (radians) swept so far, summed from per-move deltas. */
+    totalAngle: number;
+    /** Grab spoke's angle in the ring's local XY frame — the swept sector's start edge. */
+    startAngle: number;
     moved: boolean;
 };
 
@@ -142,7 +187,7 @@ const cursorAxisDistance = (
  * `modelMatrix` live and pause camera inputs for the drag.
  */
 export const createTransformGizmo = (options: TransformGizmoOptions): TransformGizmoHandle => {
-    const { scene, target, mode, onDragMove, onDragEnd } = options;
+    const { scene, target, mode, onDragMove, onDragEnd, onRotateStart, onRotateUpdate, onRotateEnd } = options;
 
     const requestRender = () => {
         if (!scene.isDestroyed()) scene.requestRender();
@@ -151,17 +196,71 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
     const handles = createHandles(mode);
     if (handles) scene.primitives.add(handles.primitive);
 
+    // The rotate-drag overlay, alive only during a rotate drag: the swept-angle
+    // sector fill, its yellow boundary stroke, and the thin white stroke over the
+    // active ring. The fill + stroke are rebuilt as the angle changes (each update
+    // removes the prior pair); the white ring is built once on grab.
+    let sector: Primitive | null = null;
+    let sectorStroke: Primitive | null = null;
+    let ring: Primitive | null = null;
+
+    const removePrimitive = (primitive: Primitive | null): null => {
+        if (primitive && !primitive.isDestroyed() && scene.primitives.contains(primitive)) {
+            scene.primitives.remove(primitive);
+        }
+        return null;
+    };
+
+    const removeSector = () => {
+        sector = removePrimitive(sector);
+        sectorStroke = removePrimitive(sectorStroke);
+    };
+
+    const removeOverlay = () => {
+        removeSector();
+        ring = removePrimitive(ring);
+    };
+
+    // Rebuild the sector fill + yellow stroke for the current swept span, sharing
+    // the rings' outer frame.
+    const updateSector = (axis: GizmoAxis, startAngle: number, endAngle: number) => {
+        removeSector();
+        const frame = handles ? Matrix4.clone(handles.primitive.modelMatrix, new Matrix4()) : undefined;
+        sector = buildSectorPrimitive(axis, startAngle, endAngle);
+        sectorStroke = buildSectorStrokePrimitive(axis, startAngle, endAngle);
+        if (frame) {
+            sector.modelMatrix = frame;
+            sectorStroke.modelMatrix = Matrix4.clone(frame, new Matrix4());
+        }
+        scene.primitives.add(sector);
+        scene.primitives.add(sectorStroke);
+    };
+
+    // Build the thin white stroke over the active ring, once on grab.
+    const addRingStroke = (axis: GizmoAxis) => {
+        ring = buildRingStrokePrimitive(axis);
+        if (handles) ring.modelMatrix = Matrix4.clone(handles.primitive.modelMatrix, new Matrix4());
+        scene.primitives.add(ring);
+    };
+
     // Keep the gizmo pinned to the (possibly mid-drag) target origin, ENU-aligned,
-    // and a constant on-screen size — recomputed every frame.
+    // and a constant on-screen size — recomputed every frame. The sector shares the
+    // same frame so it stays in the active ring's plane.
     const onPreRender = () => {
         if (!handles) return;
         const origin = targetOrigin(target);
         const enu = Transforms.eastNorthUpToFixedFrame(origin);
-        handles.primitive.modelMatrix = Matrix4.multiplyByUniformScale(enu, screenScale(scene, origin), new Matrix4());
+        const scaled = Matrix4.multiplyByUniformScale(enu, screenScale(scene, origin), new Matrix4());
+        handles.primitive.modelMatrix = scaled;
+        if (sector) sector.modelMatrix = scaled;
+        if (sectorStroke) sectorStroke.modelMatrix = Matrix4.clone(scaled, new Matrix4());
+        if (ring) ring.modelMatrix = Matrix4.clone(scaled, new Matrix4());
     };
     scene.preRender.addEventListener(onPreRender);
 
     let drag: DragState | null = null;
+    // Axis under the cursor outside a drag, so hover highlight only changes on transitions.
+    let hoveredAxis: GizmoAxis | null = null;
 
     const pickHandle = (position: Cartesian2): { axis: GizmoAxis; kind: GizmoHandleKind } | null => {
         const picked = scene.pick(position) as { id?: unknown } | undefined;
@@ -184,13 +283,21 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
         if (handle.kind === 'rotate') {
             const hit = rayPlaneIntersection(ray.origin, ray.direction, origin, axisDirection);
             if (!hit) return;
+            const spoke = Cartesian3.subtract(hit, origin, new Cartesian3());
+            const startAngle = ringPlaneAngle(origin, axis, spoke);
             drag = {
                 kind: 'rotate',
                 axis,
                 axisDirection,
-                lastSpoke: Cartesian3.subtract(hit, origin, new Cartesian3()),
+                lastSpoke: spoke,
+                totalAngle: 0,
+                startAngle,
                 moved: false,
             };
+            addRingStroke(axis);
+            updateSector(axis, startAngle, startAngle);
+            onRotateStart?.();
+            onRotateUpdate?.(0);
         } else if (handle.kind === 'scale') {
             drag = {
                 kind: 'scale',
@@ -210,15 +317,31 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
                 moved: false,
             };
         }
-        // Lighten the grabbed axis and hide the other two for the drag.
-        if (handles) setDraggedAxis(handles, axis);
+        // Clear any hover highlight, then reflect the grab: a rotate drag hides the
+        // colored rings (replaced by the white ring stroke + sector); translate/scale
+        // lighten the grabbed axis and hide the other two.
+        hoveredAxis = null;
+        if (handles) {
+            if (handle.kind === 'rotate') hideHandles(handles);
+            else setDraggedAxis(handles, axis);
+        }
         // Stop the drag from orbiting/panning the camera.
         scene.screenSpaceCameraController.enableInputs = false;
         requestRender();
     }, ScreenSpaceEventType.LEFT_DOWN);
 
     handler.setInputAction((event: ScreenSpaceEventHandler.MotionEvent) => {
-        if (!drag) return;
+        // Outside a drag, lighten whichever axis the cursor is over (any mode).
+        if (!drag) {
+            if (!handles) return;
+            const axis = pickHandle(event.endPosition)?.axis ?? null;
+            if (axis !== hoveredAxis) {
+                hoveredAxis = axis;
+                setHoveredAxis(handles, axis);
+                requestRender();
+            }
+            return;
+        }
         const origin = targetOrigin(target);
         const ray = scene.camera.getPickRay(event.endPosition);
         if (!ray) return;
@@ -230,6 +353,9 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
             const delta = signedAngleAboutAxis(drag.lastSpoke, spoke, drag.axisDirection);
             rotateInPlace(target.modelMatrix, drag.axisDirection, delta);
             drag.lastSpoke = spoke;
+            drag.totalAngle += delta;
+            updateSector(drag.axis, drag.startAngle, drag.startAngle + drag.totalAngle);
+            onRotateUpdate?.(radiansToDisplayDegrees(drag.totalAngle));
         } else if (drag.kind === 'scale') {
             const distance = cursorAxisDistance(ray.origin, ray.direction, origin, drag.axisDirection);
             const ratio = scaleRatio(drag.startDistance, distance);
@@ -248,12 +374,17 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
 
     handler.setInputAction(() => {
         if (!drag) return;
-        const { axis, moved } = drag;
+        const { kind, axis, moved } = drag;
         drag = null;
         scene.screenSpaceCameraController.enableInputs = true;
-        // Restore every axis to its base color and visibility.
+        // Restore every axis to its base color and visibility, and clear the overlay.
+        // Hover re-applies on the next move (hoveredAxis reset so it re-evaluates).
         if (handles) setDraggedAxis(handles, null);
+        hoveredAxis = null;
+        removeOverlay();
         requestRender();
+        // Clear the live readout even on a bare click, since the grab fired onRotateStart.
+        if (kind === 'rotate') onRotateEnd?.();
         // A bare click (no movement) must not commit a no-op history entry.
         if (moved) onDragEnd?.(axis);
     }, ScreenSpaceEventType.LEFT_UP);
@@ -262,6 +393,7 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
         destroy() {
             scene.preRender.removeEventListener(onPreRender);
             handler.destroy();
+            removeOverlay();
             if (handles && !handles.primitive.isDestroyed()) scene.primitives.remove(handles.primitive);
             // Restore camera inputs if torn down mid-drag.
             scene.screenSpaceCameraController.enableInputs = true;

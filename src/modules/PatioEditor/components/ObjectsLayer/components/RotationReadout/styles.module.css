@@ -1,0 +1,19 @@
+.badge {
+    position: fixed;
+    z-index: 3;
+
+    /* Lift the badge up and to the right of the gizmo origin, out from under the cursor. */
+    transform: translate(var(--gap-3), -150%);
+    padding: var(--gap-1) var(--gap-2);
+    border: 1px solid var(--color-brand-yellow-500);
+    border-radius: var(--radius-lg);
+    background: hsl(var(--color-hsl-black) / 0.72);
+    color: var(--color-base-white);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+}

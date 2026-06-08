@@ -6,13 +6,15 @@ import { useEditorState } from '../../context/EditorContext';
 import { useObjectSelection } from './hooks/useObjectSelection';
 import { useTransformGizmo } from './hooks/useTransformGizmo';
 import { createObjectModel } from './components/ObjectModel';
+import { RotationReadout } from './components/RotationReadout';
 
 /**
  * Imperatively syncs the editor's placed objects into the Cesium scene as native
- * {@link createObjectModel} primitives. Renders no DOM: it diffs the objects
- * array against a handle registry each change — creating new models, updating
- * moved/transformed ones, destroying removed ones — and requests a render so the
- * change shows under `requestRenderMode`.
+ * {@link createObjectModel} primitives: it diffs the objects array against a
+ * handle registry each change — creating new models, updating moved/transformed
+ * ones, destroying removed ones — and requests a render so the change shows under
+ * `requestRenderMode`. Its only DOM is the {@link RotationReadout} badge, shown
+ * over the map during an active rotate drag.
  */
 export const ObjectsLayer: React.FC = () => {
     const viewer = useCesiumViewer();
@@ -24,7 +26,7 @@ export const ObjectsLayer: React.FC = () => {
     const [readyVersion, setReadyVersion] = useState(0);
 
     useObjectSelection();
-    useTransformGizmo({ handlesRef, readyVersion });
+    const rotationReadout = useTransformGizmo({ handlesRef, readyVersion });
 
     useEffect(() => {
         if (!viewer || !models) return;
@@ -83,5 +85,7 @@ export const ObjectsLayer: React.FC = () => {
         };
     }, []);
 
-    return null;
+    if (!viewer) return null;
+
+    return <RotationReadout viewer={viewer} readout={rotationReadout} />;
 };

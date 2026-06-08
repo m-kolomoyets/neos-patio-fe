@@ -1,7 +1,9 @@
+import type { Cartesian3 } from 'cesium';
 import type { PatioBounds } from '@/services/patios/types';
 import type { ObjectModelHandle } from '../components/ObjectModel';
 import type { GizmoAxis } from '../gizmo/types';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Cartesian3 as Cartesian3Ctor, Matrix4 } from 'cesium';
 // `sampleSurfaceHeight` re-added when release regrounding is re-enabled below.
 import { clampToBounds, modelMatrixToGeoPose } from '../../../utils/geoPlacement';
 import { useCesiumViewer } from '../../../context/CesiumViewerContext';
@@ -12,6 +14,14 @@ type UseTransformGizmoArgs = {
     handlesRef: React.RefObject<Map<string, ObjectModelHandle>>;
     /** Bumped whenever a model finishes loading, so the gizmo can attach once ready. */
     readyVersion: number;
+};
+
+/** Live rotate-drag feedback the layer needs to render the on-screen angle badge. */
+export type RotationReadout = {
+    /** Signed cumulative angle in whole degrees, as swept about the grabbed axis. */
+    degrees: number;
+    /** World-space gizmo origin, projected to screen to place the badge. */
+    origin: Cartesian3;
 };
 
 /**
@@ -26,10 +36,12 @@ type UseTransformGizmoArgs = {
  * heading/pitch/roll. The gizmo is recreated when the selection, mode, or
  * readiness changes, and torn down when nothing is selected.
  */
-export const useTransformGizmo = ({ handlesRef, readyVersion }: UseTransformGizmoArgs): void => {
+export const useTransformGizmo = ({ handlesRef, readyVersion }: UseTransformGizmoArgs): RotationReadout | null => {
     const viewer = useCesiumViewer();
     const { selectedId, mode, bounds } = useEditorState();
     const dispatch = useEditorDispatch();
+    // Non-null only during an active rotate drag; drives the badge in ObjectsLayer.
+    const [rotation, setRotation] = useState<RotationReadout | null>(null);
 
     useEffect(() => {
         if (!viewer || !selectedId) return;
@@ -92,12 +104,28 @@ export const useTransformGizmo = ({ handlesRef, readyVersion }: UseTransformGizm
                 if (mode === 'scale') return commitScale();
                 return commitTranslate(axis, bounds);
             },
+            onRotateStart: () => {
+                const origin = Matrix4.getTranslation(model.modelMatrix, new Cartesian3Ctor());
+                setRotation({ degrees: 0, origin });
+            },
+            onRotateUpdate: (degrees) => {
+                setRotation((prev) => {
+                    return prev ? { ...prev, degrees } : prev;
+                });
+            },
+            onRotateEnd: () => {
+                return setRotation(null);
+            },
         });
         requestRender();
 
         return () => {
             gizmo.destroy();
+            // Tear down any in-flight readout if the gizmo is recreated/removed mid-drag.
+            setRotation(null);
             requestRender();
         };
     }, [viewer, selectedId, mode, bounds, dispatch, handlesRef, readyVersion]);
+
+    return rotation;
 };
