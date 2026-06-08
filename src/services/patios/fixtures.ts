@@ -32,8 +32,11 @@ const RAW_PATIOS: PatioFixture[] = [
         author: 'Neos',
         createdAt: '2025-09-12T10:00:00Z',
         popularity: 980,
+        // paris
         coords: { lat: 48.8584, lng: 2.2945 },
         // coords: { lat: 48.6361, lng: -1.5115 },
+        // monaco grand prix
+        // coords: { lat: 43.7384, lng: 7.4246 },
         isFeatured: true,
     },
     {

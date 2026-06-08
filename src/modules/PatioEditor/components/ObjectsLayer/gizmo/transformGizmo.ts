@@ -5,6 +5,8 @@ import type { GizmoAxis, GizmoHandleKind, GizmoTarget, TransformGizmoHandle } fr
 import {
     Cartesian3,
     Cartesian4,
+    Math as CesiumMath,
+    KeyboardEventModifier,
     Matrix3,
     Matrix4,
     PerspectiveFrustum,
@@ -19,6 +21,7 @@ import {
     rayPlaneIntersection,
     scaleRatio,
     signedAngleAboutAxis,
+    snapAngle,
 } from './dragMath';
 import {
     axisRotation,
@@ -51,6 +54,10 @@ import { isGizmoPickId } from './types';
 
 /** On-screen length (px) the gizmo's `1.0` local unit is rescaled to each frame. */
 const GIZMO_PIXEL_SIZE = 90;
+
+/** Rotate-drag snap increment (degrees) applied while shift is held. */
+const ROTATE_SNAP_DEGREES = 15;
+const ROTATE_SNAP_RADIANS = CesiumMath.toRadians(ROTATE_SNAP_DEGREES);
 
 /** Column index into an ENU frame for each world axis (east/north/up). */
 const AXIS_COLUMN: Record<GizmoAxis, number> = { x: 0, y: 1, z: 2 };
@@ -153,8 +160,14 @@ type RotateDrag = {
     axisDirection: Cartesian3;
     /** origin → previous ring-plane hit, so each move applies an incremental delta. */
     lastSpoke: Cartesian3;
-    /** Signed cumulative angle (radians) swept so far, summed from per-move deltas. */
-    totalAngle: number;
+    /** Signed cumulative angle (radians) the cursor has swept, summed from per-move deltas. */
+    rawTotalAngle: number;
+    /**
+     * Angle (radians) actually applied to the model so far. Equals `rawTotalAngle`
+     * when free, or the nearest snap multiple while shift is held; each move applies
+     * the difference so snap/unsnap toggles live mid-drag.
+     */
+    appliedAngle: number;
     /** Grab spoke's angle in the ring's local XY frame — the swept sector's start edge. */
     startAngle: number;
     moved: boolean;
@@ -388,7 +401,26 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
 
     const handler = new ScreenSpaceEventHandler(scene.canvas);
 
-    handler.setInputAction((event: ScreenSpaceEventHandler.PositionedEvent) => {
+    // Rotate mode reads shift to snap the drag to whole 15° steps. Cesium's move
+    // event carries no modifier flags, so track the key globally; a window blur
+    // (alt-tab) resets it so the snap never sticks on after a missed keyup.
+    let shiftHeld = false;
+    const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Shift') shiftHeld = true;
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+        if (event.key === 'Shift') shiftHeld = false;
+    };
+    const onBlur = () => {
+        shiftHeld = false;
+    };
+    if (mode === 'rotate') {
+        window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('keyup', onKeyUp);
+        window.addEventListener('blur', onBlur);
+    }
+
+    const onLeftDown = (event: ScreenSpaceEventHandler.PositionedEvent) => {
         const handle = handles ? pickHandle(event.position) : null;
         if (!handle) return;
 
@@ -408,7 +440,8 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
                 axis,
                 axisDirection,
                 lastSpoke: spoke,
-                totalAngle: 0,
+                rawTotalAngle: 0,
+                appliedAngle: 0,
                 startAngle,
                 moved: false,
             };
@@ -467,9 +500,9 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
         // Stop the drag from orbiting/panning the camera.
         scene.screenSpaceCameraController.enableInputs = false;
         requestRender();
-    }, ScreenSpaceEventType.LEFT_DOWN);
+    };
 
-    handler.setInputAction((event: ScreenSpaceEventHandler.MotionEvent) => {
+    const onMouseMove = (event: ScreenSpaceEventHandler.MotionEvent) => {
         // Outside a drag, lighten whichever axis the cursor is over (any mode).
         if (!drag) {
             if (!handles) return;
@@ -491,16 +524,21 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
             if (!hit) return;
             const spoke = Cartesian3.subtract(hit, origin, new Cartesian3());
             const delta = signedAngleAboutAxis(drag.lastSpoke, spoke, drag.axisDirection);
-            rotateInPlace(target.modelMatrix, drag.axisDirection, delta);
             drag.lastSpoke = spoke;
-            drag.totalAngle += delta;
+            drag.rawTotalAngle += delta;
+            // While shift is held, snap the applied orientation to whole 15° steps;
+            // otherwise track the cursor exactly. Apply only the difference from what
+            // is already on the matrix, so snap/unsnap toggles live mid-drag.
+            const targetAngle = shiftHeld ? snapAngle(drag.rawTotalAngle, ROTATE_SNAP_RADIANS) : drag.rawTotalAngle;
+            rotateInPlace(target.modelMatrix, drag.axisDirection, targetAngle - drag.appliedAngle);
+            drag.appliedAngle = targetAngle;
             // Wrap the swept sector into (-360°, 360°) so a full turn resets the
             // fan instead of overlapping itself — matching the wrapped readout.
-            const wrappedAngle = drag.totalAngle % (2 * Math.PI);
+            const wrappedAngle = drag.appliedAngle % (2 * Math.PI);
             updateSector(drag.axis, drag.startAngle, drag.startAngle + wrappedAngle);
             // Negate so the readout follows screen direction: clockwise positive,
             // counter-clockwise negative (raw axis-signed angle is the opposite).
-            onReadoutUpdate?.(radiansToDisplayDegrees(-drag.totalAngle));
+            onReadoutUpdate?.(radiansToDisplayDegrees(-drag.appliedAngle));
         } else if (drag.kind === 'scale') {
             const distance = cursorAxisDistance(ray.origin, ray.direction, origin, drag.axisDirection);
             const ratio = scaleRatio(drag.startDistance, distance);
@@ -520,9 +558,9 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
 
         requestRender();
         onDragMove?.();
-    }, ScreenSpaceEventType.MOUSE_MOVE);
+    };
 
-    handler.setInputAction(() => {
+    const onLeftUp = () => {
         if (!drag) return;
         const { kind, axis, moved } = drag;
         drag = null;
@@ -542,11 +580,25 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
         if (kind !== 'scale') onReadoutEnd?.();
         // A bare click (no movement) must not commit a no-op history entry.
         if (moved) onDragEnd?.(axis);
-    }, ScreenSpaceEventType.LEFT_UP);
+    };
+
+    // Register each action for both no-modifier and the SHIFT modifier. Cesium's
+    // ScreenSpaceEventHandler dispatches by modifier, so an action registered
+    // without one stops firing while shift is held — which would freeze the
+    // rotate drag exactly when snap-to-15° is wanted.
+    handler.setInputAction(onLeftDown, ScreenSpaceEventType.LEFT_DOWN);
+    handler.setInputAction(onLeftDown, ScreenSpaceEventType.LEFT_DOWN, KeyboardEventModifier.SHIFT);
+    handler.setInputAction(onMouseMove, ScreenSpaceEventType.MOUSE_MOVE);
+    handler.setInputAction(onMouseMove, ScreenSpaceEventType.MOUSE_MOVE, KeyboardEventModifier.SHIFT);
+    handler.setInputAction(onLeftUp, ScreenSpaceEventType.LEFT_UP);
+    handler.setInputAction(onLeftUp, ScreenSpaceEventType.LEFT_UP, KeyboardEventModifier.SHIFT);
 
     return {
         destroy() {
             scene.preRender.removeEventListener(onPreRender);
+            window.removeEventListener('keydown', onKeyDown);
+            window.removeEventListener('keyup', onKeyUp);
+            window.removeEventListener('blur', onBlur);
             handler.destroy();
             removeOverlay();
             removeMoveOverlay();

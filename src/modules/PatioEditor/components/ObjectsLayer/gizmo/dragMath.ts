@@ -79,6 +79,15 @@ export const signedAngleAboutAxis = (from: Cartesian3, to: Cartesian3, axis: Car
     return Math.atan2(sin, cos);
 };
 
+/**
+ * Snap an angle (radians) to the nearest multiple of `stepRadians`. Used by the
+ * rotate drag while shift is held, so the applied orientation lands on whole
+ * increments (e.g. every 15°) instead of tracking the cursor continuously.
+ */
+export const snapAngle = (radians: number, stepRadians: number): number => {
+    return Math.round(radians / stepRadians) * stepRadians;
+};
+
 /** Below this start distance, the scale ratio is ill-defined and falls back to 1. */
 const MIN_SCALE_DISTANCE = 1e-6;
 
