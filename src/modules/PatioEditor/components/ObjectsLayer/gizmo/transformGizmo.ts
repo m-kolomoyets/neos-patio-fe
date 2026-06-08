@@ -1,4 +1,4 @@
-import type { Cartesian2, Primitive, Scene } from 'cesium';
+import type { Cartesian2, PointPrimitiveCollection, Primitive, Scene } from 'cesium';
 import type { EditorMode } from '../../../types';
 import type { GizmoHandles } from './handles';
 import type { GizmoAxis, GizmoHandleKind, GizmoTarget, TransformGizmoHandle } from './types';
@@ -22,15 +22,30 @@ import {
 } from './dragMath';
 import {
     axisRotation,
+    buildMoveArrowHeadPrimitive,
+    buildMoveDotCollection,
+    buildMoveLinePrimitive,
     buildRingStrokePrimitive,
+    buildScaleCubePrimitive,
+    buildScaleDragLinePrimitive,
+    buildScaleLinesPrimitive,
     buildSectorPrimitive,
     buildSectorStrokePrimitive,
+    buildTranslateLinesPrimitive,
     createRotateHandles,
     createScaleHandles,
     createTranslateHandles,
+    hasMoveLine,
     hideHandles,
+    moveArrowHeadMatrix,
+    moveOverlayColor,
+    scaleCubeMatrix,
+    scaleCubeOffset,
+    scaleLineColors,
+    scaleOverlayColor,
     setDraggedAxis,
     setHoveredAxis,
+    translateLineColors,
 } from './handles';
 import { isGizmoPickId } from './types';
 
@@ -49,12 +64,12 @@ type TransformGizmoOptions = {
     onDragMove?: () => void;
     /** Fired once on release with the dragged axis, so the caller can commit one history entry. */
     onDragEnd?: (_axis: GizmoAxis) => void;
-    /** Rotate mode only: fired on grab so the caller can show the live angle readout. */
-    onRotateStart?: () => void;
-    /** Rotate mode only: fired each move with the signed cumulative angle in whole degrees. */
-    onRotateUpdate?: (_degrees: number) => void;
-    /** Rotate mode only: fired on release so the caller can clear the readout. */
-    onRotateEnd?: () => void;
+    /** Fired on grab (rotate + translate, not scale) so the caller can show the live readout. */
+    onReadoutStart?: () => void;
+    /** Fired each move with the mode's readout value (rotate: signed cumulative degrees; translate: abs metres). */
+    onReadoutUpdate?: (_value: number) => void;
+    /** Fired on release so the caller can clear the readout. */
+    onReadoutEnd?: () => void;
 };
 
 /** World-space translation (origin) of a target's current `modelMatrix`. */
@@ -125,6 +140,8 @@ type TranslateDrag = {
     axisDirection: Cartesian3;
     /** origin − closestPoint at grab time, so the handle doesn't jump under the cursor. */
     grabOffset: Cartesian3;
+    /** Grab-time origin (the "zero point"): the gizmo freezes here, the growing arrow and dot anchor to it. */
+    frozenOrigin: Cartesian3;
     /** Whether the pointer actually moved, so a bare click commits no history entry. */
     moved: boolean;
 };
@@ -152,6 +169,8 @@ type ScaleDrag = {
     startDistance: number;
     /** Model matrix snapshot at grab time, rescaled from each frame to avoid drift. */
     startMatrix: Matrix4;
+    /** Live current/start distance ratio, driving both the model scale and the cube's follow offset. */
+    ratio: number;
     moved: boolean;
 };
 
@@ -187,7 +206,7 @@ const cursorAxisDistance = (
  * `modelMatrix` live and pause camera inputs for the drag.
  */
 export const createTransformGizmo = (options: TransformGizmoOptions): TransformGizmoHandle => {
-    const { scene, target, mode, onDragMove, onDragEnd, onRotateStart, onRotateUpdate, onRotateEnd } = options;
+    const { scene, target, mode, onDragMove, onDragEnd, onReadoutStart, onReadoutUpdate, onReadoutEnd } = options;
 
     const requestRender = () => {
         if (!scene.isDestroyed()) scene.requestRender();
@@ -204,12 +223,98 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
     let sectorStroke: Primitive | null = null;
     let ring: Primitive | null = null;
 
+    // The axis lines: thin 3px screen-space polylines from the origin out along
+    // each axis (a separate primitive, since polylines can't share the handles'
+    // mesh appearance). Used by translate (shaft lines, RGB) and scale (origin→cube
+    // lines, grey/yellow); persists at rest and is rebuilt on hover/drag transitions
+    // to recolor / hide the non-active axes. Null in rotate mode.
+    let lines: Primitive | null = null;
+
+    // The move-drag overlay, alive only during a translate drag: a world-space
+    // growing arrow (shaft line + cone head) from the frozen zero point to the
+    // object's live origin, plus a dot at the zero point. The line is rebuilt each
+    // frame as the object moves; the head's matrix is re-placed each frame; the dot
+    // is fixed at the zero point. All null outside a translate drag.
+    let moveLine: Primitive | null = null;
+    let moveHead: Primitive | null = null;
+    let moveDots: PointPrimitiveCollection | null = null;
+
+    // The scale-drag overlay, alive only during a scale drag: the dragged cube and
+    // its stretching axis line, both yellow, following the cursor along the axis at
+    // offset `baseOffset · ratio`. The static handle cubes are hidden for the drag;
+    // the line is rebuilt each frame as the offset changes, the cube re-placed each
+    // frame. Both null outside a scale drag.
+    let scaleCube: Primitive | null = null;
+    let scaleLine: Primitive | null = null;
+
     const removePrimitive = (primitive: Primitive | null): null => {
         if (primitive && !primitive.isDestroyed() && scene.primitives.contains(primitive)) {
             scene.primitives.remove(primitive);
         }
         return null;
     };
+
+    const removeMoveOverlay = () => {
+        moveLine = removePrimitive(moveLine);
+        moveHead = removePrimitive(moveHead);
+        if (moveDots && !moveDots.isDestroyed() && scene.primitives.contains(moveDots)) {
+            scene.primitives.remove(moveDots);
+        }
+        moveDots = null;
+    };
+
+    // Rebuild the growing shaft line (skipped while degenerate) and re-place the cone
+    // head for the current frozen→live span. Called each frame during a translate drag.
+    const updateMoveOverlay = (translate: TranslateDrag) => {
+        const zero = translate.frozenOrigin;
+        const live = targetOrigin(target);
+        const color = moveOverlayColor(translate.axis);
+        moveLine = removePrimitive(moveLine);
+        if (hasMoveLine(zero, live)) {
+            moveLine = buildMoveLinePrimitive(zero, live, color);
+            scene.primitives.add(moveLine);
+        }
+        if (moveHead) {
+            moveHead.modelMatrix = moveArrowHeadMatrix(zero, live, translate.axisDirection, screenScale(scene, live));
+        }
+    };
+
+    const removeScaleOverlay = () => {
+        scaleCube = removePrimitive(scaleCube);
+        scaleLine = removePrimitive(scaleLine);
+    };
+
+    // Rebuild the stretching axis line and re-place the dragged cube for the drag's
+    // current ratio, sharing the gizmo's per-frame `frame`. Called each frame during
+    // a scale drag, so the line + cube track the cursor along the axis.
+    const updateScaleOverlay = (scaleDrag: ScaleDrag, frame: Matrix4) => {
+        const offset = scaleCubeOffset(scaleDrag.ratio);
+        const color = scaleOverlayColor();
+        scaleLine = removePrimitive(scaleLine);
+        scaleLine = buildScaleDragLinePrimitive(scaleDrag.axis, color, offset);
+        scaleLine.modelMatrix = Matrix4.clone(frame, new Matrix4());
+        scene.primitives.add(scaleLine);
+        if (scaleCube) scaleCube.modelMatrix = scaleCubeMatrix(frame, scaleDrag.axis, offset);
+    };
+
+    // Rebuild the axis lines for the current hover/drag state, sharing the handles'
+    // per-frame frame. Translate uses RGB shaft lines, scale grey/yellow origin→cube
+    // lines; no-op in rotate mode.
+    const rebuildLines = (hovered: GizmoAxis | null, dragged: GizmoAxis | null) => {
+        lines = removePrimitive(lines);
+        if (!handles) return;
+        if (mode === 'translate') {
+            lines = buildTranslateLinesPrimitive(translateLineColors(hovered, dragged));
+        } else if (mode === 'scale') {
+            lines = buildScaleLinesPrimitive(scaleLineColors(hovered, dragged));
+        } else {
+            return;
+        }
+        lines.modelMatrix = Matrix4.clone(handles.primitive.modelMatrix, new Matrix4());
+        scene.primitives.add(lines);
+    };
+    // Resting axis lines, drawn from the start in translate and scale modes.
+    rebuildLines(null, null);
 
     const removeSector = () => {
         sector = removePrimitive(sector);
@@ -246,15 +351,28 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
     // Keep the gizmo pinned to the (possibly mid-drag) target origin, ENU-aligned,
     // and a constant on-screen size — recomputed every frame. The sector shares the
     // same frame so it stays in the active ring's plane.
+    // The gizmo's per-frame frame: the ENU rotation at `origin`, uniformly scaled so
+    // `1.0` local unit is a constant on-screen pixel length at the current zoom.
+    const gizmoFrame = (origin: Cartesian3): Matrix4 => {
+        const enu = Transforms.eastNorthUpToFixedFrame(origin);
+        return Matrix4.multiplyByUniformScale(enu, screenScale(scene, origin), new Matrix4());
+    };
+
     const onPreRender = () => {
         if (!handles) return;
-        const origin = targetOrigin(target);
-        const enu = Transforms.eastNorthUpToFixedFrame(origin);
-        const scaled = Matrix4.multiplyByUniformScale(enu, screenScale(scene, origin), new Matrix4());
+        // A translate drag freezes the gizmo at the grab-start zero point; every
+        // other mode (and resting) re-pins to the live target origin each frame.
+        const origin = drag?.kind === 'translate' ? drag.frozenOrigin : targetOrigin(target);
+        const scaled = gizmoFrame(origin);
         handles.primitive.modelMatrix = scaled;
         if (sector) sector.modelMatrix = scaled;
         if (sectorStroke) sectorStroke.modelMatrix = Matrix4.clone(scaled, new Matrix4());
         if (ring) ring.modelMatrix = Matrix4.clone(scaled, new Matrix4());
+        if (lines) lines.modelMatrix = Matrix4.clone(scaled, new Matrix4());
+        // Grow the move arrow toward the object's live (still-moving) origin.
+        if (drag?.kind === 'translate') updateMoveOverlay(drag);
+        // Stretch the scale line + slide the dragged cube to the live ratio.
+        if (drag?.kind === 'scale') updateScaleOverlay(drag, scaled);
     };
     scene.preRender.addEventListener(onPreRender);
 
@@ -296,8 +414,8 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
             };
             addRingStroke(axis);
             updateSector(axis, startAngle, startAngle);
-            onRotateStart?.();
-            onRotateUpdate?.(0);
+            onReadoutStart?.();
+            onReadoutUpdate?.(0);
         } else if (handle.kind === 'scale') {
             drag = {
                 kind: 'scale',
@@ -305,6 +423,7 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
                 axisDirection,
                 startDistance: cursorAxisDistance(ray.origin, ray.direction, origin, axisDirection),
                 startMatrix: Matrix4.clone(target.modelMatrix, new Matrix4()),
+                ratio: 1,
                 moved: false,
             };
         } else {
@@ -314,16 +433,36 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
                 axis,
                 axisDirection,
                 grabOffset: Cartesian3.subtract(origin, closest, new Cartesian3()),
+                frozenOrigin: Cartesian3.clone(origin, new Cartesian3()),
                 moved: false,
             };
         }
-        // Clear any hover highlight, then reflect the grab: a rotate drag hides the
-        // colored rings (replaced by the white ring stroke + sector); translate/scale
-        // lighten the grabbed axis and hide the other two.
+        // Clear any hover highlight, then reflect the grab: every mode hides the
+        // static handles and draws a drag-only overlay — rotate the white ring stroke
+        // + sector, translate the growing-arrow overlay, scale the following cube +
+        // stretching line.
         hoveredAxis = null;
-        if (handles) {
-            if (handle.kind === 'rotate') hideHandles(handles);
-            else setDraggedAxis(handles, axis);
+        if (handles) hideHandles(handles);
+        // A scale grab replaces the resting cubes + lines with the dragged cube and
+        // its stretching line, both yellow, following the cursor; torn down on release.
+        if (handle.kind === 'scale' && drag.kind === 'scale') {
+            lines = removePrimitive(lines);
+            scaleCube = buildScaleCubePrimitive(scaleOverlayColor());
+            scene.primitives.add(scaleCube);
+            updateScaleOverlay(drag, gizmoFrame(origin));
+        }
+        // A translate grab replaces the resting shaft lines with the growing-arrow
+        // overlay (line + cone head + zero-point dot), all torn down on release.
+        if (handle.kind === 'translate' && drag.kind === 'translate') {
+            lines = removePrimitive(lines);
+            const color = moveOverlayColor(axis);
+            moveHead = buildMoveArrowHeadPrimitive(color);
+            scene.primitives.add(moveHead);
+            moveDots = buildMoveDotCollection(drag.frozenOrigin, color);
+            scene.primitives.add(moveDots);
+            updateMoveOverlay(drag);
+            onReadoutStart?.();
+            onReadoutUpdate?.(0);
         }
         // Stop the drag from orbiting/panning the camera.
         scene.screenSpaceCameraController.enableInputs = false;
@@ -338,6 +477,7 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
             if (axis !== hoveredAxis) {
                 hoveredAxis = axis;
                 setHoveredAxis(handles, axis);
+                rebuildLines(axis, null);
                 requestRender();
             }
             return;
@@ -354,17 +494,27 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
             rotateInPlace(target.modelMatrix, drag.axisDirection, delta);
             drag.lastSpoke = spoke;
             drag.totalAngle += delta;
-            updateSector(drag.axis, drag.startAngle, drag.startAngle + drag.totalAngle);
-            onRotateUpdate?.(radiansToDisplayDegrees(drag.totalAngle));
+            // Wrap the swept sector into (-360°, 360°) so a full turn resets the
+            // fan instead of overlapping itself — matching the wrapped readout.
+            const wrappedAngle = drag.totalAngle % (2 * Math.PI);
+            updateSector(drag.axis, drag.startAngle, drag.startAngle + wrappedAngle);
+            // Negate so the readout follows screen direction: clockwise positive,
+            // counter-clockwise negative (raw axis-signed angle is the opposite).
+            onReadoutUpdate?.(radiansToDisplayDegrees(-drag.totalAngle));
         } else if (drag.kind === 'scale') {
             const distance = cursorAxisDistance(ray.origin, ray.direction, origin, drag.axisDirection);
             const ratio = scaleRatio(drag.startDistance, distance);
             // Rescale uniformly from the grab-time snapshot to avoid per-frame drift.
             Matrix4.multiplyByUniformScale(drag.startMatrix, ratio, target.modelMatrix);
+            // The cube + line follow the same ratio (placed in onPreRender this requests).
+            drag.ratio = ratio;
         } else {
             const closest = closestPointOnAxis(ray.origin, ray.direction, origin, drag.axisDirection);
             const nextOrigin = Cartesian3.add(closest, drag.grabOffset, new Cartesian3());
             Matrix4.setTranslation(target.modelMatrix, nextOrigin, target.modelMatrix);
+            // Absolute distance travelled from the frozen zero point; the overlay
+            // itself regrows in onPreRender on the render this move requests.
+            onReadoutUpdate?.(Cartesian3.distance(drag.frozenOrigin, nextOrigin));
         }
         drag.moved = true;
 
@@ -382,9 +532,14 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
         if (handles) setDraggedAxis(handles, null);
         hoveredAxis = null;
         removeOverlay();
+        removeMoveOverlay();
+        removeScaleOverlay();
+        // Restore the resting shaft lines (all axes, base color).
+        rebuildLines(null, null);
         requestRender();
-        // Clear the live readout even on a bare click, since the grab fired onRotateStart.
-        if (kind === 'rotate') onRotateEnd?.();
+        // Clear the live readout even on a bare click, since the grab fired
+        // onReadoutStart (rotate and translate fire it; scale does not).
+        if (kind !== 'scale') onReadoutEnd?.();
         // A bare click (no movement) must not commit a no-op history entry.
         if (moved) onDragEnd?.(axis);
     }, ScreenSpaceEventType.LEFT_UP);
@@ -394,6 +549,9 @@ export const createTransformGizmo = (options: TransformGizmoOptions): TransformG
             scene.preRender.removeEventListener(onPreRender);
             handler.destroy();
             removeOverlay();
+            removeMoveOverlay();
+            removeScaleOverlay();
+            lines = removePrimitive(lines);
             if (handles && !handles.primitive.isDestroyed()) scene.primitives.remove(handles.primitive);
             // Restore camera inputs if torn down mid-drag.
             scene.screenSpaceCameraController.enableInputs = true;

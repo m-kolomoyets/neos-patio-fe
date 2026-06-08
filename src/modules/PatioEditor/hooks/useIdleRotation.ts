@@ -93,6 +93,14 @@ export const useIdleRotation = () => {
 
         const startOrbit = () => {
             if (frame !== null) return;
+            // A gizmo transform drag pauses the camera controller
+            // (`enableInputs = false`) for its whole duration. The idle orbit drives
+            // the camera directly and would otherwise fight an in-progress drag, so
+            // defer it: re-arm the countdown and retry once the drag releases.
+            if (!viewer.scene.screenSpaceCameraController.enableInputs) {
+                armIdle();
+                return;
+            }
             lastTs = null;
             pivot = resolvePivot();
             frame = requestAnimationFrame(tick);

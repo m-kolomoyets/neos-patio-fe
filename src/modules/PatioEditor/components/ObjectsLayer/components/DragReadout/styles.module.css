@@ -1,0 +1,25 @@
+.badge {
+    position: fixed;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-2);
+    padding: var(--gap-2) calc(var(--gap-2) + var(--gap-0-5)) var(--gap-2) var(--gap-3);
+    border-radius: var(--radius-md);
+    background-color: var(--color-base-black);
+    color: var(--color-base-white);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+
+    /* Lift the badge up and to the right of the gizmo origin, out from under the cursor. */
+    transform: translate(var(--gap-3), -150%);
+}
+
+.icon {
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+}

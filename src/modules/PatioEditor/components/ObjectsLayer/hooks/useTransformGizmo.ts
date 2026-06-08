@@ -1,13 +1,15 @@
 import type { Cartesian3 } from 'cesium';
 import type { PatioBounds } from '@/services/patios/types';
+import type { EditorMode } from '../../../types';
 import type { ObjectModelHandle } from '../components/ObjectModel';
 import type { GizmoAxis } from '../gizmo/types';
 import { useEffect, useState } from 'react';
 import { Cartesian3 as Cartesian3Ctor, Matrix4 } from 'cesium';
-// `sampleSurfaceHeight` re-added when release regrounding is re-enabled below.
 import { clampToBounds, modelMatrixToGeoPose } from '../../../utils/geoPlacement';
 import { useCesiumViewer } from '../../../context/CesiumViewerContext';
 import { useEditorDispatch, useEditorState } from '../../../context/EditorContext';
+// `sampleSurfaceHeight` re-added when release regrounding is re-enabled below.
+import { formatDistance } from '../gizmo/dragMath';
 import { createTransformGizmo } from '../gizmo/transformGizmo';
 
 type UseTransformGizmoArgs = {
@@ -16,12 +18,20 @@ type UseTransformGizmoArgs = {
     readyVersion: number;
 };
 
-/** Live rotate-drag feedback the layer needs to render the on-screen angle badge. */
-export type RotationReadout = {
-    /** Signed cumulative angle in whole degrees, as swept about the grabbed axis. */
-    degrees: number;
-    /** World-space gizmo origin, projected to screen to place the badge. */
+/** Live drag feedback the layer needs to render the on-screen readout badge. */
+export type DragReadout = {
+    /** Pre-formatted badge text (e.g. `+20°`), built per mode by the hook. */
+    label: string;
+    /** World-space readout origin, projected to screen to place the badge. */
     origin: Cartesian3;
+    /** Active transform mode — drives which leading icon the badge shows. */
+    mode: EditorMode;
+};
+
+/** `+20°` / `-45°` / `0°` — sign only on a non-zero turn. */
+const formatDegrees = (degrees: number): string => {
+    const sign = degrees > 0 ? '+' : '';
+    return `${sign}${degrees}°`;
 };
 
 /**
@@ -36,12 +46,12 @@ export type RotationReadout = {
  * heading/pitch/roll. The gizmo is recreated when the selection, mode, or
  * readiness changes, and torn down when nothing is selected.
  */
-export const useTransformGizmo = ({ handlesRef, readyVersion }: UseTransformGizmoArgs): RotationReadout | null => {
+export const useTransformGizmo = ({ handlesRef, readyVersion }: UseTransformGizmoArgs): DragReadout | null => {
     const viewer = useCesiumViewer();
     const { selectedId, mode, bounds } = useEditorState();
     const dispatch = useEditorDispatch();
-    // Non-null only during an active rotate drag; drives the badge in ObjectsLayer.
-    const [rotation, setRotation] = useState<RotationReadout | null>(null);
+    // Non-null only during an active readout drag; drives the badge in ObjectsLayer.
+    const [readout, setReadout] = useState<DragReadout | null>(null);
 
     useEffect(() => {
         if (!viewer || !selectedId) return;
@@ -52,6 +62,12 @@ export const useTransformGizmo = ({ handlesRef, readyVersion }: UseTransformGizm
         const { scene } = viewer;
         const requestRender = () => {
             if (!viewer.isDestroyed()) scene.requestRender();
+        };
+
+        // Per-mode readout label: translate reports absolute distance (auto cm/m),
+        // every other readout-firing mode (rotate) reports signed whole degrees.
+        const formatReadout = (value: number): string => {
+            return mode === 'translate' ? formatDistance(value) : formatDegrees(value);
         };
 
         // Read the rotate-dragged matrix back into a heading/pitch/roll patch via
@@ -104,17 +120,18 @@ export const useTransformGizmo = ({ handlesRef, readyVersion }: UseTransformGizm
                 if (mode === 'scale') return commitScale();
                 return commitTranslate(axis, bounds);
             },
-            onRotateStart: () => {
+            onReadoutStart: () => {
                 const origin = Matrix4.getTranslation(model.modelMatrix, new Cartesian3Ctor());
-                setRotation({ degrees: 0, origin });
+                // Format per mode: translate reports absolute metres, rotate signed degrees.
+                setReadout({ label: formatReadout(0), origin, mode });
             },
-            onRotateUpdate: (degrees) => {
-                setRotation((prev) => {
-                    return prev ? { ...prev, degrees } : prev;
+            onReadoutUpdate: (value) => {
+                setReadout((prev) => {
+                    return prev ? { ...prev, label: formatReadout(value) } : prev;
                 });
             },
-            onRotateEnd: () => {
-                return setRotation(null);
+            onReadoutEnd: () => {
+                return setReadout(null);
             },
         });
         requestRender();
@@ -122,10 +139,10 @@ export const useTransformGizmo = ({ handlesRef, readyVersion }: UseTransformGizm
         return () => {
             gizmo.destroy();
             // Tear down any in-flight readout if the gizmo is recreated/removed mid-drag.
-            setRotation(null);
+            setReadout(null);
             requestRender();
         };
     }, [viewer, selectedId, mode, bounds, dispatch, handlesRef, readyVersion]);
 
-    return rotation;
+    return readout;
 };

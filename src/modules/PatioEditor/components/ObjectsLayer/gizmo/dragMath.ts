@@ -97,9 +97,20 @@ export const scaleRatio = (startDistance: number, currentDistance: number): numb
 
 /**
  * Convert a signed cumulative rotation in radians to the whole-degree value shown
- * in the live readout. Kept cumulative (not wrapped to ±180°) so multi-turn and
- * back-and-forth drags read correctly, and returning to the start reads `0`.
+ * in the live readout. Wrapped into (-360, 360) so a full turn resets instead of
+ * accumulating past 360°; returning to the start still reads `0`.
  */
 export const radiansToDisplayDegrees = (radians: number): number => {
-    return Math.round((radians * 180) / Math.PI);
+    return Math.round((radians * 180) / Math.PI) % 360;
+};
+
+/**
+ * Render an absolute distance (metres) as the move readout's display string,
+ * auto-scaled: whole centimetres under 1 m (e.g. `45 cm`), metres with two
+ * decimals at or above 1 m (e.g. `1.25 m`). A near-zero drag reads `0 cm`, so
+ * dragging back to the start cancels cleanly.
+ */
+export const formatDistance = (meters: number): string => {
+    if (meters < 1) return `${Math.round(meters * 100)} cm`;
+    return `${meters.toFixed(2)} m`;
 };
