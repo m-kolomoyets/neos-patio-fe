@@ -32,6 +32,29 @@ export const geoPoseToModelMatrix = (pose: GeoPose): Matrix4 => {
     return Matrix4.multiplyByUniformScale(matrix, pose.scale, matrix);
 };
 
+/**
+ * Inverse of {@link geoPoseToModelMatrix}: decompose a model matrix back into a
+ * geographic + HPR pose. Translation → lng/lat/height, the ENU-relative
+ * orientation → heading/pitch/roll, and the (assumed uniform) scale → `scale`.
+ * Used to read a gizmo-dragged model's `modelMatrix` back into editor state.
+ */
+export const modelMatrixToGeoPose = (matrix: Matrix4): GeoPose => {
+    const translation = Matrix4.getTranslation(matrix, new Cartesian3());
+    const carto = Cartographic.fromCartesian(translation);
+    const hpr = Transforms.fixedFrameToHeadingPitchRoll(matrix);
+    const scaleVec = Matrix4.getScale(matrix, new Cartesian3());
+    return {
+        lng: CesiumMath.toDegrees(carto.longitude),
+        lat: CesiumMath.toDegrees(carto.latitude),
+        height: carto.height,
+        heading: hpr.heading,
+        pitch: hpr.pitch,
+        roll: hpr.roll,
+        // Objects carry a single uniform scale; read it off the X axis.
+        scale: scaleVec.x,
+    };
+};
+
 /** Clamp a lng/lat into the patio rectangle `[west, south, east, north]`. */
 export const clampToBounds = (bounds: PatioBounds, point: { lng: number; lat: number }) => {
     const [west, south, east, north] = bounds;
@@ -72,11 +95,17 @@ export const pickGroundPoint = (scene: Scene, windowPosition: Cartesian2): GeoPo
 
 /**
  * Sample the real surface height at a lng/lat using the most detailed tiles,
- * loading them if needed. Used to re-ground an object to the surface (e.g. after
- * a translate drag). Resolves to `undefined` when no surface is found.
+ * loading them if needed. Used to re-ground an object to the surface (e.g. on a
+ * translate drag-end). `objectsToExclude` keeps the dragged model from sampling
+ * its own mesh. Resolves to `undefined` when no surface is found.
  */
-export const sampleSurfaceHeight = async (scene: Scene, lng: number, lat: number): Promise<number | undefined> => {
+export const sampleSurfaceHeight = async (
+    scene: Scene,
+    lng: number,
+    lat: number,
+    objectsToExclude?: object[]
+): Promise<number | undefined> => {
     const carto = Cartographic.fromDegrees(lng, lat);
-    const [sampled] = await scene.sampleHeightMostDetailed([carto]);
+    const [sampled] = await scene.sampleHeightMostDetailed([carto], objectsToExclude);
     return sampled?.height;
 };

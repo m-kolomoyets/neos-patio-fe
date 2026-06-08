@@ -1,4 +1,5 @@
 import type { CameraState, CubeFace, CubeTarget } from '../types';
+import { Math as CesiumMath } from 'cesium';
 import { CUBE_TARGETS, MAX_PITCH } from '../constants';
 
 /**
@@ -75,24 +76,52 @@ export const stepFace = (face: CubeFace, dir: 1 | -1): CubeFace => {
 };
 
 /**
- * Map zoom → readout percentage, anchored so `refZoom` reads 100%.
+ * Camera range (meters) → readout percentage, anchored so `refRange` reads 100%.
  *
- * A whole zoom level doubles the on-screen scale, so percentage grows as
- * `2^(zoom − refZoom) · 100` (15 → 100%, 16 → 200%, 14 → 50% at refZoom 15).
- * Pure + testable; inverse of {@link percentToZoom}.
+ * Cesium has no discrete zoom levels; "zoom" is the camera's distance to the
+ * orbit target. Closer = more zoomed in = higher percentage, so the readout is
+ * the inverse ratio `refRange / range · 100` (half the range reads 200%, double
+ * reads 50%). Pure + testable; inverse of {@link percentToRange}.
  */
-export const zoomToPercent = (zoom: number, refZoom: number): number => {
-    return 2 ** (zoom - refZoom) * 100;
+export const rangeToPercent = (range: number, refRange: number): number => {
+    return (refRange / range) * 100;
 };
 
 /**
- * Readout percentage → map zoom, anchored so 100% maps to `refZoom`.
- *
- * Inverts {@link zoomToPercent}: `refZoom + log2(percent / 100)`. Drives the
- * 50/100/200% popover presets. Pure + testable.
+ * Readout percentage → camera range (meters), anchored so 100% maps to
+ * `refRange`. Inverts {@link rangeToPercent}: `refRange · 100 / percent`. Drives
+ * the 50/100/200% popover presets. Pure + testable.
  */
-export const percentToZoom = (percent: number, refZoom: number): number => {
-    return refZoom + Math.log2(percent / 100);
+export const percentToRange = (percent: number, refRange: number): number => {
+    return (refRange * 100) / percent;
+};
+
+/**
+ * Convert a display bearing (deg, clockwise from north) → Cesium camera heading
+ * (radians, same convention). The cube and maplibre-era bearing share Cesium's
+ * heading convention, so this is a plain degrees→radians map.
+ */
+export const bearingToHeading = (bearing: number): number => {
+    return CesiumMath.toRadians(normalizeBearing(bearing));
+};
+
+/** Inverse of {@link bearingToHeading}: Cesium heading (rad) → display bearing (deg). */
+export const headingToBearing = (heading: number): number => {
+    return normalizeBearing(CesiumMath.toDegrees(heading));
+};
+
+/**
+ * Convert a display pitch (deg, 0 = top-down, {@link MAX_PITCH} ≈ horizon) →
+ * Cesium camera pitch (rad, -90° = straight down, 0 = horizon). The cube reads
+ * pitch in the maplibre sense, so `displayPitch − 90` gives the Cesium pitch.
+ */
+export const displayPitchToCesium = (pitch: number): number => {
+    return CesiumMath.toRadians(clampPitch(pitch) - 90);
+};
+
+/** Inverse of {@link displayPitchToCesium}: Cesium pitch (rad) → display pitch (deg). */
+export const cesiumPitchToDisplay = (pitch: number): number => {
+    return clampPitch(CesiumMath.toDegrees(pitch) + 90);
 };
 
 /** Shortest absolute angle (deg, 0–180) between two bearings, wrap-aware. */

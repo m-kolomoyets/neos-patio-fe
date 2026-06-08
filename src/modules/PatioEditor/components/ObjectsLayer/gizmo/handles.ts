@@ -1,0 +1,202 @@
+import type { Geometry } from 'cesium';
+import type { GizmoAxis, GizmoHandleKind, GizmoPickId } from './types';
+import {
+    BoxGeometry,
+    Cartesian3,
+    Math as CesiumMath,
+    Color,
+    ColorGeometryInstanceAttribute,
+    CylinderGeometry,
+    GeometryInstance,
+    Matrix3,
+    Matrix4,
+    PerInstanceColorAppearance,
+    Primitive,
+} from 'cesium';
+import { buildTorusGeometry } from './torusGeometry';
+import { GIZMO_HANDLE_ID } from './types';
+
+/**
+ * Handle geometry, in local ENU units where `1.0` is rescaled to a fixed
+ * on-screen pixel length each frame (see `transformGizmo`). Arrows run from the
+ * origin out along each axis: a thin shaft capped by a cone arrowhead.
+ */
+const SHAFT_LENGTH = 1;
+const SHAFT_RADIUS = 0.025;
+const HEAD_LENGTH = 0.3;
+const HEAD_RADIUS = 0.09;
+const SLICES = 24;
+
+/** Rotation ring dimensions, in the same local ENU units as the arrows. */
+const RING_RADIUS = 0.9;
+const RING_TUBE_RADIUS = 0.04;
+const RING_SEGMENTS = 64;
+const RING_TUBE_SEGMENTS = 12;
+
+/** Scale-cube dimensions: a cube sat at each axis end, in the same local units. */
+const CUBE_SIZE = 0.18;
+const CUBE_OFFSET = 1;
+
+const AXES: readonly GizmoAxis[] = ['x', 'y', 'z'];
+
+const AXIS_COLOR: Record<GizmoAxis, Color> = {
+    x: Color.fromCssColorString('#ff3b53'),
+    y: Color.fromCssColorString('#39d353'),
+    z: Color.fromCssColorString('#3b82ff'),
+};
+
+/**
+ * Rotation taking a cylinder's local +Z (its length axis) onto a world ENU axis:
+ * identity for up, a ±90° turn for east/north.
+ */
+const axisRotation = (axis: GizmoAxis): Matrix3 => {
+    if (axis === 'x') {
+        return Matrix3.fromRotationY(CesiumMath.PI_OVER_TWO, new Matrix3());
+    }
+    if (axis === 'y') {
+        return Matrix3.fromRotationX(-CesiumMath.PI_OVER_TWO, new Matrix3());
+    }
+    return Matrix3.clone(Matrix3.IDENTITY, new Matrix3());
+};
+
+/**
+ * Local transform for a cylinder part: slide it along +Z to `offset` (parts are
+ * modeled centered on the origin), then rotate +Z onto the target axis.
+ */
+const partMatrix = (axis: GizmoAxis, offset: number): Matrix4 => {
+    const rotation = Matrix4.fromRotationTranslation(axisRotation(axis), Cartesian3.ZERO, new Matrix4());
+    const slide = Matrix4.fromTranslation(new Cartesian3(0, 0, offset), new Matrix4());
+    return Matrix4.multiply(rotation, slide, new Matrix4());
+};
+
+const cylinderInstance = (
+    geometry: CylinderGeometry,
+    axis: GizmoAxis,
+    offset: number,
+    kind: GizmoHandleKind
+): GeometryInstance => {
+    const pickId: GizmoPickId = { [GIZMO_HANDLE_ID]: { axis, kind } };
+    return new GeometryInstance({
+        geometry,
+        modelMatrix: partMatrix(axis, offset),
+        attributes: { color: ColorGeometryInstanceAttribute.fromColor(AXIS_COLOR[axis]) },
+        id: pickId,
+    });
+};
+
+/**
+ * Always-on-top render state: depth test off so handles stay visible (and
+ * pickable) even when geometrically behind the model; depth writes off so they
+ * never pollute the scene depth buffer. Other states fall back to Cesium defaults.
+ */
+const alwaysOnTopRenderState = (): object => {
+    return {
+        depthTest: { enabled: false },
+        depthMask: false,
+    };
+};
+
+/** A cube instance sat at the world `axis` end, carrying a scale pick id. */
+const boxInstance = (geometry: BoxGeometry, axis: GizmoAxis, kind: GizmoHandleKind): GeometryInstance => {
+    const pickId: GizmoPickId = { [GIZMO_HANDLE_ID]: { axis, kind } };
+    return new GeometryInstance({
+        geometry,
+        modelMatrix: partMatrix(axis, CUBE_OFFSET),
+        attributes: { color: ColorGeometryInstanceAttribute.fromColor(AXIS_COLOR[axis]) },
+        id: pickId,
+    });
+};
+
+/** A torus instance whose ring normal (+Z) is rotated onto the world `axis`. */
+const torusInstance = (geometry: Geometry, axis: GizmoAxis, kind: GizmoHandleKind): GeometryInstance => {
+    const pickId: GizmoPickId = { [GIZMO_HANDLE_ID]: { axis, kind } };
+    return new GeometryInstance({
+        geometry,
+        modelMatrix: partMatrix(axis, 0),
+        attributes: { color: ColorGeometryInstanceAttribute.fromColor(AXIS_COLOR[axis]) },
+        id: pickId,
+    });
+};
+
+/** Wrap handle geometry instances in one always-on-top, flat-colored {@link Primitive}. */
+const handlesPrimitive = (instances: GeometryInstance[]): Primitive => {
+    return new Primitive({
+        geometryInstances: instances,
+        appearance: new PerInstanceColorAppearance({
+            flat: true,
+            translucent: false,
+            renderState: alwaysOnTopRenderState(),
+        }),
+        asynchronous: false,
+        // Rescaled per frame to keep a constant on-screen size; see transformGizmo.
+        allowPicking: true,
+    });
+};
+
+/**
+ * Build the rotate gizmo as a single always-on-top {@link Primitive}: three rings
+ * about the world ENU axes — heading (blue, up), pitch (red, east), roll (green,
+ * north) — each a torus carrying a typed pick id so clicking it grabs that axis.
+ */
+export const createRotateHandles = (): Primitive => {
+    const ring = buildTorusGeometry({
+        ringRadius: RING_RADIUS,
+        tubeRadius: RING_TUBE_RADIUS,
+        ringSegments: RING_SEGMENTS,
+        tubeSegments: RING_TUBE_SEGMENTS,
+    });
+    return handlesPrimitive(
+        AXES.map((axis) => {
+            return torusInstance(ring, axis, 'rotate');
+        })
+    );
+};
+
+/**
+ * Build the translate gizmo as a single always-on-top {@link Primitive}: a red
+ * east, green north, blue up arrow, each a shaft cylinder plus a cone arrowhead
+ * sharing one typed pick id so clicking either part grabs that axis.
+ */
+export const createTranslateHandles = (): Primitive => {
+    const shaft = new CylinderGeometry({
+        length: SHAFT_LENGTH,
+        topRadius: SHAFT_RADIUS,
+        bottomRadius: SHAFT_RADIUS,
+        slices: SLICES,
+        vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+    });
+    const head = new CylinderGeometry({
+        length: HEAD_LENGTH,
+        topRadius: 0,
+        bottomRadius: HEAD_RADIUS,
+        slices: SLICES,
+        vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+    });
+
+    const instances = AXES.flatMap((axis) => {
+        return [
+            cylinderInstance(shaft, axis, SHAFT_LENGTH / 2, 'translate'),
+            cylinderInstance(head, axis, SHAFT_LENGTH + HEAD_LENGTH / 2, 'translate'),
+        ];
+    });
+
+    return handlesPrimitive(instances);
+};
+
+/**
+ * Build the scale gizmo as a single always-on-top {@link Primitive}: a red east,
+ * green north, blue up cube sat at each world ENU axis end, each carrying a typed
+ * scale pick id. The three cubes act uniformly — grabbing any one scales the whole
+ * model by a single factor — so they are cosmetically per-axis but never distort.
+ */
+export const createScaleHandles = (): Primitive => {
+    const cube = BoxGeometry.fromDimensions({
+        dimensions: new Cartesian3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE),
+        vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+    });
+    return handlesPrimitive(
+        AXES.map((axis) => {
+            return boxInstance(cube, axis, 'scale');
+        })
+    );
+};

@@ -1,17 +1,21 @@
-import type { MapRef } from 'react-map-gl/maplibre';
-import type { CameraTarget } from '../../types';
+import type { Viewer } from 'cesium';
+import type { PatioBounds } from '@/services/patios/types';
+import type { CameraState, CameraTarget } from '../../types';
 import { useCallback } from 'react';
-import { REFERENCE_ZOOM } from '../../constants';
-import { percentToZoom, zoomToPercent } from '../../utils/cameraMath';
+import { ZOOM_STEP_FACTOR } from '../../constants';
+import { percentToRange, rangeToPercent } from '../../utils/cameraMath';
 import { useCameraState } from '../../hooks/useCameraState';
 import { ZoomControl } from '../ZoomControl';
 
 type LiveZoomControlProps = {
-    map: MapRef;
+    viewer: Viewer;
+    readOrientation: () => CameraState;
     /** Patio footprint `[west, south, east, north]` framed by zoom-to-fit. */
-    bounds: [west: number, south: number, east: number, north: number];
+    bounds: PatioBounds;
+    /** Camera range (m) that reads as 100% — the patio diagonal. */
+    referenceRange: number;
     easeTo: (_target: CameraTarget) => void;
-    fitBounds: (_bounds: [west: number, south: number, east: number, north: number]) => void;
+    fitBounds: (_bounds: PatioBounds) => void;
     onSetHome: () => void;
     onResetHome: () => void;
 };
@@ -19,32 +23,36 @@ type LiveZoomControlProps = {
 /**
  * Live-zoom leaf: owns the per-frame camera subscription so the (memoized)
  * {@link ZoomControl} only re-renders when the zoom percentage actually changes,
- * not on every pan/orbit frame. Zoom math reads the map live (`map.getZoom()`)
- * so the step handlers stay stable across renders.
+ * not on every pan/orbit frame. Zoom math reads the camera range live (via
+ * `readOrientation`) so the step handlers stay stable across renders.
  */
 export const LiveZoomControl: React.FC<LiveZoomControlProps> = ({
-    map,
+    viewer,
+    readOrientation,
     bounds,
+    referenceRange,
     easeTo,
     fitBounds,
     onSetHome,
     onResetHome,
 }) => {
-    const camera = useCameraState(map);
-    const percent = Math.round(zoomToPercent(camera.zoom, REFERENCE_ZOOM));
+    const camera = useCameraState(viewer, readOrientation);
+    const percent = Math.round(rangeToPercent(camera.range, referenceRange));
 
     const onStepZoom = useCallback(
         (delta: 1 | -1) => {
-            easeTo({ zoom: map.getZoom() + delta });
+            // +1 zooms in → closer → smaller range; -1 zooms out → larger range.
+            const range = readOrientation().range / ZOOM_STEP_FACTOR ** delta;
+            easeTo({ range });
         },
-        [map, easeTo]
+        [readOrientation, easeTo]
     );
 
     const onZoomToPercent = useCallback(
         (pct: number) => {
-            easeTo({ zoom: percentToZoom(pct, REFERENCE_ZOOM) });
+            easeTo({ range: percentToRange(pct, referenceRange) });
         },
-        [easeTo]
+        [easeTo, referenceRange]
     );
 
     const onZoomToFit = useCallback(() => {

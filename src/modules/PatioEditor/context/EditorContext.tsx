@@ -20,16 +20,35 @@ type EditorState = {
     mode: EditorMode;
     bounds: PatioBounds;
     history: HistoryStacks<PlacedObject[]>;
+    // Objects snapshot captured when a panel field edit begins, so the whole
+    // edit (many live keystrokes) commits as a single history entry on `commitEdit`.
+    editSnapshot: PlacedObject[] | null;
 };
+
+type ObjectPatch = Partial<Omit<PlacedObject, 'id' | 'modelId'>>;
 
 type EditorAction =
     | { type: 'add'; modelId: string; position: GeoPoint }
     | { type: 'remove'; id: string }
-    | { type: 'transform'; id: string; patch: Partial<Omit<PlacedObject, 'id' | 'modelId'>> }
+    | { type: 'transform'; id: string; patch: ObjectPatch }
+    // Live panel preview: mutates the object without pushing history. Bracket a
+    // run of these with `beginEdit`/`commitEdit` for one undo step per field edit.
+    | { type: 'transformLive'; id: string; patch: ObjectPatch }
+    | { type: 'beginEdit' }
+    | { type: 'commitEdit' }
     | { type: 'select'; id: string | null }
     | { type: 'setMode'; mode: EditorMode }
     | { type: 'undo' }
     | { type: 'redo' };
+
+const applyPatch = (objects: PlacedObject[], bounds: PatioBounds, id: string, patch: ObjectPatch): PlacedObject[] => {
+    return objects.map((o) => {
+        if (o.id !== id) return o;
+        const merged = { ...o, ...patch };
+        const clamped = clampToBounds(bounds, merged);
+        return { ...merged, lng: clamped.lng, lat: clamped.lat };
+    });
+};
 
 const DEFAULT_HPR = 0;
 const DEFAULT_SCALE = 1;
@@ -69,14 +88,25 @@ const reducer = (state: EditorState, action: EditorAction): EditorState => {
         case 'transform': {
             return {
                 ...state,
-                objects: state.objects.map((o) => {
-                    if (o.id !== action.id) return o;
-                    const merged = { ...o, ...action.patch };
-                    const clamped = clampToBounds(state.bounds, merged);
-                    return { ...merged, lng: clamped.lng, lat: clamped.lat };
-                }),
+                objects: applyPatch(state.objects, state.bounds, action.id, action.patch),
                 history: pushHistory(state.history, state.objects),
             };
+        }
+        case 'transformLive': {
+            return {
+                ...state,
+                objects: applyPatch(state.objects, state.bounds, action.id, action.patch),
+            };
+        }
+        case 'beginEdit':
+            // Capture the pre-edit snapshot once; nested begins keep the first.
+            return state.editSnapshot ? state : { ...state, editSnapshot: state.objects };
+        case 'commitEdit': {
+            // Nothing edited (snapshot ref unchanged) → no history entry.
+            if (!state.editSnapshot || state.editSnapshot === state.objects) {
+                return { ...state, editSnapshot: null };
+            }
+            return { ...state, history: pushHistory(state.history, state.editSnapshot), editSnapshot: null };
         }
         case 'undo': {
             const result = undoHistory(state.history, state.objects);
@@ -135,6 +165,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ initialObjects, 
         mode: 'translate',
         bounds,
         history: createEmptyHistory<PlacedObject[]>(),
+        editSnapshot: null,
     });
 
     const value = useMemo(() => {

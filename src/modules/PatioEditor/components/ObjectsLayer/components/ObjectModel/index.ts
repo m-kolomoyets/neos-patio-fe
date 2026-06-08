@@ -20,6 +20,11 @@ export type ObjectModelHandle = {
     update: (_object: PlacedObject) => void;
     /** Toggle the selection silhouette outline. */
     setSelected: (_selected: boolean) => void;
+    /**
+     * The live Cesium {@link CesiumModel} once it has loaded, else `null`. The
+     * transform gizmo attaches to it via its `modelMatrix`.
+     */
+    getModel: () => CesiumModel | null;
     /** Remove and destroy the underlying Cesium primitive. */
     destroy: () => void;
 };
@@ -85,6 +90,9 @@ export const createObjectModel = (
         setSelected(next) {
             selected = next;
             applySilhouette();
+        },
+        getModel() {
+            return model;
         },
         destroy() {
             disposed = true;

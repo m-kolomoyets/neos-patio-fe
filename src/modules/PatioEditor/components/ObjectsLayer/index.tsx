@@ -1,9 +1,10 @@
 import type { ObjectModelHandle } from './components/ObjectModel';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useModelsQuery } from '@/services/models/queries';
 import { useCesiumViewer } from '../../context/CesiumViewerContext';
 import { useEditorState } from '../../context/EditorContext';
 import { useObjectSelection } from './hooks/useObjectSelection';
+import { useTransformGizmo } from './hooks/useTransformGizmo';
 import { createObjectModel } from './components/ObjectModel';
 
 /**
@@ -18,8 +19,12 @@ export const ObjectsLayer: React.FC = () => {
     const { objects, selectedId } = useEditorState();
     const { data: models } = useModelsQuery();
     const handlesRef = useRef<Map<string, ObjectModelHandle>>(new Map());
+    // Bumped each time an async model resolves, so the gizmo can attach once its
+    // target model exists.
+    const [readyVersion, setReadyVersion] = useState(0);
 
     useObjectSelection();
+    useTransformGizmo({ handlesRef, readyVersion });
 
     useEffect(() => {
         if (!viewer || !models) return;
@@ -28,6 +33,12 @@ export const ObjectsLayer: React.FC = () => {
         const handles = handlesRef.current;
         const requestRender = () => {
             if (!viewer.isDestroyed()) scene.requestRender();
+        };
+        const onModelReady = () => {
+            requestRender();
+            setReadyVersion((v) => {
+                return v + 1;
+            });
         };
         const gltfByModelId = new Map(
             models.map((m) => {
@@ -46,7 +57,7 @@ export const ObjectsLayer: React.FC = () => {
             }
             const gltfUrl = gltfByModelId.get(object.modelId);
             if (!gltfUrl) continue;
-            const handle = createObjectModel(scene, object, gltfUrl, requestRender);
+            const handle = createObjectModel(scene, object, gltfUrl, onModelReady);
             handle.setSelected(object.id === selectedId);
             handles.set(object.id, handle);
         }

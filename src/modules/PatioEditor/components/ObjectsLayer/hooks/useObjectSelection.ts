@@ -3,6 +3,7 @@ import { ScreenSpaceEventHandler, ScreenSpaceEventType } from 'cesium';
 import { useCesiumViewer } from '../../../context/CesiumViewerContext';
 import { useEditorDispatch } from '../../../context/EditorContext';
 import { EDITOR_OBJECT_ID } from '../components/ObjectModel';
+import { isGizmoPickId } from '../gizmo/types';
 
 /**
  * Wires left-click selection against the Cesium scene. `scene.pick` resolves the
@@ -24,12 +25,19 @@ export const useObjectSelection = (): void => {
         handler.setInputAction((event: ScreenSpaceEventHandler.PositionedEvent) => {
             const picked = scene.pick(event.position) as { id?: unknown } | undefined;
             const pickId = picked?.id;
-            const objectId =
-                pickId && typeof pickId === 'object' && EDITOR_OBJECT_ID in pickId
-                    ? (pickId as Record<string, unknown>)[EDITOR_OBJECT_ID]
-                    : null;
 
-            dispatch({ type: 'select', id: typeof objectId === 'string' ? objectId : null });
+            // Clicking a gizmo handle must not change the selection (otherwise the
+            // gizmo tears itself down mid-interaction).
+            if (isGizmoPickId(pickId)) return;
+
+            if (pickId && typeof pickId === 'object' && EDITOR_OBJECT_ID in pickId) {
+                const objectId = (pickId as Record<string, unknown>)[EDITOR_OBJECT_ID];
+                dispatch({ type: 'select', id: typeof objectId === 'string' ? objectId : null });
+                scene.requestRender();
+                return;
+            }
+
+            dispatch({ type: 'select', id: null });
             scene.requestRender();
         }, ScreenSpaceEventType.LEFT_CLICK);
 

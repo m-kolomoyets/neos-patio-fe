@@ -4,14 +4,14 @@ import { Typography } from '@/components/ui/Typography';
 import { CesiumViewerProvider } from './context/CesiumViewerContext';
 import { EditorProvider } from './context/EditorContext';
 import { useAutosavePatio } from './hooks/useAutosavePatio';
-// import { useIdleRotation } from './hooks/useIdleRotation';
+import { useIdleRotation } from './hooks/useIdleRotation';
 import { usePatioEditorParams } from './hooks/usePatioEditorRouteApi';
 import { MapCanvas } from './components/MapCanvas';
 import { ObjectsLayer } from './components/ObjectsLayer';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { Sidebar } from './components/Sidebar';
 import { Toolbar } from './components/Toolbar';
-// import { ViewCube } from './components/ViewCube';
+import { ViewCube } from './components/ViewCube';
 import s from './styles.module.css';
 
 type EditorShellProps = {
@@ -19,11 +19,11 @@ type EditorShellProps = {
     bounds: [number, number, number, number];
 };
 
-/** Drives the ambient idle-orbit; renders nothing. Must live inside MapProvider. */
-// const IdleOrbit: React.FC = () => {
-//     useIdleRotation();
-//     return null;
-// };
+/** Drives the ambient idle-orbit; renders nothing. Must live inside CesiumViewerProvider. */
+const IdleOrbit: React.FC = () => {
+    useIdleRotation();
+    return null;
+};
 
 const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds }) => {
     const { status } = useAutosavePatio(patioId);
@@ -35,9 +35,8 @@ const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds }) => {
             <Sidebar />
             <Toolbar saveStatus={status} />
             <PropertiesPanel />
-            {/* ViewCube restored in S6 (camera adapter rewrite); IdleOrbit in S7. */}
-            {/* <ViewCube /> */}
-            {/* <IdleOrbit /> */}
+            <ViewCube />
+            <IdleOrbit />
         </CesiumViewerProvider>
     );
 };

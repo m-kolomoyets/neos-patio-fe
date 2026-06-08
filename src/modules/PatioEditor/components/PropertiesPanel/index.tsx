@@ -150,11 +150,18 @@ const EditableField: React.FC<EditableFieldProps> = ({ field, object }) => {
             customInput={Input}
             readOnly={readOnly}
             value={Number(field.fromObject(object).toFixed(field.decimals))}
-            onValueChange={({ floatValue }) => {
-                if (readOnly || !Number.isFinite(floatValue)) {
+            onFocus={() => {
+                if (!readOnly) dispatch({ type: 'beginEdit' });
+            }}
+            onBlur={() => {
+                if (!readOnly) dispatch({ type: 'commitEdit' });
+            }}
+            onValueChange={({ floatValue }, { source }) => {
+                // Ignore programmatic value resets (gizmo/undo sync); only commit user typing.
+                if (readOnly || source !== 'event' || !Number.isFinite(floatValue)) {
                     return;
                 }
-                dispatch({ type: 'transform', id: object.id, patch: field.toPatch!(floatValue ?? 0) });
+                dispatch({ type: 'transformLive', id: object.id, patch: field.toPatch!(floatValue ?? 0) });
             }}
         />
     );

@@ -1,5 +1,13 @@
 import type { PatioBounds } from '@/services/patios/types';
-import { Math as CesiumMath, createGooglePhotorealistic3DTileset, Ion, Rectangle, Viewer } from 'cesium';
+import {
+    BoundingSphere,
+    Math as CesiumMath,
+    createGooglePhotorealistic3DTileset,
+    HeadingPitchRange,
+    Ion,
+    Rectangle,
+    Viewer,
+} from 'cesium';
 
 const ION_TOKEN = import.meta.env.VITE_CESIUM_ACCESS_TOKEN;
 const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -86,13 +94,25 @@ export const bootstrapScene = (viewer: Viewer, bounds: PatioBounds): (() => void
     };
 };
 
-/** Snap the camera to view the whole patio rectangle at heading 0 / pitch -45°. */
+/**
+ * Snap the camera to view the whole patio rectangle at heading 0 / pitch -45°,
+ * orbiting the bounds centre.
+ *
+ * Frames via `flyToBoundingSphere` (not `flyTo({ destination: Rectangle })`):
+ * a Rectangle destination positions the camera to fit the rect top-down and then
+ * overrides orientation in place, so the camera tilts to -45° without
+ * repositioning to aim at the centre — it ends up parked over the centre looking
+ * off into space. `flyToBoundingSphere` always looks at the sphere centre, and a
+ * `range` of 0 lets Cesium derive the fitting distance from the sphere radius.
+ * This matches the `HeadingPitchRange`-around-centre model the ViewCube camera
+ * adapter uses for every other move.
+ */
 const frameBounds = (viewer: Viewer, bounds: PatioBounds) => {
     const [west, south, east, north] = bounds;
+    const sphere = BoundingSphere.fromRectangle3D(Rectangle.fromDegrees(west, south, east, north));
 
-    viewer.camera.flyTo({
-        destination: Rectangle.fromDegrees(west, south, east, north),
-        orientation: { heading: 0, pitch: INITIAL_PITCH, roll: 0 },
+    viewer.camera.flyToBoundingSphere(sphere, {
+        offset: new HeadingPitchRange(0, INITIAL_PITCH, 0),
         duration: 0,
     });
 

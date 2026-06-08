@@ -1,16 +1,19 @@
 import type { CubeTarget } from './types';
-import { DEFAULT_ZOOM } from '../MapCanvas/constants';
 
 /** Duration (ms) for every programmatic camera move (snap, arrows, home, zoom presets). */
 export const CAMERA_EASE_MS = 400;
 
-/**
- * Zoom that reads as 100% on the stepper. Anchored to the editor's default
- * zoom so the percentage is "scale relative to the framing the editor opens at".
- */
-export const REFERENCE_ZOOM = DEFAULT_ZOOM;
+/** Same duration in seconds — the unit Cesium's `flyTo`/`flyToBoundingSphere` expects. */
+export const CAMERA_EASE_S = CAMERA_EASE_MS / 1_000;
 
-/** Zoom-popover preset percentages; fall on adjacent integer zoom levels (×2 per level). */
+/** Display orientation the editor opens at and Home defaults to (pitch is maplibre-style). */
+export const DEFAULT_BEARING = 0;
+export const DEFAULT_PITCH = 45;
+
+/** Each `−`/`+` step on the zoom stepper halves / doubles the camera range (a 2× scale change). */
+export const ZOOM_STEP_FACTOR = 2;
+
+/** Zoom-popover preset percentages; each is a ×2 range factor from the reference. */
 export const ZOOM_PRESETS = [50, 100, 200] as const;
 
 /** localStorage key prefix for the per-patio Home view (`${prefix}${patioId}`). */
@@ -37,13 +40,14 @@ export const CLICK_THRESHOLD_PX = 4;
 /**
  * Face / corner → camera orientation table.
  *
- * Maplibre is a geographic camera (pitch clamped 0–{@link MAX_PITCH}, always
- * looking down at the ground), so side "elevations" are pseudo-elevations at
- * max pitch and there are no edge targets — only 6 faces + 4 corners.
+ * Values are display units (pitch 0 = top-down, {@link MAX_PITCH} ≈ horizon),
+ * converted to Cesium heading/pitch radians by the camera adapter. Side
+ * "elevations" sit at near-max pitch and there are no edge targets — only the
+ * top face + 4 sides + 4 corners.
  *
  * `bearing: null` means "leave bearing unchanged" (used by the top face).
- * Consumed by the snap logic in issue #03; defined here so the mapping lives
- * in one pure, testable place.
+ * Consumed by the snap logic; defined here so the mapping lives in one pure,
+ * testable place.
  */
 export const CUBE_TARGETS: Record<CubeTarget, { bearing: number | null; pitch: number }> = {
     top: { bearing: null, pitch: 0 },

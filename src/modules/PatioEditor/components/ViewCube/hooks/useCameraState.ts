@@ -1,35 +1,49 @@
-import type { MapRef } from 'react-map-gl/maplibre';
+import type { Viewer } from 'cesium';
 import type { CameraState } from '../types';
 import { useEffect, useState } from 'react';
+import { DEFAULT_BEARING, DEFAULT_PITCH } from '../constants';
 
-const INITIAL_CAMERA: CameraState = { bearing: 0, pitch: 0, zoom: 0 };
+const INITIAL_CAMERA: CameraState = { bearing: DEFAULT_BEARING, pitch: DEFAULT_PITCH, range: 0 };
+
+/** Sub-unit changes are visual noise; bail on re-render unless something moved. */
+const EPSILON = 0.5;
+const samePose = (a: CameraState, b: CameraState): boolean => {
+    return (
+        Math.abs(a.bearing - b.bearing) < EPSILON &&
+        Math.abs(a.pitch - b.pitch) < EPSILON &&
+        Math.abs(a.range - b.range) < EPSILON
+    );
+};
 
 /**
- * Subscribes to the map's live `{ bearing, pitch, zoom }` via its `move` event
- * (which also fires on rotate/pitch/zoom).
+ * Subscribes to the live camera `{ bearing, pitch, range }` (display units) via
+ * `scene.postRender`, which fires on every rendered frame — exactly the frames
+ * the camera can change under `requestRenderMode`. Idle (no renders) means no
+ * updates; tile-streaming frames are absorbed by the {@link samePose} guard.
  *
- * Deliberately kept out of {@link useMapCamera}: only the small leaf components
- * that render the live orientation/zoom call this and re-render per frame, while
- * the ViewCube shell and its controls stay put during pan/orbit/zoom. Ephemeral
- * local state — never touches the EditorContext reducer / undo history.
+ * Deliberately kept out of {@link useCesiumCamera}: only the small leaf
+ * components that render the live orientation/zoom call this and re-render per
+ * frame, while the ViewCube shell and its controls stay put during pan/orbit.
+ * Ephemeral local state — never touches the EditorContext reducer / undo history.
  */
-export const useCameraState = (map: MapRef | null): CameraState => {
+export const useCameraState = (viewer: Viewer | null, readOrientation: () => CameraState): CameraState => {
     const [camera, setCamera] = useState<CameraState>(INITIAL_CAMERA);
 
     useEffect(() => {
-        if (!map) return undefined;
+        if (!viewer) {
+            return undefined;
+        }
 
         const sync = () => {
-            setCamera({ bearing: map.getBearing(), pitch: map.getPitch(), zoom: map.getZoom() });
+            const next = readOrientation();
+            setCamera((prev) => {
+                return samePose(prev, next) ? prev : next;
+            });
         };
 
         sync();
-        map.on('move', sync);
-
-        return () => {
-            map.off('move', sync);
-        };
-    }, [map]);
+        return viewer.scene.postRender.addEventListener(sync);
+    }, [viewer, readOrientation]);
 
     return camera;
 };
