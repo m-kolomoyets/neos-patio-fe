@@ -1,29 +1,76 @@
-import { useMemo } from 'react';
+import type { ObjectModelHandle } from './components/ObjectModel';
+import { useEffect, useRef } from 'react';
 import { useModelsQuery } from '@/services/models/queries';
+import { useCesiumViewer } from '../../context/CesiumViewerContext';
 import { useEditorState } from '../../context/EditorContext';
-import { ObjectMesh } from './components/ObjectMesh';
+import { useObjectSelection } from './hooks/useObjectSelection';
+import { createObjectModel } from './components/ObjectModel';
 
+/**
+ * Imperatively syncs the editor's placed objects into the Cesium scene as native
+ * {@link createObjectModel} primitives. Renders no DOM: it diffs the objects
+ * array against a handle registry each change — creating new models, updating
+ * moved/transformed ones, destroying removed ones — and requests a render so the
+ * change shows under `requestRenderMode`.
+ */
 export const ObjectsLayer: React.FC = () => {
-    const { objects } = useEditorState();
+    const viewer = useCesiumViewer();
+    const { objects, selectedId } = useEditorState();
     const { data: models } = useModelsQuery();
+    const handlesRef = useRef<Map<string, ObjectModelHandle>>(new Map());
 
-    const modelById = useMemo(() => {
-        return new Map(
-            (models ?? []).map((m) => {
-                return [m.id, m];
+    useObjectSelection();
+
+    useEffect(() => {
+        if (!viewer || !models) return;
+
+        const { scene } = viewer;
+        const handles = handlesRef.current;
+        const requestRender = () => {
+            if (!viewer.isDestroyed()) scene.requestRender();
+        };
+        const gltfByModelId = new Map(
+            models.map((m) => {
+                return [m.id, m.gltfUrl];
             })
         );
-    }, [models]);
+        const live = new Set<string>();
 
-    if (!models) return null;
+        for (const object of objects) {
+            live.add(object.id);
+            const existing = handles.get(object.id);
+            if (existing) {
+                existing.update(object);
+                existing.setSelected(object.id === selectedId);
+                continue;
+            }
+            const gltfUrl = gltfByModelId.get(object.modelId);
+            if (!gltfUrl) continue;
+            const handle = createObjectModel(scene, object, gltfUrl, requestRender);
+            handle.setSelected(object.id === selectedId);
+            handles.set(object.id, handle);
+        }
 
-    return (
-        <>
-            {objects.map((obj) => {
-                const model = modelById.get(obj.modelId);
-                if (!model) return null;
-                return <ObjectMesh key={obj.id} object={obj} gltfUrl={model.gltfUrl} />;
-            })}
-        </>
-    );
+        for (const [id, handle] of handles) {
+            if (!live.has(id)) {
+                handle.destroy();
+                handles.delete(id);
+            }
+        }
+
+        requestRender();
+    }, [viewer, objects, models, selectedId]);
+
+    // Destroy every model when the layer unmounts.
+    useEffect(() => {
+        const handles = handlesRef.current;
+        return () => {
+            for (const handle of handles.values()) {
+                handle.destroy();
+            }
+            handles.clear();
+        };
+    }, []);
+
+    return null;
 };

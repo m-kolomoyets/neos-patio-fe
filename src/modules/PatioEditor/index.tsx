@@ -1,5 +1,4 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { MapProvider } from 'react-map-gl/maplibre';
 import { getPatioQueryOptions } from '@/services/patios/queries';
 import { Typography } from '@/components/ui/Typography';
 import { CesiumViewerProvider } from './context/CesiumViewerContext';
@@ -8,6 +7,7 @@ import { useAutosavePatio } from './hooks/useAutosavePatio';
 // import { useIdleRotation } from './hooks/useIdleRotation';
 import { usePatioEditorParams } from './hooks/usePatioEditorRouteApi';
 import { MapCanvas } from './components/MapCanvas';
+import { ObjectsLayer } from './components/ObjectsLayer';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { Sidebar } from './components/Sidebar';
 import { Toolbar } from './components/Toolbar';
@@ -29,19 +29,16 @@ const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds }) => {
     const { status } = useAutosavePatio(patioId);
 
     return (
-        // MapProvider is retained only so CatalogPanel's `useMap()` stays valid until
-        // catalog placement is rewired onto Cesium in S2; no MapLibre `<Map>` is rendered.
-        <MapProvider>
-            <CesiumViewerProvider>
-                <MapCanvas bounds={bounds} />
-                <Sidebar />
-                <Toolbar saveStatus={status} />
-                <PropertiesPanel />
-                {/* ViewCube restored in S6 (camera adapter rewrite); IdleOrbit in S7. */}
-                {/* <ViewCube /> */}
-                {/* <IdleOrbit /> */}
-            </CesiumViewerProvider>
-        </MapProvider>
+        <CesiumViewerProvider>
+            <MapCanvas bounds={bounds} />
+            <ObjectsLayer />
+            <Sidebar />
+            <Toolbar saveStatus={status} />
+            <PropertiesPanel />
+            {/* ViewCube restored in S6 (camera adapter rewrite); IdleOrbit in S7. */}
+            {/* <ViewCube /> */}
+            {/* <IdleOrbit /> */}
+        </CesiumViewerProvider>
     );
 };
 

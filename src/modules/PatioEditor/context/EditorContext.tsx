@@ -1,11 +1,10 @@
 import type { PatioBounds, PlacedObject } from '@/services/patios/types';
 import type { EditorMode } from '../types';
-import type { SceneBounds } from '../utils/boundsClamp';
+import type { GeoPoint } from '../utils/geoPlacement';
 import type { HistoryStacks } from '../utils/undoRedoHistory';
 import { createContext, useMemo, useReducer } from 'react';
 import { useSafeContext } from '@/hooks/useSafeContext';
-import { clampToSceneBounds, deriveSceneBounds } from '../utils/boundsClamp';
-import { boundsAnchor, geoToScene } from '../utils/geoSceneProjection';
+import { clampToBounds } from '../utils/geoPlacement';
 import {
     canRedo as canRedoStacks,
     canUndo as canUndoStacks,
@@ -15,19 +14,16 @@ import {
     undoHistory,
 } from '../utils/undoRedoHistory';
 
-type LngLat = { lng: number; lat: number };
-
 type EditorState = {
     objects: PlacedObject[];
     selectedId: string | null;
     mode: EditorMode;
     bounds: PatioBounds;
-    sceneBounds: SceneBounds;
     history: HistoryStacks<PlacedObject[]>;
 };
 
 type EditorAction =
-    | { type: 'add'; modelId: string; center: LngLat }
+    | { type: 'add'; modelId: string; position: GeoPoint }
     | { type: 'remove'; id: string }
     | { type: 'transform'; id: string; patch: Partial<Omit<PlacedObject, 'id' | 'modelId'>> }
     | { type: 'select'; id: string | null }
@@ -35,24 +31,22 @@ type EditorAction =
     | { type: 'undo' }
     | { type: 'redo' };
 
-const DEFAULT_Y = 0;
-const DEFAULT_ROT = 0;
+const DEFAULT_HPR = 0;
 const DEFAULT_SCALE = 1;
 
 const reducer = (state: EditorState, action: EditorAction): EditorState => {
     switch (action.type) {
         case 'add': {
-            const scene = geoToScene(boundsAnchor(state.bounds), action.center);
-            const clamped = clampToSceneBounds(state.sceneBounds, { x: scene.x, z: scene.z });
+            const { lng, lat } = clampToBounds(state.bounds, action.position);
             const next: PlacedObject = {
                 id: crypto.randomUUID(),
                 modelId: action.modelId,
-                x: clamped.x,
-                y: DEFAULT_Y,
-                z: clamped.z,
-                rotX: DEFAULT_ROT,
-                rotY: DEFAULT_ROT,
-                rotZ: DEFAULT_ROT,
+                lng,
+                lat,
+                height: action.position.height,
+                heading: DEFAULT_HPR,
+                pitch: DEFAULT_HPR,
+                roll: DEFAULT_HPR,
                 scale: DEFAULT_SCALE,
             };
             return {
@@ -78,8 +72,8 @@ const reducer = (state: EditorState, action: EditorAction): EditorState => {
                 objects: state.objects.map((o) => {
                     if (o.id !== action.id) return o;
                     const merged = { ...o, ...action.patch };
-                    const clamped = clampToSceneBounds(state.sceneBounds, { x: merged.x, z: merged.z });
-                    return { ...merged, x: clamped.x, z: clamped.z };
+                    const clamped = clampToBounds(state.bounds, merged);
+                    return { ...merged, lng: clamped.lng, lat: clamped.lat };
                 }),
                 history: pushHistory(state.history, state.objects),
             };
@@ -140,7 +134,6 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ initialObjects, 
         selectedId: null,
         mode: 'translate',
         bounds,
-        sceneBounds: deriveSceneBounds(bounds),
         history: createEmptyHistory<PlacedObject[]>(),
     });
 

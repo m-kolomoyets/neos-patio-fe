@@ -1,18 +1,18 @@
 import ChevronRightIcon from '@/icons/chevrone-right_24.svg?react';
-import { useGLTF } from '@react-three/drei';
+import { Cartesian2 } from 'cesium';
 import clsx from 'clsx';
-import { useMap } from 'react-map-gl/maplibre';
 import { useModelsQuery } from '@/services/models/queries';
 import { Typography } from '@/components/ui/Typography';
-import { EDITOR_MAP_ID } from '../../constants';
 import { CATALOG_PANEL_INSET_PX } from './constants';
+import { pickGroundPoint } from '../../utils/geoPlacement';
+import { useCesiumViewer } from '../../context/CesiumViewerContext';
 import { useEditorDispatch } from '../../context/EditorContext';
 import s from './styles.module.css';
 
 export const CatalogPanel: React.FC = () => {
     const { data, isLoading } = useModelsQuery();
     const dispatch = useEditorDispatch();
-    const maps = useMap();
+    const viewer = useCesiumViewer();
 
     return (
         <aside className={s.panel}>
@@ -26,22 +26,18 @@ export const CatalogPanel: React.FC = () => {
                                     type="button"
                                     className={s.item}
                                     title={`Add ${model.name} to the scene`}
-                                    onMouseEnter={() => {
-                                        useGLTF.preload(model.gltfUrl);
-                                    }}
-                                    onFocus={() => {
-                                        useGLTF.preload(model.gltfUrl);
-                                    }}
                                     onClick={() => {
-                                        const map = maps[EDITOR_MAP_ID];
-                                        if (!map) return;
-                                        // Sample the center of the *visible* map region: full canvas
-                                        // width minus the catalog panel that occludes the left edge,
-                                        // so the object spawns where the user is actually looking.
-                                        const { clientWidth, clientHeight } = map.getContainer();
-                                        const x = (CATALOG_PANEL_INSET_PX + clientWidth) / 2;
-                                        const { lng, lat } = map.unproject([x, clientHeight / 2]);
-                                        dispatch({ type: 'add', modelId: model.id, center: { lng, lat } });
+                                        if (!viewer) return;
+                                        const { scene } = viewer;
+                                        const { canvas } = scene;
+                                        // Sample the center of the *visible* canvas region: full
+                                        // width minus the catalog panel occluding the left edge,
+                                        // so the object drops where the user is actually looking.
+                                        const x = (CATALOG_PANEL_INSET_PX + canvas.clientWidth) / 2;
+                                        const y = canvas.clientHeight / 2;
+                                        const point = pickGroundPoint(scene, new Cartesian2(x, y));
+                                        if (!point) return;
+                                        dispatch({ type: 'add', modelId: model.id, position: point });
                                     }}
                                 >
                                     <img src={model.previewUrl} alt="" className={s.thumb} loading="lazy" />

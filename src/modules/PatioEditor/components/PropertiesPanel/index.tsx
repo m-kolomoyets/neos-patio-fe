@@ -1,10 +1,6 @@
 import type { PlacedObject } from '@/services/patios/types';
-import { Suspense, useMemo } from 'react';
-import { useGLTF } from '@react-three/drei';
 import clsx from 'clsx';
 import { NumericFormat } from 'react-number-format';
-import { Box3, Vector3 } from 'three';
-import { useModelsQuery } from '@/services/models/queries';
 import { Input } from '@/components/ui/Input';
 import { Tabs } from '@/components/ui/Tabs';
 import { Typography } from '@/components/ui/Typography';
@@ -25,8 +21,10 @@ type FieldConfig = {
     key: string;
     label?: string;
     step: number;
+    decimals: number;
     fromObject(_o: PlacedObject): number;
-    toPatch(_v: number): Partial<PlacedObject>;
+    // Read-only fields (lng/lat) omit `toPatch`: position is changed via the gizmo.
+    toPatch?(_v: number): Partial<PlacedObject>;
 };
 
 type FieldGroup = {
@@ -35,42 +33,40 @@ type FieldGroup = {
     fields: FieldConfig[];
 };
 
+// Option B: height/heading/pitch/roll/scale editable; lng/lat read-only (moved via gizmo).
 const GROUPS: FieldGroup[] = [
     {
         value: 'translate',
         title: 'Position',
         fields: [
             {
-                key: 'x',
-                label: 'X',
+                key: 'height',
+                label: 'Alt',
                 step: 0.1,
+                decimals: 2,
                 fromObject: (o) => {
-                    return o.x;
+                    return o.height;
                 },
                 toPatch: (v) => {
-                    return { x: v };
+                    return { height: v };
                 },
             },
             {
-                key: 'y',
-                label: 'Y',
-                step: 0.1,
+                key: 'lng',
+                label: 'Lng',
+                step: 0,
+                decimals: 6,
                 fromObject: (o) => {
-                    return o.y;
-                },
-                toPatch: (v) => {
-                    return { y: v };
+                    return o.lng;
                 },
             },
             {
-                key: 'z',
-                label: 'Z',
-                step: 0.1,
+                key: 'lat',
+                label: 'Lat',
+                step: 0,
+                decimals: 6,
                 fromObject: (o) => {
-                    return o.z;
-                },
-                toPatch: (v) => {
-                    return { z: v };
+                    return o.lat;
                 },
             },
         ],
@@ -80,52 +76,62 @@ const GROUPS: FieldGroup[] = [
         title: 'Rotation',
         fields: [
             {
-                key: 'rotXDeg',
-                label: 'X',
+                key: 'heading',
+                label: 'H',
                 step: 1,
+                decimals: 1,
                 fromObject: (o) => {
-                    return o.rotX * RAD_TO_DEG;
+                    return o.heading * RAD_TO_DEG;
                 },
                 toPatch: (v) => {
-                    return { rotX: v * DEG_TO_RAD };
+                    return { heading: v * DEG_TO_RAD };
                 },
             },
             {
-                key: 'rotYDeg',
-                label: 'Y',
+                key: 'pitch',
+                label: 'P',
                 step: 1,
+                decimals: 1,
                 fromObject: (o) => {
-                    return o.rotY * RAD_TO_DEG;
+                    return o.pitch * RAD_TO_DEG;
                 },
                 toPatch: (v) => {
-                    return { rotY: v * DEG_TO_RAD };
+                    return { pitch: v * DEG_TO_RAD };
                 },
             },
             {
-                key: 'rotZDeg',
-                label: 'Z',
+                key: 'roll',
+                label: 'R',
                 step: 1,
+                decimals: 1,
                 fromObject: (o) => {
-                    return o.rotZ * RAD_TO_DEG;
+                    return o.roll * RAD_TO_DEG;
                 },
                 toPatch: (v) => {
-                    return { rotZ: v * DEG_TO_RAD };
+                    return { roll: v * DEG_TO_RAD };
+                },
+            },
+        ],
+    },
+    {
+        value: 'scale',
+        title: 'Scale',
+        fields: [
+            {
+                key: 'scale',
+                label: '×',
+                step: 0.1,
+                decimals: 2,
+                fromObject: (o) => {
+                    return o.scale;
+                },
+                toPatch: (v) => {
+                    return { scale: v };
                 },
             },
         ],
     },
 ];
-
-// const SCALE_FIELD: FieldConfig = {
-//     key: 'scale',
-//     step: 0.1,
-//     fromObject: (o) => {
-//         return o.scale;
-//     },
-//     toPatch: (v) => {
-//         return { scale: v };
-//     },
-// };
 
 type EditableFieldProps = {
     field: FieldConfig;
@@ -134,6 +140,7 @@ type EditableFieldProps = {
 
 const EditableField: React.FC<EditableFieldProps> = ({ field, object }) => {
     const dispatch = useEditorDispatch();
+    const readOnly = !field.toPatch;
     return (
         <NumericFormat
             className={s.input}
@@ -141,62 +148,26 @@ const EditableField: React.FC<EditableFieldProps> = ({ field, object }) => {
             leftAddon={field.label}
             step={field.step}
             customInput={Input}
-            value={Number(field.fromObject(object).toFixed(2))}
+            readOnly={readOnly}
+            value={Number(field.fromObject(object).toFixed(field.decimals))}
             onValueChange={({ floatValue }) => {
-                if (!Number.isFinite(floatValue)) {
+                if (readOnly || !Number.isFinite(floatValue)) {
                     return;
                 }
-                dispatch({ type: 'transform', id: object.id, patch: field.toPatch(floatValue ?? 0) });
+                dispatch({ type: 'transform', id: object.id, patch: field.toPatch!(floatValue ?? 0) });
             }}
         />
-    );
-};
-
-const DIMENSION_LABELS = ['X (m)', 'Y (m)', 'Z (m)'] as const;
-
-type DimensionsProps = {
-    gltfUrl: string;
-    scale: number;
-};
-
-const Dimensions: React.FC<DimensionsProps> = ({ gltfUrl, scale }) => {
-    // Reuses the same cached useGLTF instance the scene loads — no extra fetch.
-    const { scene } = useGLTF(gltfUrl);
-    // Local-space bounding box keeps the readout rotation-independent.
-    const size = useMemo(() => {
-        return new Box3().setFromObject(scene).getSize(new Vector3());
-    }, [scene]);
-    const dims = [size.x, size.y, size.z];
-    return (
-        <div className={s.dimensions}>
-            {DIMENSION_LABELS.map((_, i) => {
-                return (
-                    <NumericFormat
-                        className={s.input}
-                        size="sm"
-                        value={Number((dims[i] * scale).toFixed(3))}
-                        customInput={Input}
-                        readOnly
-                    />
-                );
-            })}
-        </div>
     );
 };
 
 export const PropertiesPanel: React.FC = () => {
     const { objects, selectedId, mode } = useEditorState();
     const dispatch = useEditorDispatch();
-    const { data: models } = useModelsQuery();
 
     const selected = objects.find((o) => {
         return o.id === selectedId;
     });
     if (!selected) return null;
-
-    const gltfUrl = models?.find((m) => {
-        return m.id === selected.modelId;
-    })?.gltfUrl;
 
     return (
         <aside className={clsx(s.panel, 'surface-regular')}>
@@ -207,10 +178,10 @@ export const PropertiesPanel: React.FC = () => {
                 }}
             >
                 <Tabs.List className={s.tabs}>
-                    {MODES.map((mode) => {
+                    {MODES.map((m) => {
                         return (
-                            <Tabs.Tab className={s.tab} key={mode.mode} value={mode.mode}>
-                                {mode.label}
+                            <Tabs.Tab className={s.tab} key={m.mode} value={m.mode}>
+                                {m.label}
                             </Tabs.Tab>
                         );
                     })}
@@ -232,31 +203,6 @@ export const PropertiesPanel: React.FC = () => {
                         </Tabs.Panel>
                     );
                 })}
-                <Tabs.Panel value="scale">
-                    {gltfUrl && (
-                        <section className={s.group}>
-                            <Typography variant="text-xs" className={s['group-title']} render={<h4 />}>
-                                Dimensions (m)
-                            </Typography>
-                            <Suspense fallback={<div className={s.label}>Loading…</div>}>
-                                <Dimensions gltfUrl={gltfUrl} scale={selected.scale} />
-                            </Suspense>
-                        </section>
-                    )}
-                </Tabs.Panel>
-                {/* <section className={s.group}>
-                <h4 className={s['group-title']}>Scale</h4>
-                <EditableField field={SCALE_FIELD} object={selected} />
-            </section> */}
-                {/* <button
-                type="button"
-                className={s.delete}
-                onClick={() => {
-                    dispatch({ type: 'remove', id: selected.id });
-                }}
-            >
-                Delete object
-            </button> */}
             </Tabs.Root>
         </aside>
     );

@@ -26,6 +26,8 @@ export const configureViewer = (container: HTMLDivElement): Viewer => {
         // stream, explicit `scene.requestRender()`), not every animation frame.
         requestRenderMode: true,
         maximumRenderTimeChange: Infinity,
+        // Stencil buffer is required for the selection silhouette (Model.silhouetteSize).
+        contextOptions: { webgl: { stencil: true } },
         // No default base imagery — the world is the Google P3DT tileset.
         baseLayer: false,
         // Default widgets off.
