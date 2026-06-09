@@ -11,6 +11,8 @@ import { Separator } from '@/components/ui/Separator';
 import { Tabs } from '@/components/ui/Tabs';
 import { Typography } from '@/components/ui/Typography';
 import { usePatioEditorParams } from '../../hooks/usePatioEditorRouteApi';
+import { useSidebarResize } from './hooks/useSidebarResize';
+import { ResizeHandle } from './components/ResizeHandle';
 import { CatalogPanel } from '../CatalogPanel';
 import { ScenePanel } from '../ScenePanel';
 import s from './styles.module.css';
@@ -21,9 +23,10 @@ export const Sidebar: React.FC = () => {
     const { id } = usePatioEditorParams();
     const { data: patio } = useSuspenseQuery(getPatioQueryOptions(id));
     const [tab, setTab] = useState<SidebarTab>('assets');
+    const { width, isResizing, handleProps } = useSidebarResize();
 
     return (
-        <aside className={clsx(s.sidebar, 'surface-regular')}>
+        <aside className={clsx(s.sidebar, 'surface-regular')} style={{ width }}>
             <header className={s.header}>
                 <Button className={s.back} render={<Link to="/" />} size="md" variant="link" isIcon title="Back">
                     <ArrowLeftIcon />
@@ -41,7 +44,7 @@ export const Sidebar: React.FC = () => {
                     setTab(value as SidebarTab);
                 }}
             >
-                <Tabs.List>
+                <Tabs.List className={s['tabs-list']} data-resizing={isResizing || undefined}>
                     <Tabs.Tab value="scene">Scene</Tabs.Tab>
                     <Tabs.Tab value="assets">Assets</Tabs.Tab>
                     <Tabs.Indicator />
@@ -62,6 +65,7 @@ export const Sidebar: React.FC = () => {
             <Activity mode={tab === 'scene' ? 'visible' : 'hidden'}>
                 <ScenePanel />
             </Activity>
+            <ResizeHandle {...handleProps} />
         </aside>
     );
 };
