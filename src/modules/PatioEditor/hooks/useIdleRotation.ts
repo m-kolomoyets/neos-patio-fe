@@ -14,6 +14,15 @@ const ROTATION_DEG_PER_SEC = 3;
 const INTERACTION_EVENTS = ['pointerdown', 'wheel', 'touchstart', 'keydown'] as const;
 
 /**
+ * Pointer movement only counts as interaction while a button is held — a live
+ * drag (view-cube orbit, gizmo, scene pan). A press fires `pointerdown` once, but
+ * a sustained drag emits only `pointermove`; without this the idle countdown
+ * could elapse mid-drag and the orbit would fight the gesture. Buttonless hover
+ * is ignored so merely moving the mouse over the page never blocks idle.
+ */
+const DRAG_MOVE_EVENT = 'pointermove' as const;
+
+/**
  * Ambient idle behaviour for the editor camera (Cesium).
  *
  * After {@link IDLE_DELAY_MS} with no pointer/wheel/touch/key interaction, the
@@ -124,15 +133,22 @@ export const useIdleRotation = () => {
             armIdle();
         };
 
+        // Buttonless moves (plain hover) must not reset idle — only held-button drags.
+        const onPointerMove = (e: PointerEvent) => {
+            if (e.buttons !== 0) onInteraction();
+        };
+
         INTERACTION_EVENTS.forEach((evt) => {
             window.addEventListener(evt, onInteraction, { capture: true, passive: true });
         });
+        window.addEventListener(DRAG_MOVE_EVENT, onPointerMove, { capture: true, passive: true });
         armIdle();
 
         return () => {
             INTERACTION_EVENTS.forEach((evt) => {
                 window.removeEventListener(evt, onInteraction, { capture: true });
             });
+            window.removeEventListener(DRAG_MOVE_EVENT, onPointerMove, { capture: true });
             if (idleTimer !== null) clearTimeout(idleTimer);
             stopOrbit();
         };

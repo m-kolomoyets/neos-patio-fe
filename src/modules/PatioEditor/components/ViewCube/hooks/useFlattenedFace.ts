@@ -7,7 +7,8 @@ import { isCubeFace, isSnappedToFace, resolveSnapOrientation, stepFace } from '.
 type UseFlattenedFaceArgs = {
     viewer: Viewer | null;
     readOrientation: () => CameraState;
-    easeTo: (_target: CameraTarget) => void;
+    /** Animated snap that keeps the patio framed (no out-of-bounds in view). */
+    snapTo: (_target: CameraTarget) => void;
 };
 
 /**
@@ -23,7 +24,7 @@ type UseFlattenedFaceArgs = {
  * Returns the selected face plus the callbacks the widget wires to the cube
  * interaction (`onSnap`/`onOrbitStart`) and the arrow buttons (`stepBy`/`goTop`).
  */
-export const useFlattenedFace = ({ viewer, readOrientation, easeTo }: UseFlattenedFaceArgs) => {
+export const useFlattenedFace = ({ viewer, readOrientation, snapTo }: UseFlattenedFaceArgs) => {
     const [selectedFace, setSelectedFace] = useState<CubeFace | null>(null);
     const snapping = useRef(false);
     const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -85,22 +86,22 @@ export const useFlattenedFace = ({ viewer, readOrientation, easeTo }: UseFlatten
                 if (!face) return face;
                 const next = stepFace(face, dir);
                 beginSnapping();
-                easeTo({
+                snapTo({
                     bearing: CUBE_TARGETS[next].bearing ?? readOrientation().bearing,
                     pitch: CUBE_TARGETS[next].pitch,
                 });
                 return next;
             });
         },
-        [beginSnapping, easeTo, readOrientation]
+        [beginSnapping, snapTo, readOrientation]
     );
 
     /** Up arrow: jump to the top view (exits flattened — top is not a side face). */
     const goTop = useCallback(() => {
         beginSnapping();
-        easeTo(resolveSnapOrientation('top', readOrientation().bearing));
+        snapTo(resolveSnapOrientation('top', readOrientation().bearing));
         setSelectedFace(null);
-    }, [beginSnapping, easeTo, readOrientation]);
+    }, [beginSnapping, snapTo, readOrientation]);
 
     return { selectedFace, onSnap, onOrbitStart, stepBy, goTop };
 };

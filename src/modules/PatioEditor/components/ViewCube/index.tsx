@@ -33,12 +33,17 @@ const FACE_LABELS: Record<CubeFace, string> = { north: 'N', east: 'E', south: 'S
  */
 export const ViewCube: React.FC = () => {
     const { bounds } = useEditorState();
-    const { viewer, referenceRange, readOrientation, easeTo, beginDragOrbit, fitBounds } = useCesiumCamera(bounds);
-    const { selectedFace, onSnap, onOrbitStart, stepBy, goTop } = useFlattenedFace({ viewer, readOrientation, easeTo });
+    const { viewer, referenceRange, readOrientation, easeTo, snapTo, beginDragOrbit, fitBounds } =
+        useCesiumCamera(bounds);
+    const { selectedFace, onSnap, onOrbitStart, stepBy, goTop } = useFlattenedFace({
+        viewer,
+        readOrientation,
+        snapTo,
+    });
     const { isDragging, handlers } = useCubeInteraction({
         viewer,
         readOrientation,
-        easeTo,
+        snapTo,
         beginDragOrbit,
         onSnap,
         onOrbitStart,

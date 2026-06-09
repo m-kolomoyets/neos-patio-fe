@@ -22,6 +22,16 @@ export const HOME_STORAGE_PREFIX = 'patio-editor:home:';
 /** Maximum map pitch (deg). Mirrors the `maxPitch` set on the `<Map>`. */
 export const MAX_PITCH = 85;
 
+/**
+ * Pitch (deg) the side faces (N/E/S/W) snap to: an angled-down "elevation"
+ * rather than a near-horizon look. At true horizon (≈{@link MAX_PITCH}) the
+ * camera stares across the patio and the bottom half of the frame fills with the
+ * flat out-of-bounds ground/sea in front of it; angling down keeps the framed
+ * patio filling the screen instead. Paired with the snap framing in
+ * `useCesiumCamera` (range clamped so the patio bounds always fill the view).
+ */
+export const SIDE_PITCH = 60;
+
 /** Drag-orbit sensitivity (degrees of camera rotation per pixel dragged). */
 export const DRAG_SENSITIVITY = 0.5;
 
@@ -42,8 +52,9 @@ export const CLICK_THRESHOLD_PX = 4;
  *
  * Values are display units (pitch 0 = top-down, {@link MAX_PITCH} ≈ horizon),
  * converted to Cesium heading/pitch radians by the camera adapter. Side
- * "elevations" sit at near-max pitch and there are no edge targets — only the
- * top face + 4 sides + 4 corners.
+ * "elevations" sit at {@link SIDE_PITCH} (angled down, not near-horizon, so the
+ * framed patio fills the view) and there are no edge targets — only the top face
+ * + 4 sides + 4 corners.
  *
  * `bearing: null` means "leave bearing unchanged" (used by the top face).
  * Consumed by the snap logic; defined here so the mapping lives in one pure,
@@ -51,10 +62,10 @@ export const CLICK_THRESHOLD_PX = 4;
  */
 export const CUBE_TARGETS: Record<CubeTarget, { bearing: number | null; pitch: number }> = {
     top: { bearing: null, pitch: 0 },
-    north: { bearing: 0, pitch: MAX_PITCH },
-    east: { bearing: 90, pitch: MAX_PITCH },
-    south: { bearing: 180, pitch: MAX_PITCH },
-    west: { bearing: 270, pitch: MAX_PITCH },
+    north: { bearing: 0, pitch: SIDE_PITCH },
+    east: { bearing: 90, pitch: SIDE_PITCH },
+    south: { bearing: 180, pitch: SIDE_PITCH },
+    west: { bearing: 270, pitch: SIDE_PITCH },
     northeast: { bearing: 45, pitch: 60 },
     southeast: { bearing: 135, pitch: 60 },
     southwest: { bearing: 225, pitch: 60 },

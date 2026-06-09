@@ -135,12 +135,38 @@ export const useCesiumCamera = (bounds: PatioBounds) => {
         [readOrientation]
     );
 
-    /** Animated camera move (snap, arrows, home, zoom presets). */
+    /** Animated camera move (home, zoom presets). */
     const easeTo = useCallback(
         (target: CameraTarget) => {
             moveCamera(resolve(target), true);
         },
         [moveCamera, resolve]
+    );
+
+    /**
+     * Animated snap to a cube face/corner that also guarantees the patio fills
+     * the viewport — no out-of-bounds ground/sea creeping into frame.
+     *
+     * The orbit target is the patio bounds centre, so framing the patio is a
+     * matter of range: the footprint radius is half the patio diagonal
+     * ({@link referenceRange}), and `radius / tan(fovy / 2)` is the range at
+     * which that footprint spans the full viewport height (where the
+     * out-of-bounds foreground would otherwise sit). The live range is clamped
+     * **down** to that fit — only pulling in when the current zoom would reveal
+     * out-of-bounds, never pushing out — so an already-tight zoom is preserved.
+     */
+    const snapTo = useCallback(
+        (target: CameraTarget) => {
+            const resolved = resolve(target);
+            const frustum = viewer?.camera.frustum;
+            const fovy = frustum && 'fovy' in frustum ? frustum.fovy : undefined;
+            if (typeof fovy === 'number' && Number.isFinite(fovy) && referenceRange > 0) {
+                const fitRange = referenceRange / 2 / Math.tan(fovy / 2);
+                resolved.range = Math.min(resolved.range, fitRange);
+            }
+            moveCamera(resolved, true);
+        },
+        [viewer, resolve, moveCamera, referenceRange]
     );
 
     /**
@@ -206,5 +232,5 @@ export const useCesiumCamera = (bounds: PatioBounds) => {
         [viewer]
     );
 
-    return { viewer, referenceRange, readOrientation, easeTo, beginDragOrbit, fitBounds };
+    return { viewer, referenceRange, readOrientation, easeTo, snapTo, beginDragOrbit, fitBounds };
 };

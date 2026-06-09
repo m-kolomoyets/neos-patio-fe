@@ -1,9 +1,12 @@
 import type { PlacedObject } from '@/services/patios/types';
+import type { LocalFrame, LocalOffset } from '../../utils/geoPlacement';
+import { useMemo } from 'react';
 import clsx from 'clsx';
 import { NumericFormat } from 'react-number-format';
 import { Input } from '@/components/ui/Input';
 import { Tabs } from '@/components/ui/Tabs';
 import { Typography } from '@/components/ui/Typography';
+import { createLocalFrame, geoToLocal, localToGeo } from '../../utils/geoPlacement';
 import { useEditorDispatch, useEditorState } from '../../context/EditorContext';
 import { EditorMode } from '../../types';
 import s from './styles.module.css';
@@ -17,13 +20,22 @@ const MODES: { mode: EditorMode; label: string }[] = [
     { mode: 'scale', label: 'Scale' },
 ];
 
+// Position offset from the patio center, in meters; edited via the X/Y/Z fields.
+const POSITION_STEP = 0.1;
+const POSITION_DECIMALS = 2;
+const POSITION_AXES: { axis: keyof LocalOffset; label: string }[] = [
+    { axis: 'x', label: 'X' },
+    { axis: 'y', label: 'Y' },
+    { axis: 'z', label: 'Z' },
+];
+
 type FieldConfig = {
     key: string;
     label?: string;
     step: number;
     decimals: number;
     fromObject(_o: PlacedObject): number;
-    // Read-only fields (lng/lat) omit `toPatch`: position is changed via the gizmo.
+    // Read-only fields omit `toPatch`.
     toPatch?(_v: number): Partial<PlacedObject>;
 };
 
@@ -33,63 +45,30 @@ type FieldGroup = {
     fields: FieldConfig[];
 };
 
-// Option B: height/heading/pitch/roll/scale editable; lng/lat read-only (moved via gizmo).
+// Rotation/scale are independent single-field edits. Position (X/Y/Z meters) is a
+// coupled triple handled separately by `PositionFields`.
 const GROUPS: FieldGroup[] = [
-    {
-        value: 'translate',
-        title: 'Position',
-        fields: [
-            {
-                key: 'height',
-                label: 'Alt',
-                step: 0.1,
-                decimals: 2,
-                fromObject: (o) => {
-                    return o.height;
-                },
-                toPatch: (v) => {
-                    return { height: v };
-                },
-            },
-            {
-                key: 'lng',
-                label: 'Lng',
-                step: 0,
-                decimals: 6,
-                fromObject: (o) => {
-                    return o.lng;
-                },
-            },
-            {
-                key: 'lat',
-                label: 'Lat',
-                step: 0,
-                decimals: 6,
-                fromObject: (o) => {
-                    return o.lat;
-                },
-            },
-        ],
-    },
     {
         value: 'rotate',
         title: 'Rotation',
+        // Stored heading/pitch/roll is a Cesium ENU Euler triple, so X/Y/Z degrees
+        // is a lossless relabel: X=roll, Y=pitch, Z=heading.
         fields: [
             {
-                key: 'heading',
-                label: 'H',
+                key: 'roll',
+                label: 'X',
                 step: 1,
                 decimals: 1,
                 fromObject: (o) => {
-                    return o.heading * RAD_TO_DEG;
+                    return o.roll * RAD_TO_DEG;
                 },
                 toPatch: (v) => {
-                    return { heading: v * DEG_TO_RAD };
+                    return { roll: v * DEG_TO_RAD };
                 },
             },
             {
                 key: 'pitch',
-                label: 'P',
+                label: 'Y',
                 step: 1,
                 decimals: 1,
                 fromObject: (o) => {
@@ -100,15 +79,15 @@ const GROUPS: FieldGroup[] = [
                 },
             },
             {
-                key: 'roll',
-                label: 'R',
+                key: 'heading',
+                label: 'Z',
                 step: 1,
                 decimals: 1,
                 fromObject: (o) => {
-                    return o.roll * RAD_TO_DEG;
+                    return o.heading * RAD_TO_DEG;
                 },
                 toPatch: (v) => {
-                    return { roll: v * DEG_TO_RAD };
+                    return { heading: v * DEG_TO_RAD };
                 },
             },
         ],
@@ -167,9 +146,58 @@ const EditableField: React.FC<EditableFieldProps> = ({ field, object }) => {
     );
 };
 
-export const PropertiesPanel: React.FC = () => {
-    const { objects, selectedId, mode } = useEditorState();
+type PositionFieldsProps = {
+    object: PlacedObject;
+    frame: LocalFrame;
+};
+
+// Position is shown as X/Y/Z meters from the patio center. Editing one axis is a
+// coupled edit: the new value is substituted into the live triple and converted
+// back to a geographic patch (the reducer re-clamps lng/lat to the bounds).
+const PositionFields: React.FC<PositionFieldsProps> = ({ object, frame }) => {
     const dispatch = useEditorDispatch();
+    const local = geoToLocal(frame, object);
+    return (
+        <>
+            {POSITION_AXES.map(({ axis, label }) => {
+                return (
+                    <NumericFormat
+                        key={axis}
+                        className={s.input}
+                        size="sm"
+                        leftAddon={label}
+                        step={POSITION_STEP}
+                        customInput={Input}
+                        value={Number(local[axis].toFixed(POSITION_DECIMALS))}
+                        onFocus={() => {
+                            dispatch({ type: 'beginEdit' });
+                        }}
+                        onBlur={() => {
+                            dispatch({ type: 'commitEdit' });
+                        }}
+                        onValueChange={({ floatValue }, { source }) => {
+                            // Ignore programmatic value resets (gizmo/undo sync); only commit user typing.
+                            if (source !== 'event' || !Number.isFinite(floatValue)) {
+                                return;
+                            }
+                            const next = { ...local, [axis]: floatValue ?? 0 };
+                            dispatch({ type: 'transformLive', id: object.id, patch: localToGeo(frame, next) });
+                        }}
+                    />
+                );
+            })}
+        </>
+    );
+};
+
+export const PropertiesPanel: React.FC = () => {
+    const { objects, selectedId, mode, bounds } = useEditorState();
+    const dispatch = useEditorDispatch();
+
+    // Origin ENU frame is fixed per patio (bounds center) — build it once.
+    const frame = useMemo(() => {
+        return createLocalFrame(bounds);
+    }, [bounds]);
 
     const selected = objects.find((o) => {
         return o.id === selectedId;
@@ -194,6 +222,16 @@ export const PropertiesPanel: React.FC = () => {
                     })}
                     <Tabs.Indicator />
                 </Tabs.List>
+                <Tabs.Panel value="translate">
+                    <section className={s.group}>
+                        <Typography variant="text-xs" className={s['group-title']} render={<h4 />}>
+                            Position
+                        </Typography>
+                        <div className={s.fields}>
+                            <PositionFields object={selected} frame={frame} />
+                        </div>
+                    </section>
+                </Tabs.Panel>
                 {GROUPS.map((group) => {
                     return (
                         <Tabs.Panel key={group.value} value={group.value}>

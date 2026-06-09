@@ -19,6 +19,54 @@ export type GeoPose = {
 
 export type GeoPoint = { lng: number; lat: number; height: number };
 
+/** An east/north/up offset, in meters, from a {@link LocalFrame} origin. */
+export type LocalOffset = { x: number; y: number; z: number };
+
+/**
+ * An east-north-up frame anchored at a fixed origin, with both directions of the
+ * ENU↔ECEF transform precomputed. Built once per patio (the origin is the bounds
+ * center) and reused for every geo↔local conversion, so editing never rebuilds
+ * the matrices.
+ */
+export type LocalFrame = {
+    /** ENU (meters) → earth-fixed (ECEF). */
+    toFixed: Matrix4;
+    /** Earth-fixed (ECEF) → ENU (meters). */
+    toLocal: Matrix4;
+};
+
+/**
+ * Build the {@link LocalFrame} whose origin is the center of the patio rectangle
+ * `[west, south, east, north]` at ellipsoid height 0. `x`/`y`/`z` produced by
+ * {@link geoToLocal} are then east/north/up meters from that center.
+ */
+export const createLocalFrame = (bounds: PatioBounds): LocalFrame => {
+    const [west, south, east, north] = bounds;
+    const origin = Cartesian3.fromDegrees((west + east) / 2, (south + north) / 2, 0);
+    const toFixed = Transforms.eastNorthUpToFixedFrame(origin);
+    const toLocal = Matrix4.inverse(toFixed, new Matrix4());
+    return { toFixed, toLocal };
+};
+
+/** Convert a geographic point to east/north/up meters within `frame`. */
+export const geoToLocal = (frame: LocalFrame, point: GeoPoint): LocalOffset => {
+    const ecef = Cartesian3.fromDegrees(point.lng, point.lat, point.height);
+    const local = Matrix4.multiplyByPoint(frame.toLocal, ecef, new Cartesian3());
+    return { x: local.x, y: local.y, z: local.z };
+};
+
+/** Inverse of {@link geoToLocal}: east/north/up meters back to a geographic point. */
+export const localToGeo = (frame: LocalFrame, offset: LocalOffset): GeoPoint => {
+    const point = new Cartesian3(offset.x, offset.y, offset.z);
+    const ecef = Matrix4.multiplyByPoint(frame.toFixed, point, point);
+    const carto = Cartographic.fromCartesian(ecef);
+    return {
+        lng: CesiumMath.toDegrees(carto.longitude),
+        lat: CesiumMath.toDegrees(carto.latitude),
+        height: carto.height,
+    };
+};
+
 /**
  * Build a Cesium model matrix from a geographic + HPR pose: an east-north-up
  * frame at the geographic origin, oriented by heading/pitch/roll and uniformly
