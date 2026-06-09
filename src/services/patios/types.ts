@@ -21,6 +21,9 @@ export type PatioBounds = [west: number, south: number, east: number, north: num
 export type PlacedObject = {
     id: string;
     modelId: string;
+    // Human-readable name shown in the Scene list. Generated on add from the
+    // model display name, deduped with a numeric suffix (`Anvil`, `Anvil 2`).
+    name: string;
     // Geographic position. lng/lat in degrees; height is the absolute altitude
     // above the WGS84 ellipsoid (meters), resolved from the real tileset surface.
     lng: number;

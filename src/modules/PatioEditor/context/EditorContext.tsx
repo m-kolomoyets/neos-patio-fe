@@ -5,6 +5,7 @@ import type { HistoryStacks } from '../utils/undoRedoHistory';
 import { createContext, useMemo, useReducer } from 'react';
 import { useSafeContext } from '@/hooks/useSafeContext';
 import { clampToBounds } from '../utils/geoPlacement';
+import { generateObjectName } from '../utils/objectName';
 import {
     canRedo as canRedoStacks,
     canUndo as canUndoStacks,
@@ -28,7 +29,7 @@ type EditorState = {
 type ObjectPatch = Partial<Omit<PlacedObject, 'id' | 'modelId'>>;
 
 type EditorAction =
-    | { type: 'add'; modelId: string; position: GeoPoint }
+    | { type: 'add'; modelId: string; modelName: string; position: GeoPoint }
     | { type: 'remove'; id: string }
     | { type: 'transform'; id: string; patch: ObjectPatch }
     // Live panel preview: mutates the object without pushing history. Bracket a
@@ -60,6 +61,7 @@ const reducer = (state: EditorState, action: EditorAction): EditorState => {
             const next: PlacedObject = {
                 id: crypto.randomUUID(),
                 modelId: action.modelId,
+                name: generateObjectName(action.modelName, action.modelId, state.objects),
                 lng,
                 lat,
                 height: action.position.height,

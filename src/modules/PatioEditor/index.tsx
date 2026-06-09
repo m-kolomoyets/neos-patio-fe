@@ -4,6 +4,7 @@ import { Typography } from '@/components/ui/Typography';
 import { CesiumViewerProvider } from './context/CesiumViewerContext';
 import { EditorProvider } from './context/EditorContext';
 import { useAutosavePatio } from './hooks/useAutosavePatio';
+import { useDeleteSelectedShortcut } from './hooks/useDeleteSelectedShortcut';
 import { useIdleRotation } from './hooks/useIdleRotation';
 import { usePatioEditorParams } from './hooks/usePatioEditorRouteApi';
 import { MapCanvas } from './components/MapCanvas';
@@ -27,6 +28,8 @@ const IdleOrbit: React.FC = () => {
 
 const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds }) => {
     const { status } = useAutosavePatio(patioId);
+
+    useDeleteSelectedShortcut();
 
     return (
         <CesiumViewerProvider>

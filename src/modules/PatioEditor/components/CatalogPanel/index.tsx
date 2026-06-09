@@ -37,7 +37,12 @@ export const CatalogPanel: React.FC = () => {
                                         const y = canvas.clientHeight / 2;
                                         const point = pickGroundPoint(scene, new Cartesian2(x, y));
                                         if (!point) return;
-                                        dispatch({ type: 'add', modelId: model.id, position: point });
+                                        dispatch({
+                                            type: 'add',
+                                            modelId: model.id,
+                                            modelName: model.name,
+                                            position: point,
+                                        });
                                     }}
                                 >
                                     <img src={model.previewUrl} alt="" className={s.thumb} loading="lazy" />
