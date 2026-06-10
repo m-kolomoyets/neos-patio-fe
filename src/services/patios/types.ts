@@ -16,6 +16,26 @@ export type PatioType = (typeof PATIO_TYPES)[number];
 export const SORT_KEYS = ['id', 'newest', 'nearest', 'popular', 'name'] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
 
+export type PatioBounds = [west: number, south: number, east: number, north: number];
+
+export type PlacedObject = {
+    id: string;
+    modelId: string;
+    // Human-readable name shown in the Scene list. Generated on add from the
+    // model display name, deduped with a numeric suffix (`Anvil`, `Anvil 2`).
+    name: string;
+    // Geographic position. lng/lat in degrees; height is the absolute altitude
+    // above the WGS84 ellipsoid (meters), resolved from the real tileset surface.
+    lng: number;
+    lat: number;
+    height: number;
+    // Orientation as a heading/pitch/roll triple in radians (Cesium ENU frame).
+    heading: number;
+    pitch: number;
+    roll: number;
+    scale: number;
+};
+
 export type Patio = {
     id: string;
     name: string;
@@ -26,6 +46,8 @@ export type Patio = {
     createdAt: string;
     popularity: number;
     coords: { lat: number; lng: number };
+    bounds: PatioBounds;
+    objects: PlacedObject[];
     isFeatured: boolean;
     videoUrl?: string;
     previewLowUrl?: string;

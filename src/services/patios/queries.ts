@@ -1,7 +1,8 @@
 import type { PatioLettersFilters, PatiosListFilters } from './queryKeys';
-import type { Patio } from './types';
-import { infiniteQueryOptions, keepPreviousData, queryOptions } from '@tanstack/react-query';
-import { getPatio, listAllPatios, listFeaturedPatios, listPatioLetters, listPatios } from './api';
+import type { Patio, PlacedObject } from './types';
+import { infiniteQueryOptions, keepPreviousData, mutationOptions, queryOptions } from '@tanstack/react-query';
+import { queryClient } from '@/lib/@queryClient';
+import { getPatio, listAllPatios, listFeaturedPatios, listPatioLetters, listPatios, updatePatioObjects } from './api';
 import { patiosKeys } from './queryKeys';
 
 export const PATIOS_PAGE_SIZE = 12;
@@ -58,6 +59,18 @@ export const getPatioQueryOptions = (id: string) => {
         queryKey: patiosKeys.detail(id),
         queryFn() {
             return getPatio(id);
+        },
+    });
+};
+
+export const updatePatioObjectsMutationOptions = (id: string) => {
+    return mutationOptions({
+        mutationKey: [...patiosKeys.detail(id), 'update-objects'],
+        mutationFn(objects: PlacedObject[]) {
+            return updatePatioObjects(id, objects);
+        },
+        onSuccess() {
+            return queryClient.invalidateQueries({ queryKey: patiosKeys.detail(id) });
         },
     });
 };

@@ -1,6 +1,23 @@
-import type { Patio } from './types';
+import type { Patio, PatioBounds } from './types';
 
-export const PATIOS_FIXTURES: Patio[] = [
+const DEFAULT_BOUNDS_HALF_DEG = 0.005;
+
+type PatioFixture = Omit<Patio, 'bounds' | 'objects'> & {
+    bounds?: PatioBounds;
+};
+
+const definePatio = (fixture: PatioFixture): Patio => {
+    const { coords, bounds, ...rest } = fixture;
+    const derivedBounds: PatioBounds = bounds ?? [
+        coords.lng - DEFAULT_BOUNDS_HALF_DEG,
+        coords.lat - DEFAULT_BOUNDS_HALF_DEG,
+        coords.lng + DEFAULT_BOUNDS_HALF_DEG,
+        coords.lat + DEFAULT_BOUNDS_HALF_DEG,
+    ];
+    return { ...rest, coords, bounds: derivedBounds, objects: [] };
+};
+
+const RAW_PATIOS: PatioFixture[] = [
     {
         id: '1',
         name: 'Mont Saint Michel',
@@ -15,7 +32,10 @@ export const PATIOS_FIXTURES: Patio[] = [
         author: 'Neos',
         createdAt: '2025-09-12T10:00:00Z',
         popularity: 980,
-        coords: { lat: 48.8584, lng: 2.2945 },
+        // paris
+        // coords: { lat: 48.8584, lng: 2.2945 },
+        // mont saint michel
+        coords: { lat: 48.6361, lng: -1.5115 },
         isFeatured: true,
     },
     {
@@ -362,3 +382,5 @@ export const PATIOS_FIXTURES: Patio[] = [
     //     isFeatured: false,
     // },
 ];
+
+export const PATIOS_FIXTURES: Patio[] = RAW_PATIOS.map(definePatio);

@@ -91,6 +91,12 @@
         width 0.2s ease-in-out;
 }
 
+/* While the list is being resized, the indicator must track the active tab
+   instantly — the animated transition would otherwise lag behind the drag. */
+.list[data-resizing] .indicator {
+    transition: none;
+}
+
 .indicator::before {
     content: "";
     position: absolute;

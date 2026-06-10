@@ -45,7 +45,7 @@ export const Route = createRootRoute({
                 <React.Suspense>
                     <TanStackDevtools
                         config={{
-                            position: 'bottom-right',
+                            position: 'bottom-left',
                         }}
                         plugins={[
                             {

@@ -1,0 +1,85 @@
+.bar {
+    position: absolute;
+    top: var(--gap-2);
+    right: var(--gap-2);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: var(--gap-4);
+    padding: var(--gap-2);
+    border-radius: var(--radius-full);
+}
+
+.bar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--stroke-surface);
+    mask:
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.button-group {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-1);
+    height: 28px;
+    flex-shrink: 0;
+    flex-grow: 0;
+}
+
+.button.button {
+    padding: var(--gap-1);
+    width: 28px;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    flex-grow: 0;
+}
+
+.button:hover {
+    background: rgb(255 255 255 / 0.08);
+    color: white;
+}
+
+.button[data-active="true"] {
+    background: rgb(255 255 255 / 0.18);
+    color: white;
+}
+
+.button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.divider {
+    width: 1px;
+    margin: 0.25rem 0.125rem;
+    background: rgb(255 255 255 / 0.18);
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    padding: 0 0.625rem;
+    font-size: 0.75rem;
+    color: rgb(255 255 255 / 0.65);
+    font-variant-numeric: tabular-nums;
+}
+
+.bar .connect-wallet,
+.bar .connect-wallet :global(.web3-avatar),
+.bar .connect-wallet > button {
+    width: 36px;
+    height: 36px;
+    min-height: 0;
+    max-height: 100%;
+    flex-shrink: 0;
+    flex-grow: 0;
+    padding: 0;
+}
