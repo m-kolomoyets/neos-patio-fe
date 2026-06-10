@@ -1,5 +1,5 @@
-import type { MapRef } from 'react-map-gl/maplibre';
-import type { CubeFace } from '../../types';
+import type { Viewer } from 'cesium';
+import type { CameraState, CubeFace } from '../../types';
 import clsx from 'clsx';
 import { cubeTransform } from '../../utils/cameraMath';
 import { useCameraState } from '../../hooks/useCameraState';
@@ -22,8 +22,11 @@ const FACES: { face: 'top' | CubeFace; label: string; className: string }[] = [
  * carry `data-face` for the parent's hover + pointer gesture wiring. No
  * three.js / GL — pure DOM + CSS transforms.
  */
-export const CubeView: React.FC<{ map: MapRef }> = ({ map }) => {
-    const camera = useCameraState(map);
+export const CubeView: React.FC<{ viewer: Viewer; readOrientation: () => CameraState }> = ({
+    viewer,
+    readOrientation,
+}) => {
+    const camera = useCameraState(viewer, readOrientation);
 
     return (
         <div className={s.cube} style={{ transform: cubeTransform(camera) }}>

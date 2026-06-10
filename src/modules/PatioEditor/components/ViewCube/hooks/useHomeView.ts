@@ -1,9 +1,6 @@
-import type { MapRef } from 'react-map-gl/maplibre';
-import type { CameraTarget, HomeView } from '../types';
+import type { CameraState, CameraTarget, HomeView } from '../types';
 import { useCallback, useMemo } from 'react';
-import { DEFAULT_BEARING, DEFAULT_PITCH, DEFAULT_ZOOM } from '../../MapCanvas/constants';
-import { HOME_STORAGE_PREFIX } from '../constants';
-import { useEditorState } from '../../../context/EditorContext';
+import { DEFAULT_BEARING, DEFAULT_PITCH, HOME_STORAGE_PREFIX } from '../constants';
 import { usePatioEditorParams } from '../../../hooks/usePatioEditorRouteApi';
 
 /** localStorage entry holding the saved Home view, parsed defensively. */
@@ -16,30 +13,31 @@ const readStoredHome = (key: string): HomeView | null => {
     }
 };
 
+type UseHomeViewArgs = {
+    easeTo: (_target: CameraTarget) => void;
+    readOrientation: () => CameraState;
+    /** Patio-diagonal range used as the default Home distance (100% framing). */
+    referenceRange: number;
+};
+
 /**
  * The Home view: a saved camera framing of the patio, persisted in localStorage
  * keyed by patio id and surviving reloads.
  *
- * Default Home mirrors the editor's `initialViewState` — patio-center,
- * {@link DEFAULT_ZOOM}/{@link DEFAULT_PITCH}/{@link DEFAULT_BEARING}. `goHome`
- * eases to the saved (or default) view, `setHome` snapshots the live camera,
- * `resetHome` clears storage and returns to default. All moves go through the
- * shared animated `easeTo`. Home is viewport state, never the undo reducer.
+ * Default Home mirrors the editor's initial framing — heading 0, pitch -45°
+ * ({@link DEFAULT_BEARING}/{@link DEFAULT_PITCH} in display units), at the
+ * patio-diagonal `referenceRange`. `goHome` eases to the saved (or default)
+ * view, `setHome` snapshots the live camera, `resetHome` clears storage and
+ * returns to default. All moves go through the shared animated `easeTo`. Home is
+ * viewport state, never the undo reducer.
  */
-export const useHomeView = (map: MapRef | null, easeTo: (_target: CameraTarget) => void) => {
+export const useHomeView = ({ easeTo, readOrientation, referenceRange }: UseHomeViewArgs) => {
     const { id } = usePatioEditorParams();
-    const { bounds } = useEditorState();
     const storageKey = `${HOME_STORAGE_PREFIX}${id}`;
 
     const defaultHome = useMemo<HomeView>(() => {
-        const [west, south, east, north] = bounds;
-        return {
-            center: [(west + east) / 2, (south + north) / 2],
-            zoom: DEFAULT_ZOOM,
-            pitch: DEFAULT_PITCH,
-            bearing: DEFAULT_BEARING,
-        };
-    }, [bounds]);
+        return { bearing: DEFAULT_BEARING, pitch: DEFAULT_PITCH, range: referenceRange };
+    }, [referenceRange]);
 
     /** Ease to the saved Home (falling back to the editor default). */
     const goHome = useCallback(() => {
@@ -48,20 +46,14 @@ export const useHomeView = (map: MapRef | null, easeTo: (_target: CameraTarget) 
 
     /** Snapshot the live camera as the new Home and persist it. */
     const setHome = useCallback(() => {
-        if (!map) return;
-        const { lng, lat } = map.getCenter();
-        const home: HomeView = {
-            center: [lng, lat],
-            zoom: map.getZoom(),
-            pitch: map.getPitch(),
-            bearing: map.getBearing(),
-        };
+        const { bearing, pitch, range } = readOrientation();
+        const home: HomeView = { bearing, pitch, range };
         try {
             localStorage.setItem(storageKey, JSON.stringify(home));
         } catch {
             // Storage unavailable (private mode / quota) — Home stays at default.
         }
-    }, [map, storageKey]);
+    }, [readOrientation, storageKey]);
 
     /** Forget the saved Home and ease back to the editor default. */
     const resetHome = useCallback(() => {

@@ -1,12 +1,14 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { MapProvider } from 'react-map-gl/maplibre';
 import { getPatioQueryOptions } from '@/services/patios/queries';
 import { Typography } from '@/components/ui/Typography';
+import { CesiumViewerProvider } from './context/CesiumViewerContext';
 import { EditorProvider } from './context/EditorContext';
 import { useAutosavePatio } from './hooks/useAutosavePatio';
-// import { useIdleRotation } from './hooks/useIdleRotation';
+import { useDeleteSelectedShortcut } from './hooks/useDeleteSelectedShortcut';
+import { useIdleRotation } from './hooks/useIdleRotation';
 import { usePatioEditorParams } from './hooks/usePatioEditorRouteApi';
 import { MapCanvas } from './components/MapCanvas';
+import { ObjectsLayer } from './components/ObjectsLayer';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { Sidebar } from './components/Sidebar';
 import { Toolbar } from './components/Toolbar';
@@ -18,24 +20,27 @@ type EditorShellProps = {
     bounds: [number, number, number, number];
 };
 
-/** Drives the ambient idle-orbit; renders nothing. Must live inside MapProvider. */
-// const IdleOrbit: React.FC = () => {
-//     useIdleRotation();
-//     return null;
-// };
+/** Drives the ambient idle-orbit; renders nothing. Must live inside CesiumViewerProvider. */
+const IdleOrbit: React.FC = () => {
+    useIdleRotation();
+    return null;
+};
 
 const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds }) => {
     const { status } = useAutosavePatio(patioId);
 
+    useDeleteSelectedShortcut();
+
     return (
-        <MapProvider>
+        <CesiumViewerProvider>
             <MapCanvas bounds={bounds} />
+            <ObjectsLayer />
             <Sidebar />
             <Toolbar saveStatus={status} />
             <PropertiesPanel />
             <ViewCube />
-            {/* <IdleOrbit /> */}
-        </MapProvider>
+            <IdleOrbit />
+        </CesiumViewerProvider>
     );
 };
 

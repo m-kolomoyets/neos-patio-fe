@@ -1,3 +1,4 @@
+import { Activity, useState } from 'react';
 import ArrowLeftIcon from '@/icons/arrow-left_24.svg?react';
 import SearchIcon from '@/icons/search_24.svg?react';
 import { useSuspenseQuery } from '@tanstack/react-query';
@@ -10,15 +11,22 @@ import { Separator } from '@/components/ui/Separator';
 import { Tabs } from '@/components/ui/Tabs';
 import { Typography } from '@/components/ui/Typography';
 import { usePatioEditorParams } from '../../hooks/usePatioEditorRouteApi';
+import { useSidebarResize } from './hooks/useSidebarResize';
+import { ResizeHandle } from './components/ResizeHandle';
 import { CatalogPanel } from '../CatalogPanel';
+import { ScenePanel } from '../ScenePanel';
 import s from './styles.module.css';
+
+type SidebarTab = 'scene' | 'assets';
 
 export const Sidebar: React.FC = () => {
     const { id } = usePatioEditorParams();
     const { data: patio } = useSuspenseQuery(getPatioQueryOptions(id));
+    const [tab, setTab] = useState<SidebarTab>('assets');
+    const { width, isResizing, handleProps } = useSidebarResize();
 
     return (
-        <aside className={clsx(s.sidebar, 'surface-regular')}>
+        <aside className={clsx(s.sidebar, 'surface-regular')} style={{ width }}>
             <header className={s.header}>
                 <Button className={s.back} render={<Link to="/" />} size="md" variant="link" isIcon title="Back">
                     <ArrowLeftIcon />
@@ -29,23 +37,35 @@ export const Sidebar: React.FC = () => {
                 </Typography>
             </header>
             <Separator orientation="horizontal" />
-            <Tabs.Root className={s.tabs} value="assets" defaultValue="assets">
-                <Tabs.List>
+            <Tabs.Root
+                className={s.tabs}
+                value={tab}
+                onValueChange={(value) => {
+                    setTab(value as SidebarTab);
+                }}
+            >
+                <Tabs.List className={s['tabs-list']} data-resizing={isResizing || undefined}>
                     <Tabs.Tab value="scene">Scene</Tabs.Tab>
                     <Tabs.Tab value="assets">Assets</Tabs.Tab>
                     <Tabs.Indicator />
                 </Tabs.List>
             </Tabs.Root>
             <Separator orientation="horizontal" />
-            <Input
-                className={s.search}
-                type="search"
-                placeholder="Search"
-                leftAddon={<SearchIcon />}
-                isRounded
-                size="sm"
-            />
-            <CatalogPanel />
+            <Activity mode={tab === 'assets' ? 'visible' : 'hidden'}>
+                <Input
+                    className={s.search}
+                    type="search"
+                    placeholder="Search"
+                    leftAddon={<SearchIcon />}
+                    isRounded
+                    size="sm"
+                />
+                <CatalogPanel />
+            </Activity>
+            <Activity mode={tab === 'scene' ? 'visible' : 'hidden'}>
+                <ScenePanel />
+            </Activity>
+            <ResizeHandle {...handleProps} />
         </aside>
     );
 };

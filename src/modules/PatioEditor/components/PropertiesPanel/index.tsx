@@ -1,13 +1,12 @@
 import type { PlacedObject } from '@/services/patios/types';
-import { Suspense, useMemo } from 'react';
-import { useGLTF } from '@react-three/drei';
+import type { LocalFrame, LocalOffset } from '../../utils/geoPlacement';
+import { useMemo } from 'react';
 import clsx from 'clsx';
 import { NumericFormat } from 'react-number-format';
-import { Box3, Vector3 } from 'three';
-import { useModelsQuery } from '@/services/models/queries';
 import { Input } from '@/components/ui/Input';
 import { Tabs } from '@/components/ui/Tabs';
 import { Typography } from '@/components/ui/Typography';
+import { createLocalFrame, geoToLocal, localToGeo } from '../../utils/geoPlacement';
 import { useEditorDispatch, useEditorState } from '../../context/EditorContext';
 import { EditorMode } from '../../types';
 import s from './styles.module.css';
@@ -21,12 +20,23 @@ const MODES: { mode: EditorMode; label: string }[] = [
     { mode: 'scale', label: 'Scale' },
 ];
 
+// Position offset from the patio center, in meters; edited via the X/Y/Z fields.
+const POSITION_STEP = 0.1;
+const POSITION_DECIMALS = 2;
+const POSITION_AXES: { axis: keyof LocalOffset; label: string }[] = [
+    { axis: 'x', label: 'X' },
+    { axis: 'y', label: 'Y' },
+    { axis: 'z', label: 'Z' },
+];
+
 type FieldConfig = {
     key: string;
     label?: string;
     step: number;
+    decimals: number;
     fromObject(_o: PlacedObject): number;
-    toPatch(_v: number): Partial<PlacedObject>;
+    // Read-only fields omit `toPatch`.
+    toPatch?(_v: number): Partial<PlacedObject>;
 };
 
 type FieldGroup = {
@@ -35,97 +45,72 @@ type FieldGroup = {
     fields: FieldConfig[];
 };
 
+// Rotation/scale are independent single-field edits. Position (X/Y/Z meters) is a
+// coupled triple handled separately by `PositionFields`.
 const GROUPS: FieldGroup[] = [
     {
-        value: 'translate',
-        title: 'Position',
+        value: 'rotate',
+        title: 'Rotation',
+        // Stored heading/pitch/roll is a Cesium ENU Euler triple, so X/Y/Z degrees
+        // is a lossless relabel: X=roll, Y=pitch, Z=heading.
         fields: [
             {
-                key: 'x',
+                key: 'roll',
                 label: 'X',
-                step: 0.1,
+                step: 1,
+                decimals: 1,
                 fromObject: (o) => {
-                    return o.x;
+                    return o.roll * RAD_TO_DEG;
                 },
                 toPatch: (v) => {
-                    return { x: v };
+                    return { roll: v * DEG_TO_RAD };
                 },
             },
             {
-                key: 'y',
+                key: 'pitch',
                 label: 'Y',
-                step: 0.1,
+                step: 1,
+                decimals: 1,
                 fromObject: (o) => {
-                    return o.y;
+                    return o.pitch * RAD_TO_DEG;
                 },
                 toPatch: (v) => {
-                    return { y: v };
+                    return { pitch: v * DEG_TO_RAD };
                 },
             },
             {
-                key: 'z',
+                key: 'heading',
                 label: 'Z',
-                step: 0.1,
+                step: 1,
+                decimals: 1,
                 fromObject: (o) => {
-                    return o.z;
+                    return o.heading * RAD_TO_DEG;
                 },
                 toPatch: (v) => {
-                    return { z: v };
+                    return { heading: v * DEG_TO_RAD };
                 },
             },
         ],
     },
     {
-        value: 'rotate',
-        title: 'Rotation',
+        value: 'scale',
+        title: 'Scale',
         fields: [
             {
-                key: 'rotXDeg',
-                label: 'X',
-                step: 1,
+                key: 'scale',
+                label: '×',
+                step: 0.1,
+                decimals: 2,
                 fromObject: (o) => {
-                    return o.rotX * RAD_TO_DEG;
+                    return o.scale;
                 },
                 toPatch: (v) => {
-                    return { rotX: v * DEG_TO_RAD };
-                },
-            },
-            {
-                key: 'rotYDeg',
-                label: 'Y',
-                step: 1,
-                fromObject: (o) => {
-                    return o.rotY * RAD_TO_DEG;
-                },
-                toPatch: (v) => {
-                    return { rotY: v * DEG_TO_RAD };
-                },
-            },
-            {
-                key: 'rotZDeg',
-                label: 'Z',
-                step: 1,
-                fromObject: (o) => {
-                    return o.rotZ * RAD_TO_DEG;
-                },
-                toPatch: (v) => {
-                    return { rotZ: v * DEG_TO_RAD };
+                    return { scale: v };
                 },
             },
         ],
     },
 ];
-
-// const SCALE_FIELD: FieldConfig = {
-//     key: 'scale',
-//     step: 0.1,
-//     fromObject: (o) => {
-//         return o.scale;
-//     },
-//     toPatch: (v) => {
-//         return { scale: v };
-//     },
-// };
 
 type EditableFieldProps = {
     field: FieldConfig;
@@ -134,6 +119,7 @@ type EditableFieldProps = {
 
 const EditableField: React.FC<EditableFieldProps> = ({ field, object }) => {
     const dispatch = useEditorDispatch();
+    const readOnly = !field.toPatch;
     return (
         <NumericFormat
             className={s.input}
@@ -141,62 +127,82 @@ const EditableField: React.FC<EditableFieldProps> = ({ field, object }) => {
             leftAddon={field.label}
             step={field.step}
             customInput={Input}
-            value={Number(field.fromObject(object).toFixed(2))}
-            onValueChange={({ floatValue }) => {
-                if (!Number.isFinite(floatValue)) {
+            readOnly={readOnly}
+            value={Number(field.fromObject(object).toFixed(field.decimals))}
+            onFocus={() => {
+                if (!readOnly) dispatch({ type: 'beginEdit' });
+            }}
+            onBlur={() => {
+                if (!readOnly) dispatch({ type: 'commitEdit' });
+            }}
+            onValueChange={({ floatValue }, { source }) => {
+                // Ignore programmatic value resets (gizmo/undo sync); only commit user typing.
+                if (readOnly || source !== 'event' || !Number.isFinite(floatValue)) {
                     return;
                 }
-                dispatch({ type: 'transform', id: object.id, patch: field.toPatch(floatValue ?? 0) });
+                dispatch({ type: 'transformLive', id: object.id, patch: field.toPatch!(floatValue ?? 0) });
             }}
         />
     );
 };
 
-const DIMENSION_LABELS = ['X (m)', 'Y (m)', 'Z (m)'] as const;
-
-type DimensionsProps = {
-    gltfUrl: string;
-    scale: number;
+type PositionFieldsProps = {
+    object: PlacedObject;
+    frame: LocalFrame;
 };
 
-const Dimensions: React.FC<DimensionsProps> = ({ gltfUrl, scale }) => {
-    // Reuses the same cached useGLTF instance the scene loads — no extra fetch.
-    const { scene } = useGLTF(gltfUrl);
-    // Local-space bounding box keeps the readout rotation-independent.
-    const size = useMemo(() => {
-        return new Box3().setFromObject(scene).getSize(new Vector3());
-    }, [scene]);
-    const dims = [size.x, size.y, size.z];
+// Position is shown as X/Y/Z meters from the patio center. Editing one axis is a
+// coupled edit: the new value is substituted into the live triple and converted
+// back to a geographic patch (the reducer re-clamps lng/lat to the bounds).
+const PositionFields: React.FC<PositionFieldsProps> = ({ object, frame }) => {
+    const dispatch = useEditorDispatch();
+    const local = geoToLocal(frame, object);
     return (
-        <div className={s.dimensions}>
-            {DIMENSION_LABELS.map((_, i) => {
+        <>
+            {POSITION_AXES.map(({ axis, label }) => {
                 return (
                     <NumericFormat
+                        key={axis}
                         className={s.input}
                         size="sm"
-                        value={Number((dims[i] * scale).toFixed(3))}
+                        leftAddon={label}
+                        step={POSITION_STEP}
                         customInput={Input}
-                        readOnly
+                        value={Number(local[axis].toFixed(POSITION_DECIMALS))}
+                        onFocus={() => {
+                            dispatch({ type: 'beginEdit' });
+                        }}
+                        onBlur={() => {
+                            dispatch({ type: 'commitEdit' });
+                        }}
+                        onValueChange={({ floatValue }, { source }) => {
+                            // Ignore programmatic value resets (gizmo/undo sync); only commit user typing.
+                            if (source !== 'event' || !Number.isFinite(floatValue)) {
+                                return;
+                            }
+                            const next = { ...local, [axis]: floatValue ?? 0 };
+                            dispatch({ type: 'transformLive', id: object.id, patch: localToGeo(frame, next) });
+                        }}
                     />
                 );
             })}
-        </div>
+        </>
     );
 };
 
 export const PropertiesPanel: React.FC = () => {
-    const { objects, selectedId, mode } = useEditorState();
+    const { objects, selectedId, mode, bounds } = useEditorState();
     const dispatch = useEditorDispatch();
-    const { data: models } = useModelsQuery();
+
+    // Origin ENU frame is fixed per patio (bounds center) — build it once.
+    const frame = useMemo(() => {
+        return createLocalFrame(bounds);
+    }, [bounds]);
 
     const selected = objects.find((o) => {
         return o.id === selectedId;
     });
     if (!selected) return null;
-
-    const gltfUrl = models?.find((m) => {
-        return m.id === selected.modelId;
-    })?.gltfUrl;
 
     return (
         <aside className={clsx(s.panel, 'surface-regular')}>
@@ -207,15 +213,25 @@ export const PropertiesPanel: React.FC = () => {
                 }}
             >
                 <Tabs.List className={s.tabs}>
-                    {MODES.map((mode) => {
+                    {MODES.map((m) => {
                         return (
-                            <Tabs.Tab className={s.tab} key={mode.mode} value={mode.mode}>
-                                {mode.label}
+                            <Tabs.Tab className={s.tab} key={m.mode} value={m.mode}>
+                                {m.label}
                             </Tabs.Tab>
                         );
                     })}
                     <Tabs.Indicator />
                 </Tabs.List>
+                <Tabs.Panel value="translate">
+                    <section className={s.group}>
+                        <Typography variant="text-xs" className={s['group-title']} render={<h4 />}>
+                            Position
+                        </Typography>
+                        <div className={s.fields}>
+                            <PositionFields object={selected} frame={frame} />
+                        </div>
+                    </section>
+                </Tabs.Panel>
                 {GROUPS.map((group) => {
                     return (
                         <Tabs.Panel key={group.value} value={group.value}>
@@ -232,31 +248,6 @@ export const PropertiesPanel: React.FC = () => {
                         </Tabs.Panel>
                     );
                 })}
-                <Tabs.Panel value="scale">
-                    {gltfUrl && (
-                        <section className={s.group}>
-                            <Typography variant="text-xs" className={s['group-title']} render={<h4 />}>
-                                Dimensions (m)
-                            </Typography>
-                            <Suspense fallback={<div className={s.label}>Loading…</div>}>
-                                <Dimensions gltfUrl={gltfUrl} scale={selected.scale} />
-                            </Suspense>
-                        </section>
-                    )}
-                </Tabs.Panel>
-                {/* <section className={s.group}>
-                <h4 className={s['group-title']}>Scale</h4>
-                <EditableField field={SCALE_FIELD} object={selected} />
-            </section> */}
-                {/* <button
-                type="button"
-                className={s.delete}
-                onClick={() => {
-                    dispatch({ type: 'remove', id: selected.id });
-                }}
-            >
-                Delete object
-            </button> */}
             </Tabs.Root>
         </aside>
     );

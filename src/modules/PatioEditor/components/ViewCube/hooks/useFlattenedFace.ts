@@ -1,12 +1,14 @@
-import type { MapRef } from 'react-map-gl/maplibre';
-import type { CameraTarget, CubeFace, CubeTarget } from '../types';
+import type { Viewer } from 'cesium';
+import type { CameraState, CameraTarget, CubeFace, CubeTarget } from '../types';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CUBE_TARGETS, FLATTEN_EXIT_THRESHOLD_DEG } from '../constants';
+import { CAMERA_EASE_MS, CUBE_TARGETS, FLATTEN_EXIT_THRESHOLD_DEG } from '../constants';
 import { isCubeFace, isSnappedToFace, resolveSnapOrientation, stepFace } from '../utils/cameraMath';
 
 type UseFlattenedFaceArgs = {
-    map: MapRef | null;
-    easeTo: (_target: CameraTarget) => void;
+    viewer: Viewer | null;
+    readOrientation: () => CameraState;
+    /** Animated snap that keeps the patio framed (no out-of-bounds in view). */
+    snapTo: (_target: CameraTarget) => void;
 };
 
 /**
@@ -15,50 +17,62 @@ type UseFlattenedFaceArgs = {
  * Clicking a **side face** flattens the cube to that face head-on with helper
  * arrows; clicking a **corner/top** stays the live 3D cube. The state exits on
  * a drag-orbit, or once the camera drifts past {@link FLATTEN_EXIT_THRESHOLD_DEG}
- * from the snapped face. A `snapping` flag suppresses that drift exit while our
- * own `easeTo` animation is still settling (it passes through off-target angles).
+ * from the snapped face. A `snapping` flag (cleared {@link CAMERA_EASE_MS} after
+ * a snap fires) suppresses that drift exit while our own flight is still settling
+ * through off-target angles.
  *
  * Returns the selected face plus the callbacks the widget wires to the cube
  * interaction (`onSnap`/`onOrbitStart`) and the arrow buttons (`stepBy`/`goTop`).
  */
-export const useFlattenedFace = ({ map, easeTo }: UseFlattenedFaceArgs) => {
+export const useFlattenedFace = ({ viewer, readOrientation, snapTo }: UseFlattenedFaceArgs) => {
     const [selectedFace, setSelectedFace] = useState<CubeFace | null>(null);
     const snapping = useRef(false);
-    // Mirrors selectedFace for the imperative map-event handler (avoids re-subscribing).
+    const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Mirrors selectedFace for the imperative postRender handler (avoids re-subscribing).
     const faceRef = useRef<CubeFace | null>(null);
     useEffect(() => {
         faceRef.current = selectedFace;
     }, [selectedFace]);
 
-    // Watch the live camera: our own snaps animate through off-target angles
-    // (suppressed by `snapping` until `moveend`), but once a user orbits the
-    // map away from the snapped face beyond tolerance, exit the flattened state.
-    useEffect(() => {
-        if (!map) return undefined;
-        const settle = () => {
+    /** Suppress drift-exit for the length of a programmatic flight, then re-arm it. */
+    const beginSnapping = useCallback(() => {
+        snapping.current = true;
+        if (snapTimer.current !== null) clearTimeout(snapTimer.current);
+        snapTimer.current = setTimeout(() => {
             snapping.current = false;
-        };
+        }, CAMERA_EASE_MS);
+    }, []);
+
+    // Watch the live camera: our own snaps fly through off-target angles
+    // (suppressed by `snapping` until the flight settles), but once a user orbits
+    // away from the snapped face beyond tolerance, exit the flattened state.
+    useEffect(() => {
+        if (!viewer) return undefined;
         const checkDrift = () => {
             const face = faceRef.current;
             if (!face || snapping.current) return;
-            const camera = { bearing: map.getBearing(), pitch: map.getPitch() };
-            if (!isSnappedToFace(camera, face, FLATTEN_EXIT_THRESHOLD_DEG)) {
+            const { bearing, pitch } = readOrientation();
+            if (!isSnappedToFace({ bearing, pitch }, face, FLATTEN_EXIT_THRESHOLD_DEG)) {
                 setSelectedFace(null);
             }
         };
-        map.on('moveend', settle);
-        map.on('move', checkDrift);
+        return viewer.scene.postRender.addEventListener(checkDrift);
+    }, [viewer, readOrientation]);
+
+    useEffect(() => {
         return () => {
-            map.off('moveend', settle);
-            map.off('move', checkDrift);
+            if (snapTimer.current !== null) clearTimeout(snapTimer.current);
         };
-    }, [map]);
+    }, []);
 
     /** Click-snap result: flatten on a side face, stay 3D on a corner/top. */
-    const onSnap = useCallback((target: CubeTarget) => {
-        snapping.current = true;
-        setSelectedFace(isCubeFace(target) ? target : null);
-    }, []);
+    const onSnap = useCallback(
+        (target: CubeTarget) => {
+            beginSnapping();
+            setSelectedFace(isCubeFace(target) ? target : null);
+        },
+        [beginSnapping]
+    );
 
     /** A drag-orbit always exits the flattened state. */
     const onOrbitStart = useCallback(() => {
@@ -69,23 +83,25 @@ export const useFlattenedFace = ({ map, easeTo }: UseFlattenedFaceArgs) => {
     const stepBy = useCallback(
         (dir: 1 | -1) => {
             setSelectedFace((face) => {
-                if (!face || !map) return face;
+                if (!face) return face;
                 const next = stepFace(face, dir);
-                snapping.current = true;
-                easeTo({ bearing: CUBE_TARGETS[next].bearing ?? map.getBearing(), pitch: CUBE_TARGETS[next].pitch });
+                beginSnapping();
+                snapTo({
+                    bearing: CUBE_TARGETS[next].bearing ?? readOrientation().bearing,
+                    pitch: CUBE_TARGETS[next].pitch,
+                });
                 return next;
             });
         },
-        [map, easeTo]
+        [beginSnapping, snapTo, readOrientation]
     );
 
     /** Up arrow: jump to the top view (exits flattened — top is not a side face). */
     const goTop = useCallback(() => {
-        if (!map) return;
-        snapping.current = true;
-        easeTo(resolveSnapOrientation('top', map.getBearing()));
+        beginSnapping();
+        snapTo(resolveSnapOrientation('top', readOrientation().bearing));
         setSelectedFace(null);
-    }, [map, easeTo]);
+    }, [beginSnapping, snapTo, readOrientation]);
 
     return { selectedFace, onSnap, onOrbitStart, stepBy, goTop };
 };
