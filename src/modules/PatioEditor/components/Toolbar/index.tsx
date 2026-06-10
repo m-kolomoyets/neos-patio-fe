@@ -81,21 +81,21 @@ export const Toolbar: React.FC<ToolbarProps> = ({ saveStatus }) => {
                     <RedoIcon />
                     <span className="sr-only">Redo</span>
                 </Button>
-                <Button
-                    disabled={!selectedId}
-                    className={s.button}
-                    variant="link"
-                    title="Delete"
-                    size="sm"
-                    isIcon
-                    onClick={() => {
-                        if (!selectedId) return;
-                        dispatch({ type: 'remove', id: selectedId });
-                    }}
-                >
-                    <TrashIcon />
-                    <span className="sr-only">Delete</span>
-                </Button>
+                {selectedId ? (
+                    <Button
+                        className={s.button}
+                        variant="link"
+                        title="Delete"
+                        size="sm"
+                        isIcon
+                        onClick={() => {
+                            dispatch({ type: 'remove', id: selectedId });
+                        }}
+                    >
+                        <TrashIcon />
+                        <span className="sr-only">Delete</span>
+                    </Button>
+                ) : null}
             </div>
             <ConnectWalletButton className={s['connect-wallet']} />
         </div>
