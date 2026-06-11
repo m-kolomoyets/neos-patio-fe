@@ -30,7 +30,7 @@ const PatiosIdRoute = PatiosIdRouteImport.update({
   id: '/patios/$id',
   path: '/patios/$id',
   getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/patios.$id.lazy').then((d) => d.Route))
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
