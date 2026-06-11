@@ -2,18 +2,11 @@ import type { AutosaveStatus } from '../../hooks/useAutosavePatio';
 import RedoIcon from '@/icons/redo_24.svg?react';
 import TrashIcon from '@/icons/trash_24.svg?react';
 import UndoIcon from '@/icons/undo_24.svg?react';
-// import type { EditorMode } from '../../types';
 import clsx from 'clsx';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { Button } from '@/components/ui/Button';
 import { useEditorDispatch, useEditorHistoryFlags, useEditorState } from '../../context/EditorContext';
 import s from './styles.module.css';
-
-// const MODES: { mode: EditorMode; label: string }[] = [
-//     { mode: 'translate', label: 'Move' },
-//     { mode: 'rotate', label: 'Rotate' },
-//     { mode: 'scale', label: 'Scale' },
-// ];
 
 const STATUS_LABEL: Record<AutosaveStatus, string> = {
     idle: 'Saved',
@@ -26,29 +19,12 @@ type ToolbarProps = {
 };
 
 export const Toolbar: React.FC<ToolbarProps> = ({ saveStatus }) => {
-    // const { mode } = useEditorState();
     const dispatch = useEditorDispatch();
     const { canUndo, canRedo } = useEditorHistoryFlags();
     const { selectedId } = useEditorState();
 
     return (
         <div className={clsx(s.bar, 'surface-regular')}>
-            {/* {MODES.map((entry) => {
-                return (
-                    <button
-                        key={entry.mode}
-                        type="button"
-                        className={s.button}
-                        data-active={entry.mode === mode}
-                        onClick={() => {
-                            dispatch({ type: 'setMode', mode: entry.mode });
-                        }}
-                    >
-                        {entry.label}
-                    </button>
-                );
-            })}
-            <span className={s.divider} /> */}
             <span className={s.status} data-status={saveStatus}>
                 {STATUS_LABEL[saveStatus]}
             </span>
