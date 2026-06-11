@@ -5,6 +5,7 @@ import MapPin24Icon from '@/icons/map-pin_24.svg?react';
 import clsx from 'clsx';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import { Typography } from '@/components/ui/Typography';
+import { CONTINENT_LABELS } from '../../constants';
 import { useHomeNavigate } from '../../hooks/useHomeRouteApi';
 import { useParallax } from './hooks/useParallax';
 import s from './styles.module.css';
@@ -66,8 +67,8 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
                 <footer className={s.footer}>
                     <Typography variant="text-sm" className={clsx(s.country, 'truncate')} render={<p />}>
                         <MapPin24Icon className={s.icon} aria-hidden />
-                        <span className="sr-only">Country</span>
-                        {patio.country}
+                        <span className="sr-only">Continent: </span>
+                        {CONTINENT_LABELS?.[patio.continent] ?? 'N/A'}
                     </Typography>
                     <Typography className={s.id} variant="text-sm" render={<p />}>
                         <Id24Icon className={s.icon} aria-label="ID" /> {patio.id}

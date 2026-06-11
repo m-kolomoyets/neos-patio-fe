@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import { Tag } from '@/components/ui/Tag';
 import { Typography } from '@/components/ui/Typography';
+import { CONTINENT_LABELS } from '../../constants';
 import { useHoverVideoScrub } from './hooks/useHoverVideoScrub';
 import s from './styles.module.css';
 
@@ -106,7 +107,8 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
                         <Tag render={<li />}>
                             <MapPin24Icon className={s.icon} aria-hidden />
                             <Typography variant="text-sm" render={<span />}>
-                                {patio.country}
+                                <span className="sr-only">Continent: </span>
+                                {CONTINENT_LABELS?.[patio.continent] ?? 'N/A'}
                             </Typography>
                         </Tag>
                         <Tag render={<li />}>
