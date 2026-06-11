@@ -51,7 +51,7 @@ const buildOptions = (reducedMotion: boolean): EmblaOptionsType => {
             skipSnaps: true,
         };
     }
-    return { loop: true, align: 'start', dragFree: false, containScroll: 'trimSnaps' };
+    return { loop: false, align: 'start', dragFree: false, containScroll: 'trimSnaps' };
 };
 
 export const useFeaturedCarousel = ({ dataKey }: Params): Result => {

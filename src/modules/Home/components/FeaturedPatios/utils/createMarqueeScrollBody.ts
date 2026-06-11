@@ -10,7 +10,7 @@ import type { EngineType, ScrollBodyType } from 'embla-carousel';
  * `getVelocity` returns px/frame in embla's location space (negative = forward / next).
  */
 export const createMarqueeScrollBody = (engine: EngineType, getVelocity: () => number): ScrollBodyType => {
-    const { location, previousLocation, target, index, indexPrevious, scrollTarget, eventHandler } = engine;
+    const { location, previousLocation, target, index, indexPrevious, scrollTarget, eventHandler, limit } = engine;
 
     let velocity = 0;
 
@@ -21,7 +21,9 @@ export const createMarqueeScrollBody = (engine: EngineType, getVelocity: () => n
     const seek = (): ScrollBodyType => {
         previousLocation.set(location);
         velocity = getVelocity();
-        location.add(velocity);
+        // Loop is disabled: clamp to the scroll bounds so the marquee can never drift past the
+        // first or last slide. constrain() pins location to [limit.min, limit.max].
+        location.set(limit.constrain(location.get() + velocity));
         target.set(location);
 
         // Keep the selected snap (and thus dots/aria) in sync as we drift past snaps.

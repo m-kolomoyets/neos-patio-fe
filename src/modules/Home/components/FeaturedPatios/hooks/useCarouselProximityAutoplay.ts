@@ -1,35 +1,30 @@
 import type { EmblaCarouselType, ScrollBodyType } from 'embla-carousel';
 import { useEffect } from 'react';
-import { computeMagneticTarget } from '../utils/computeMagneticTarget';
+import { computeHalfScrollSpeed } from '../utils/computeHalfScrollSpeed';
 import { createMarqueeScrollBody } from '../utils/createMarqueeScrollBody';
 
 type Params = {
     emblaApi: EmblaCarouselType | undefined;
-    prevRef: React.RefObject<HTMLElement | null>;
-    nextRef: React.RefObject<HTMLElement | null>;
     enabled: boolean;
 };
 
-// Shared with the magnetic scrub so the autoplay zone matches the scrub zone exactly.
-const RADIUS_PX = 225;
-// Marquee velocity magnitude in px/frame: lazy drift at the zone edge, brisk on the arrow.
-const SPEED_MIN = 1.1;
-const SPEED_MAX = 5;
+// Marquee velocity magnitude in px/frame at the area edge; ramps from 0 at the center line.
+const SPEED_MAX = 12;
 const EPSILON = 1e-4;
 
-type Center = { x: number; y: number };
+type Rect = { left: number; top: number; width: number; height: number };
 
-export const useCarouselProximityAutoplay = ({ emblaApi, prevRef, nextRef, enabled }: Params): void => {
+export const useCarouselProximityAutoplay = ({ emblaApi, enabled }: Params): void => {
     useEffect(
         function configureProximityAutoplay() {
             if (!emblaApi || !enabled) return;
 
-            let prevCenter: Center = { x: 0, y: 0 };
-            let nextCenter: Center = { x: 0, y: 0 };
+            let area: Rect = { left: 0, top: 0, width: 0, height: 0 };
             let cursorX = 0;
             let cursorY = 0;
-            // Signed proximity in [-1, 1]: positive near the next arrow, negative near the prev arrow.
-            let proximity = 0;
+            // Signed speed in px/frame from the half-split model: positive scrolls to the next
+            // arrow, negative to the prev arrow, zero at the center line or outside the area.
+            let speed = 0;
             // True while the user drags the carousel; manual interaction wins over the marquee.
             let isPointerDown = false;
             let running = false;
@@ -39,31 +34,28 @@ export const useCarouselProximityAutoplay = ({ emblaApi, prevRef, nextRef, enabl
             let engine = emblaApi.internalEngine();
             let defaultScrollBody: ScrollBodyType = engine.scrollBody;
 
-            const refreshCenters = () => {
-                const prevEl = prevRef.current;
-                const nextEl = nextRef.current;
-                if (prevEl) {
-                    const r = prevEl.getBoundingClientRect();
-                    prevCenter = { x: r.x + r.width / 2, y: r.y + r.height / 2 };
-                }
-                if (nextEl) {
-                    const r = nextEl.getBoundingClientRect();
-                    nextCenter = { x: r.x + r.width / 2, y: r.y + r.height / 2 };
-                }
+            const refreshArea = () => {
+                const r = emblaApi.rootNode().getBoundingClientRect();
+                area = { left: r.left, top: r.top, width: r.width, height: r.height };
             };
 
-            const magnitude = (): number => {
-                return Math.abs(proximity);
+            // Loop is off: at a scroll boundary, suppress speed that would push further out.
+            // Forward (positive speed) drives location toward limit.min; prev toward limit.max.
+            const atBlockingBoundary = (): boolean => {
+                const loc = engine.location.get();
+                if (speed > 0) return engine.limit.reachedMin(loc);
+                if (speed < 0) return engine.limit.reachedMax(loc);
+                return false;
             };
+
             const isActive = (): boolean => {
-                return magnitude() > EPSILON;
+                return Math.abs(speed) > EPSILON && !atBlockingBoundary();
             };
 
             // Signed px/frame in embla's location space. Forward (next) scrolls toward decreasing
-            // location, so a positive `proximity` maps to a negative velocity.
+            // location, so a positive `speed` maps to a negative velocity.
             const velocity = (): number => {
-                const mag = SPEED_MIN + (SPEED_MAX - SPEED_MIN) * Math.min(1, magnitude());
-                return proximity >= 0 ? -mag : mag;
+                return -speed;
             };
 
             const play = () => {
@@ -89,15 +81,28 @@ export const useCarouselProximityAutoplay = ({ emblaApi, prevRef, nextRef, enabl
                 play();
             };
 
+            // While the marquee runs it advances location every frame without re-entering
+            // recompute; re-check each frame so it halts the moment it reaches a boundary.
+            const onScroll = () => {
+                if (running && !isActive()) stop();
+            };
+
             const recompute = () => {
-                proximity = computeMagneticTarget({
-                    cursorX,
-                    cursorY,
-                    prevCenter,
-                    nextCenter,
-                    radius: RADIUS_PX,
-                    maxRate: 1,
-                });
+                // Re-read the live rect so the area tracks the carousel as the page scrolls.
+                refreshArea();
+                // Gate on the cursor being inside the area's bounds on both axes; movement over
+                // other page content (or beside the carousel) must never drive it.
+                const insideX = cursorX >= area.left && cursorX <= area.left + area.width;
+                const insideY = cursorY >= area.top && cursorY <= area.top + area.height;
+                speed =
+                    insideX && insideY
+                        ? computeHalfScrollSpeed({
+                              cursorX,
+                              areaLeft: area.left,
+                              areaWidth: area.width,
+                              maxSpeed: SPEED_MAX,
+                          })
+                        : 0;
                 sync();
             };
 
@@ -108,7 +113,7 @@ export const useCarouselProximityAutoplay = ({ emblaApi, prevRef, nextRef, enabl
             };
 
             const onResize = () => {
-                refreshCenters();
+                refreshArea();
                 recompute();
             };
 
@@ -116,7 +121,7 @@ export const useCarouselProximityAutoplay = ({ emblaApi, prevRef, nextRef, enabl
                 running = false;
                 engine = emblaApi.internalEngine();
                 defaultScrollBody = engine.scrollBody;
-                refreshCenters();
+                refreshArea();
                 recompute();
             };
 
@@ -127,16 +132,17 @@ export const useCarouselProximityAutoplay = ({ emblaApi, prevRef, nextRef, enabl
             };
             const onPointerUp = () => {
                 isPointerDown = false;
-                // Resume only if the cursor is still inside the magnetic zone.
+                // Resume only if the cursor is still inside the active area.
                 recompute();
             };
 
-            refreshCenters();
+            refreshArea();
             window.addEventListener('pointermove', onPointerMove);
             window.addEventListener('resize', onResize);
             emblaApi.on('reInit', onReInit);
             emblaApi.on('pointerDown', onPointerDown);
             emblaApi.on('pointerUp', onPointerUp);
+            emblaApi.on('scroll', onScroll);
 
             return () => {
                 window.removeEventListener('pointermove', onPointerMove);
@@ -144,9 +150,10 @@ export const useCarouselProximityAutoplay = ({ emblaApi, prevRef, nextRef, enabl
                 emblaApi.off('reInit', onReInit);
                 emblaApi.off('pointerDown', onPointerDown);
                 emblaApi.off('pointerUp', onPointerUp);
+                emblaApi.off('scroll', onScroll);
                 stop();
             };
         },
-        [emblaApi, enabled, prevRef, nextRef]
+        [emblaApi, enabled]
     );
 };
