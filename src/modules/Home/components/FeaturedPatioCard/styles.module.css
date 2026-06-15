@@ -64,6 +64,9 @@
     height: 100%;
     border-radius: var(--radius-2xl);
     z-index: 2;
+    box-shadow: 0 0 2px 1px hsl(var(--color-hsl-white) / 0.15);
+    outline: 1px hsl(var(--color-hsl-white) / 0.2) solid;
+    outline-offset: -1px;
 }
 
 .media::before {
@@ -81,9 +84,9 @@
         hsl(var(--color-hsl-black) / 0.5) 100%
     );
     box-shadow:
-        1px 4px 6px hsl(var(--color-hsl-black) / 0.15) inset,
-        1px 4px 6px hsl(var(--color-hsl-black) / 0.3) inset,
-        0 -1px 1px hsl(26deg 0.2% 8.8 / 0.6) inset,
+        1px 1.5px 2px hsl(var(--color-hsl-black) / 0.16) inset,
+        1px 1.5px 4px hsl(var(--color-hsl-black) / 0.48) inset,
+        0 -1px 1px hsl(26deg 0.2% 8.8 / 0.8) inset,
         0 -3px 3px hsl(var(--color-hsl-black) / 0.3) inset;
 }
 
