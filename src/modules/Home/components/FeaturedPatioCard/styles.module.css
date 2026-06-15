@@ -64,6 +64,9 @@
     height: 100%;
     border-radius: var(--radius-2xl);
     z-index: 2;
+    box-shadow: 0 0 2px 1px hsl(var(--color-hsl-white) / 0.15);
+    outline: 1px hsl(var(--color-hsl-white) / 0.2) solid;
+    outline-offset: -1px;
 }
 
 .media::before {
