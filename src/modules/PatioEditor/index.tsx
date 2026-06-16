@@ -3,6 +3,7 @@ import { getPatioQueryOptions } from '@/services/patios/queries';
 import { Typography } from '@/components/ui/Typography';
 import { CesiumViewerProvider } from './context/CesiumViewerContext';
 import { EditorProvider } from './context/EditorContext';
+import { UploadModelProvider } from './context/UploadModelContext';
 import { useAutosavePatio } from './hooks/useAutosavePatio';
 import { useDeleteSelectedShortcut } from './hooks/useDeleteSelectedShortcut';
 import { useIdleRotation } from './hooks/useIdleRotation';
@@ -35,7 +36,9 @@ const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds }) => {
         <CesiumViewerProvider>
             <MapCanvas bounds={bounds} />
             <ObjectsLayer />
-            <Sidebar />
+            <UploadModelProvider>
+                <Sidebar />
+            </UploadModelProvider>
             <Toolbar saveStatus={status} />
             <PropertiesPanel />
             <ViewCube />

@@ -1,8 +1,8 @@
 import type { BaseErrorData } from '@/lib/@http';
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 import { HTTPError } from 'ky';
-import { toast } from 'sonner';
 import { COMMON_ERROR_MESSAGE } from '@/lib/constants';
+import { toast } from '@/components/ui/Toast';
 
 declare module '@tanstack/react-query' {
     interface Register {

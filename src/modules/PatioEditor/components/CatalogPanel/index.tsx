@@ -2,21 +2,51 @@ import ChevronRightIcon from '@/icons/chevrone-right_24.svg?react';
 import { Cartesian2 } from 'cesium';
 import clsx from 'clsx';
 import { useModelsQuery } from '@/services/models/queries';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Typography } from '@/components/ui/Typography';
 import { CATALOG_PANEL_INSET_PX } from './constants';
 import { pickGroundPoint } from '../../utils/geoPlacement';
 import { useCesiumViewer } from '../../context/CesiumViewerContext';
 import { useEditorDispatch } from '../../context/EditorContext';
+import { useUploadModel } from '../../context/UploadModelContext';
 import s from './styles.module.css';
 
 export const CatalogPanel: React.FC = () => {
     const { data, isLoading } = useModelsQuery();
     const dispatch = useEditorDispatch();
     const viewer = useCesiumViewer();
+    const { state: upload } = useUploadModel();
+
+    // Transient placeholder mirroring the dialog: live progress while uploading,
+    // a settled tile once the preview is ready. Driven entirely by the provider.
+    const pending = upload.status === 'uploading' || upload.status === 'preview' ? upload : null;
 
     return (
         <aside className={s.panel}>
             {isLoading ? <p className={s.status}>Loading models…</p> : null}
+            {pending ? (
+                <ul className={s.list}>
+                    <li className={s.pending}>
+                        {pending.status === 'preview' && pending.thumbnailUrl ? (
+                            <img src={pending.thumbnailUrl} alt="" className={s.thumb} />
+                        ) : (
+                            <span className={s.thumb} aria-hidden />
+                        )}
+                        <span className={s['label-wrap']}>
+                            <Typography className={clsx(s.label, 'truncate')} variant="text-xs" render={<span />}>
+                                {pending.file.name}
+                            </Typography>
+                        </span>
+                        {pending.status === 'uploading' ? (
+                            <ProgressBar
+                                className={s['pending-progress']}
+                                value={pending.progress}
+                                aria-label="Upload progress"
+                            />
+                        ) : null}
+                    </li>
+                </ul>
+            ) : null}
             {data ? (
                 <ul className={s.list}>
                     {data.map((model) => {
