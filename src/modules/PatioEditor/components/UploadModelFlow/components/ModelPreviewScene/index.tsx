@@ -2,7 +2,6 @@ import type { AnimationClip, Object3D } from 'three';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import PauseIcon from '@/icons/pause-square_24.svg?react';
-import PhotoCameraIcon from '@/icons/photocamera_24.svg?react';
 import PlayIcon from '@/icons/play_24.svg?react';
 import { OrbitControls, Stage, useAnimations } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
@@ -18,6 +17,8 @@ const THUMBNAIL_ERROR_MESSAGE = 'Could not capture a thumbnail from the preview.
 type ModelPreviewSceneProps = {
     /** Locally-parsed model to display. */
     gltf: GLTF;
+    /** Hands the capture handler to the parent so an external control can snapshot the canvas. */
+    onRegisterCapture?: (_capture: () => void) => void;
 };
 
 type CaptureBridgeProps = {
@@ -136,7 +137,7 @@ const ModelAnimator: React.FC<ModelAnimatorProps> = ({ clips, root, playing, onF
  * This Canvas is entirely separate from the Cesium-backed MapCanvas — only mounted
  * while the upload flow is in its `preview` state.
  */
-export const ModelPreviewScene: React.FC<ModelPreviewSceneProps> = ({ gltf }) => {
+export const ModelPreviewScene: React.FC<ModelPreviewSceneProps> = ({ gltf, onRegisterCapture }) => {
     const { captureThumbnail } = useUploadModel();
     const getCanvasRef = useRef<(() => HTMLCanvasElement) | null>(null);
     const autoCapturedRef = useRef(false);
@@ -169,6 +170,12 @@ export const ModelPreviewScene: React.FC<ModelPreviewSceneProps> = ({ gltf }) =>
         captureThumbnailFromCanvas();
     }, [captureThumbnailFromCanvas]);
 
+    // Lift the capture trigger so the Capture Thumbnail button (rendered outside the
+    // morphing scene box, in the bottom bar) can snapshot this canvas.
+    useEffect(() => {
+        onRegisterCapture?.(captureThumbnailFromCanvas);
+    }, [onRegisterCapture, captureThumbnailFromCanvas]);
+
     return (
         <div className={s.wrap}>
             <Canvas className={s.canvas} gl={{ preserveDrawingBuffer: true }} camera={{ position: [0, 0, 5], fov: 45 }}>
@@ -193,27 +200,24 @@ export const ModelPreviewScene: React.FC<ModelPreviewSceneProps> = ({ gltf }) =>
                 <OrbitControls makeDefault enablePan={false} />
                 <CaptureBridge register={register} onReady={handleReady} />
             </Canvas>
-            <div className={s.controls}>
-                {hasAnimations && (
-                    <Button
-                        type="button"
-                        variant="surface"
-                        size="sm"
-                        onClick={() => {
-                            setIsPlaying((prev) => {
-                                return !prev;
-                            });
-                        }}
-                    >
-                        {isPlaying ? <PauseIcon /> : <PlayIcon />}
-                        {isPlaying ? 'Pause' : 'Play'}
-                    </Button>
-                )}
-                <Button type="button" variant="surface" size="sm" onClick={captureThumbnailFromCanvas}>
-                    <PhotoCameraIcon />
-                    Capture thumbnail
+            {hasAnimations && (
+                <Button
+                    className={s.play}
+                    type="button"
+                    variant="surface"
+                    size="sm"
+                    isIcon
+                    title={isPlaying ? 'Pause' : 'Play'}
+                    onClick={() => {
+                        setIsPlaying((prev) => {
+                            return !prev;
+                        });
+                    }}
+                >
+                    {isPlaying ? <PauseIcon /> : <PlayIcon />}
+                    <span className="sr-only">{isPlaying ? 'Pause' : 'Play'}</span>
                 </Button>
-            </div>
+            )}
         </div>
     );
 };

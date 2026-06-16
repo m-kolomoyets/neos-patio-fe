@@ -1,0 +1,30 @@
+.panel {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--gap-2);
+    animation: panel-slide 240ms ease-out;
+}
+
+.name {
+    color: var(--color-base-white);
+}
+
+.value {
+    align-self: flex-end;
+    color: rgb(255 255 255 / 0.6);
+}
+
+@keyframes panel-slide {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

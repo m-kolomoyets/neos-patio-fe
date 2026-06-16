@@ -2,6 +2,8 @@
     display: flex;
     flex-direction: column;
     gap: var(--gap-3);
+    padding-inline: var(--gap-6);
+    padding-bottom: var(--gap-6);
 }
 
 .dropzone {
@@ -11,7 +13,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--gap-2);
-    min-height: 12rem;
+    min-height: 21.875rem;
     padding: var(--gap-6);
     text-align: center;
     border: 1px dashed rgb(255 255 255 / 0.24);
@@ -31,6 +33,10 @@
     border-color: var(--color-error-500);
 }
 
+.cta {
+    min-width: 6.9375rem;
+}
+
 .input {
     position: absolute;
     width: 1px;
@@ -44,17 +50,27 @@
 }
 
 .icon {
-    width: 2rem;
-    height: 2rem;
-    color: rgb(255 255 255 / 0.7);
+    width: 6.25rem;
+    height: 6.25rem;
+    color: hsl(var(--color-hsl-white) / 0.7);
 }
 
 .prompt {
     color: var(--color-base-white);
+    font-weight: 500;
 }
 
 .hint {
-    color: rgb(255 255 255 / 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-1);
+    margin-bottom: var(--gap-5);
+}
+
+.hint-item > span {
+    color: hsl(var(--color-hsl-white) / 0.7);
 }
 
 .selected {

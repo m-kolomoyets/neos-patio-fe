@@ -5,9 +5,31 @@
 }
 
 .popup {
+    display: block;
+}
+
+/* Static-height window the views slide through; height never animates (by design). */
+.viewport {
+    position: relative;
+    height: 450px;
+    overflow: hidden;
+}
+
+.view {
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--gap-5);
+    gap: var(--gap-6);
+}
+
+.close.close {
+    position: absolute;
+    top: var(--gap-6);
+    right: var(--gap-6);
+    padding: var(--gap-1);
+    min-height: 28px;
+    z-index: 20;
 }
 
 .header {
@@ -19,40 +41,132 @@
 
 .title {
     color: var(--color-base-white);
+    font-weight: 600;
+    padding-top: var(--gap-6);
+    padding-inline: var(--gap-6);
 }
 
-.description {
-    margin: 0;
-    color: rgb(255 255 255 / 0.6);
+/* Scene flexes to fill the leftover space above the fixed bottom slot within 450px. */
+.scene {
+    position: relative;
+    flex: 1;
+    min-height: 0;
 }
 
-.footer {
+/* Fixed slot so the progress → error / name swap never reflows the dialog height. */
+.bottom {
+    position: relative;
+    flex-shrink: 0;
+    height: 132px;
+}
+
+/* Back-to-capture button, mirrors the close button's top corner placement. */
+.back.back {
+    position: absolute;
+    top: var(--gap-6);
+    left: var(--gap-6);
+    z-index: 1;
+    padding: var(--gap-1);
+    min-height: 28px;
+}
+
+/* Preview stage. Capture: full-bleed scene on top + bottom bar. Naming: centered
+   thumbnail + form. Only .preview-model morphs between the two via shared layout. */
+.preview {
+    position: relative;
     display: flex;
-    justify-content: flex-end;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.preview-model {
+    position: relative;
+    overflow: hidden;
+    background: rgb(0 0 0 / 0.2);
+    transition: border-radius 0.4s ease;
+}
+
+.preview[data-step="capture"] {
+    justify-content: flex-start;
+}
+
+.preview[data-step="capture"] .preview-model {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+
+    /* Top corners follow the popup radius; bottom meets the separator flush. */
+    border-radius: var(--radius-4xl) var(--radius-4xl) 0 0;
+}
+
+.preview[data-step="naming"] {
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-8);
+}
+
+.preview[data-step="naming"] .preview-model {
+    flex-shrink: 0;
+    width: 170px;
+    height: 226px;
+    background: none;
+    border-radius: var(--radius-2xl);
+}
+
+.thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Bottom chrome of the capture step. */
+.capture-controls {
+    flex-shrink: 0;
+}
+
+.separator {
+    height: 1px;
+    width: 100%;
+    background: hsl(var(--color-hsl-white) / 0.2);
+}
+
+.capture-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-4);
+    padding: var(--gap-4);
+}
+
+.capture-thumb {
+    flex-shrink: 0;
+    width: 100px;
+    height: 100px;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    background: hsl(var(--color-hsl-white) / 0.2);
+}
+
+.capture-main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
     gap: var(--gap-3);
+    min-width: 0;
 }
 
-.field {
+.caption {
+    list-style-position: inside;
+    color: hsl(var(--color-hsl-white) / 0.7);
+}
+
+.next.next {
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.preview-form {
     display: flex;
-    flex-direction: column;
-    gap: var(--gap-2);
-}
-
-.field-label {
-    color: var(--color-base-white);
-}
-
-.progress {
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap-2);
-}
-
-.progress-name {
-    color: var(--color-base-white);
-}
-
-.progress-value {
-    align-self: flex-end;
-    color: rgb(255 255 255 / 0.6);
+    width: 100%;
+    justify-content: center;
 }
