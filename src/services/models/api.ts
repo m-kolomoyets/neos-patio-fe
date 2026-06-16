@@ -1,7 +1,15 @@
-import type { Model3D } from './types';
+import type {
+    Model3D,
+    UploadModelFile,
+    UploadModelOptions,
+    UploadModelResult,
+    UploadModelThumbnailVariables,
+} from './types';
 import { sleep } from '@/lib/utils/sleep';
 
 const MOCK_DELAY_MS = 200;
+const MOCK_UPLOAD_DURATION_MS = 2500;
+const MOCK_UPLOAD_TICK_MS = 100;
 const SAMPLE_ASSETS_BASE = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models';
 
 const buildAsset = (name: string, dirName?: string): Pick<Model3D, 'gltfUrl' | 'previewUrl'> => {
@@ -17,4 +25,51 @@ const MODELS_FIXTURES: Model3D[] = [{ id: 'lantern', name: 'Lantern', ...buildAs
 export const listModels = async (): Promise<Model3D[]> => {
     await sleep(MOCK_DELAY_MS);
     return MODELS_FIXTURES;
+};
+
+/**
+ * Mock model upload — drives `onProgress` 0→100 over a simulated duration and
+ * resolves with the issued model id. Rejects with an `AbortError` if `signal` fires.
+ *
+ * Accepts the full bundle (entry + referenced files) and the relative paths a real
+ * backend needs to reconstruct it; a single `.glb` is just a one-element list.
+ */
+export const uploadModel = async (
+    entryPath: string,
+    files: UploadModelFile[],
+    options: UploadModelOptions = {}
+): Promise<UploadModelResult> => {
+    const { onProgress, signal } = options;
+
+    // Shape the multipart payload a real API would receive (the mock doesn't send it).
+    const formData = new FormData();
+    formData.set('entryPath', entryPath);
+    files.forEach(({ path, file }) => {
+        formData.append('files', file, path);
+    });
+    const totalSize = files.reduce((sum, { file }) => {
+        return sum + file.size;
+    }, 0);
+
+    const ticks = Math.ceil(MOCK_UPLOAD_DURATION_MS / MOCK_UPLOAD_TICK_MS);
+
+    for (let tick = 1; tick <= ticks; tick++) {
+        if (signal?.aborted) {
+            throw new DOMException('Upload aborted', 'AbortError');
+        }
+        await sleep(MOCK_UPLOAD_TICK_MS);
+        onProgress?.(Math.round((tick / ticks) * 100));
+    }
+
+    return { id: `model-${crypto.randomUUID()}-${totalSize}` };
+};
+
+/** Mock model delete. */
+export const deleteModel = async (_id: string): Promise<void> => {
+    await sleep(MOCK_DELAY_MS);
+};
+
+/** Mock thumbnail upload for an already-created model. */
+export const uploadModelThumbnail = async ({ id: _id, blob: _blob }: UploadModelThumbnailVariables): Promise<void> => {
+    await sleep(MOCK_DELAY_MS);
 };

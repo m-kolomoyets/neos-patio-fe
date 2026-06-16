@@ -15,6 +15,7 @@ import { useSidebarResize } from './hooks/useSidebarResize';
 import { ResizeHandle } from './components/ResizeHandle';
 import { CatalogPanel } from '../CatalogPanel';
 import { ScenePanel } from '../ScenePanel';
+import { UploadModelFlow } from '../UploadModelFlow';
 import s from './styles.module.css';
 
 type SidebarTab = 'scene' | 'assets';
@@ -61,6 +62,10 @@ export const Sidebar: React.FC = () => {
                     size="sm"
                 />
                 <CatalogPanel />
+                <Separator orientation="horizontal" />
+                <footer className={s.footer}>
+                    <UploadModelFlow />
+                </footer>
             </Activity>
             <Activity mode={tab === 'scene' ? 'visible' : 'hidden'}>
                 <ScenePanel />

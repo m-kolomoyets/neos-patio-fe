@@ -4,3 +4,32 @@ export type Model3D = {
     gltfUrl: string;
     previewUrl: string;
 };
+
+export type UploadModelOptions = {
+    /** Called with the upload completion percentage (0–100). */
+    onProgress?: (_percent: number) => void;
+    /** Aborts the in-flight upload when triggered. */
+    signal?: AbortSignal;
+};
+
+/** A bundle file paired with its path relative to the bundle root. */
+export type UploadModelFile = {
+    path: string;
+    file: File;
+};
+
+export type UploadModelVariables = UploadModelOptions & {
+    /** Path of the glTF document the backend should treat as the scene entry. */
+    entryPath: string;
+    /** The referenced files to upload; a single `.glb` is a one-element list. */
+    files: UploadModelFile[];
+};
+
+export type UploadModelResult = {
+    id: string;
+};
+
+export type UploadModelThumbnailVariables = {
+    id: string;
+    blob: Blob;
+};

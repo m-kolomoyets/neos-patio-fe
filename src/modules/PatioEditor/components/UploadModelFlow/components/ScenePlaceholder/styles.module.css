@@ -1,0 +1,26 @@
+.placeholder {
+    /* Transparent: sits inside an already-styled scene box (shared dotted surface
+       while uploading, plain otherwise) and only contributes the centered icon. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    animation: scene-fade 200ms ease-out;
+}
+
+.icon {
+    width: 7.375rem;
+    height: 7.375rem;
+    color: rgb(255 255 255 / 0.6);
+}
+
+@keyframes scene-fade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

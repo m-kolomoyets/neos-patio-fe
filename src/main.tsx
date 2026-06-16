@@ -7,6 +7,7 @@ import { WagmiProvider } from 'wagmi';
 import { queryClient } from '@/lib/@queryClient';
 import { envSchema } from '@/lib/schemas';
 import { checkEnv } from '@/lib/utils/checkEnv';
+import { Toaster } from '@/components/ui/Toast';
 import { wagmiConfig } from './lib/wagmi';
 import { ErrorFallback } from './modules/ErrorFallback';
 import { routeTree } from './routeTree.gen';
@@ -44,6 +45,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
             <QueryClientProvider client={queryClient}>
                 <RainbowKitProvider theme={darkTheme()}>
                     <RouterProvider router={router} />
+                    <Toaster />
                 </RainbowKitProvider>
             </QueryClientProvider>
         </WagmiProvider>

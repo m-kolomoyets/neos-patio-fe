@@ -12,6 +12,7 @@
     color: var(--color-base-white);
     font-weight: 500;
     border: none;
+    isolation: isolate;
     border-radius: var(--radius-full);
     text-decoration: none;
     transition:

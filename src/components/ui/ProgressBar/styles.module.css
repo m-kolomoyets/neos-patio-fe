@@ -1,0 +1,21 @@
+.root {
+    --progress-bar-height: 4px;
+
+    width: 100%;
+}
+
+.track {
+    position: relative;
+    width: 100%;
+    height: var(--progress-bar-height);
+    overflow: hidden;
+    border-radius: var(--radius-full);
+    background: var(--surface-thin);
+}
+
+.indicator {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--color-base-white);
+    transition: width 0.2s ease-in-out;
+}

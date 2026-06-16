@@ -1,0 +1,38 @@
+.panel {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: var(--gap-12);
+    animation: panel-slide 240ms ease-out;
+}
+
+.name {
+    color: var(--color-base-white);
+    margin-bottom: var(--gap-2);
+    font-weight: 600;
+}
+
+.size {
+    color: hsl(var(--color-hsl-white) / 0.6);
+    margin-bottom: var(--gap-8);
+}
+
+.value {
+    align-self: flex-end;
+    color: rgb(255 255 255 / 0.6);
+}
+
+@keyframes panel-slide {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
