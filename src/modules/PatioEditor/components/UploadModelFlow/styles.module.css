@@ -32,6 +32,10 @@
     z-index: 20;
 }
 
+.cta {
+    min-width: 188px;
+}
+
 .header {
     display: flex;
     align-items: flex-start;
@@ -44,13 +48,6 @@
     font-weight: 600;
     padding-top: var(--gap-6);
     padding-inline: var(--gap-6);
-}
-
-/* Scene flexes to fill the leftover space above the fixed bottom slot within 450px. */
-.scene {
-    position: relative;
-    flex: 1;
-    min-height: 0;
 }
 
 /* Fixed slot so the progress → error / name swap never reflows the dialog height. */
@@ -81,20 +78,32 @@
 }
 
 .preview-model {
+    /* Both steps share this ratio so the morph scales uniformly (scaleX == scaleY)
+       and the 3D canvas never stretches mid-transition. Height is always derived
+       from width via aspect-ratio — never set an explicit height, or the scale
+       factors diverge and the canvas distorts. */
+    --scene-ratio: 16 / 10;
+
     position: relative;
+    flex-shrink: 0;
     overflow: hidden;
-    background: rgb(0 0 0 / 0.2);
+    aspect-ratio: var(--scene-ratio);
     transition: border-radius 0.4s ease;
 }
 
 .preview[data-step="capture"] {
-    justify-content: flex-start;
+    justify-content: stretch;
 }
 
 .preview[data-step="capture"] .preview-model {
-    flex: 1;
     width: 100%;
-    min-height: 0;
+    flex: 1;
+
+    /* Dotted surface shared across uploading → preview; the box persists and morphs. */
+    background-color: hsl(0deg 0% 31% / 0.5);
+    background-image: radial-gradient(hsl(var(--color-hsl-white) / 0.08) 1px, transparent 1px);
+    background-position: center;
+    background-size: 16px 16px;
 
     /* Top corners follow the popup radius; bottom meets the separator flush. */
     border-radius: var(--radius-4xl) var(--radius-4xl) 0 0;
@@ -102,16 +111,23 @@
 
 .preview[data-step="naming"] {
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: var(--gap-8);
 }
 
 .preview[data-step="naming"] .preview-model {
-    flex-shrink: 0;
-    width: 170px;
-    height: 226px;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    aspect-ratio: auto;
     background: none;
     border-radius: var(--radius-2xl);
+
+    /* Fade all four canvas edges to transparent on the naming step. */
+    mask-image:
+        linear-gradient(to right, transparent, black 12%, black 88%, transparent),
+        linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+    mask-composite: intersect;
 }
 
 .thumbnail {
@@ -162,7 +178,7 @@
 
 .next.next {
     flex-shrink: 0;
-    align-self: center;
+    align-self: flex-end;
 }
 
 .preview-form {

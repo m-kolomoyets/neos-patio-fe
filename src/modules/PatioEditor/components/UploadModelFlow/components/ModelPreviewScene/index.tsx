@@ -1,11 +1,11 @@
-import type { AnimationClip, Object3D } from 'three';
+import type { AnimationClip, Object3D, PerspectiveCamera } from 'three';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import PauseIcon from '@/icons/pause-square_24.svg?react';
 import PlayIcon from '@/icons/play_24.svg?react';
-import { OrbitControls, Stage, useAnimations } from '@react-three/drei';
+import { Center, OrbitControls, useAnimations } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { LoopOnce } from 'three';
+import { Box3, LoopOnce, Vector3 } from 'three';
 import { Button } from '@/components/ui/Button';
 import { toast } from '@/components/ui/Toast';
 import { captureCanvasThumbnail } from '../../utils/captureCanvasThumbnail';
@@ -19,6 +19,10 @@ type ModelPreviewSceneProps = {
     gltf: GLTF;
     /** Hands the capture handler to the parent so an external control can snapshot the canvas. */
     onRegisterCapture?: (_capture: () => void) => void;
+    /** Show the in-scene play/pause overlay. Hidden on the naming step. @default true */
+    showControls?: boolean;
+    /** Allow orbit/zoom interaction. Disabled on the naming step. @default true */
+    interactive?: boolean;
 };
 
 type CaptureBridgeProps = {
@@ -60,6 +64,42 @@ const CaptureBridge: React.FC<CaptureBridgeProps> = ({ register, onReady }) => {
             onReady();
         }
     });
+
+    return null;
+};
+
+type FitCameraProps = {
+    /** The (already centered) model to frame. Only its size is used. */
+    object: Object3D;
+};
+
+/**
+ * One-shot camera fit. Runs in a layout effect — before the first rendered frame —
+ * so the model appears correctly framed with no settle/animation glitch, and the
+ * auto-captured thumbnail (taken a couple frames later) reflects the final framing.
+ * The model is centered at the origin by `<Center>`, so the camera only needs to be
+ * pushed back along Z; OrbitControls' default target (0,0,0) then matches.
+ */
+const FitCamera: React.FC<FitCameraProps> = ({ object }) => {
+    const camera = useThree((state) => {
+        return state.camera as PerspectiveCamera;
+    });
+
+    useLayoutEffect(() => {
+        const size = new Box3().setFromObject(object).getSize(new Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z) || 1;
+        const fov = (camera.fov * Math.PI) / 180;
+        // Distance that frames the largest dimension, with margin to spare.
+        const distance = (maxDim / 2 / Math.tan(fov / 2)) * 1.6;
+
+        /* eslint-disable react-hooks/immutability -- three.js camera is mutated imperatively */
+        camera.position.set(0, 0, distance);
+        camera.near = Math.max(distance / 100, 0.01);
+        camera.far = distance * 100;
+        camera.lookAt(0, 0, 0);
+        camera.updateProjectionMatrix();
+        /* eslint-enable react-hooks/immutability */
+    }, [object, camera]);
 
     return null;
 };
@@ -129,15 +169,22 @@ const ModelAnimator: React.FC<ModelAnimatorProps> = ({ clips, root, playing, onF
 };
 
 /**
- * Standalone R3F preview of the uploaded model. Auto-frames and lights the model
- * locally (drei `<Stage>`, no remote HDR `<Environment>`) and lets the user rotate
- * and zoom with OrbitControls. `preserveDrawingBuffer` keeps the framebuffer
- * readable so the canvas can be snapshotted for the thumbnail.
+ * Standalone R3F preview of the uploaded model. Centers the model and frames it
+ * once on mount via a layout-effect camera fit ({@link FitCamera}) — no resize
+ * observe, so user zoom/orbit persists across the morph and into the naming step.
+ * Lit locally; rotate/zoom with OrbitControls. `preserveDrawingBuffer` keeps the
+ * framebuffer readable so the canvas can be snapshotted for the thumbnail at the
+ * current zoom.
  *
  * This Canvas is entirely separate from the Cesium-backed MapCanvas — only mounted
  * while the upload flow is in its `preview` state.
  */
-export const ModelPreviewScene: React.FC<ModelPreviewSceneProps> = ({ gltf, onRegisterCapture }) => {
+export const ModelPreviewScene: React.FC<ModelPreviewSceneProps> = ({
+    gltf,
+    onRegisterCapture,
+    showControls = true,
+    interactive = true,
+}) => {
     const { captureThumbnail } = useUploadModel();
     const getCanvasRef = useRef<(() => HTMLCanvasElement) | null>(null);
     const autoCapturedRef = useRef(false);
@@ -177,15 +224,18 @@ export const ModelPreviewScene: React.FC<ModelPreviewSceneProps> = ({ gltf, onRe
     }, [onRegisterCapture, captureThumbnailFromCanvas]);
 
     return (
-        <div className={s.wrap}>
+        <div className={s.wrap} data-interactive={interactive}>
             <Canvas className={s.canvas} gl={{ preserveDrawingBuffer: true }} camera={{ position: [0, 0, 5], fov: 45 }}>
                 <ambientLight intensity={0.8} />
                 <directionalLight position={[5, 10, 7]} intensity={1.5} />
                 <directionalLight position={[-5, 5, -7]} intensity={0.6} />
                 <Suspense fallback={null}>
-                    <Stage environment={null} adjustCamera shadows="contact" intensity={1}>
+                    {/* Center at origin + one-shot camera fit (layout effect, pre-first-frame).
+                        No resize observe, so user zoom/orbit persists across the morph. */}
+                    <Center>
                         <primitive object={gltf.scene} />
-                    </Stage>
+                    </Center>
+                    <FitCamera object={gltf.scene} />
                 </Suspense>
                 {hasAnimations && (
                     <ModelAnimator
@@ -197,10 +247,10 @@ export const ModelPreviewScene: React.FC<ModelPreviewSceneProps> = ({ gltf, onRe
                         }}
                     />
                 )}
-                <OrbitControls makeDefault enablePan={false} />
+                <OrbitControls makeDefault enablePan={false} enabled={interactive} />
                 <CaptureBridge register={register} onReady={handleReady} />
             </Canvas>
-            {hasAnimations && (
+            {hasAnimations && showControls && (
                 <Button
                     className={s.play}
                     type="button"

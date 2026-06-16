@@ -30,6 +30,15 @@ const VIEW_MOTION = {
 // Spring driving the shared model box morph (full scene ⇄ small thumbnail).
 const MODEL_LAYOUT_TRANSITION = { type: 'spring' as const, bounce: 0, duration: 0.5 };
 
+// Crossfade for the bottom chrome that swaps under the shared scene box
+// (uploading panel ↔ capture bar ↔ naming form).
+const BOTTOM_MOTION = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.25 },
+};
+
 type PreviewStep = 'capture' | 'naming';
 
 export const UploadModelFlow: React.FC = () => {
@@ -125,12 +134,14 @@ export const UploadModelFlow: React.FC = () => {
                                     />
                                 </motion.div>
                             )}
-                            {state.status === 'preview' && (
-                                <motion.div key="preview" className={s.view} {...VIEW_MOTION}>
+                            {(state.status === 'uploading' ||
+                                state.status === 'error' ||
+                                state.status === 'preview') && (
+                                <motion.div key="stage" className={s.view} {...VIEW_MOTION}>
                                     <Dialog.Title className="sr-only" render={<span />}>
                                         Upload Assets
                                     </Dialog.Title>
-                                    {previewStep === 'naming' && (
+                                    {state.status === 'preview' && previewStep === 'naming' && (
                                         <Button
                                             className={s.back}
                                             variant="surface"
@@ -145,105 +156,114 @@ export const UploadModelFlow: React.FC = () => {
                                             <span className="sr-only">Back</span>
                                         </Button>
                                     )}
-                                    {/* Capture ⇄ naming: only the model box morphs (shared layout) between
-                                        the full live scene and the centered thumbnail; the surrounding
-                                        chrome (capture bar ↔ naming form) hard-swaps around it. */}
-                                    <div className={s.preview} data-step={previewStep}>
+                                    {/* Shared top scene box: persists across uploading → preview (its dotted
+                                        surface morphs in place) and across capture ⇄ naming. The same live
+                                        3D canvas stays mounted through both preview steps so it scales with
+                                        the box morph instead of swapping to a static image. */}
+                                    <div
+                                        className={s.preview}
+                                        data-step={state.status === 'preview' ? previewStep : 'capture'}
+                                    >
                                         <motion.div
                                             layout
                                             className={s['preview-model']}
                                             transition={MODEL_LAYOUT_TRANSITION}
                                         >
-                                            {previewStep === 'capture' && (
+                                            {state.status === 'preview' && (
                                                 <ModelPreviewScene
                                                     gltf={state.gltf}
+                                                    showControls={previewStep === 'capture'}
+                                                    interactive={previewStep === 'capture'}
                                                     onRegisterCapture={(capture) => {
                                                         captureRef.current = capture;
                                                     }}
                                                 />
                                             )}
-                                            {previewStep === 'naming' && state.thumbnailUrl && (
-                                                <img
-                                                    className={s.thumbnail}
-                                                    src={state.thumbnailUrl}
-                                                    alt={state.name || 'Model thumbnail'}
-                                                />
+                                            {(state.status === 'uploading' || state.status === 'error') && (
+                                                <ScenePlaceholder />
                                             )}
-                                            {previewStep === 'naming' && !state.thumbnailUrl && <ScenePlaceholder />}
                                         </motion.div>
-                                        {previewStep === 'capture' && (
-                                            <div className={s['capture-controls']}>
-                                                <div className={s.separator} />
-                                                <div className={s['capture-bar']}>
-                                                    <div className={s['capture-thumb']}>
-                                                        {state.thumbnailUrl ? (
-                                                            <img
-                                                                className={s.thumbnail}
-                                                                src={state.thumbnailUrl}
-                                                                alt={state.name || 'Model thumbnail'}
-                                                            />
-                                                        ) : null}
-                                                    </div>
-                                                    <div className={s['capture-main']}>
-                                                        <Typography
-                                                            variant="text-xs"
-                                                            className={s.caption}
-                                                            render={<ol start={1} />}
-                                                        >
-                                                            <li>Set the asset thumbnail</li>
-                                                        </Typography>
+                                        <AnimatePresence mode="popLayout" initial={false}>
+                                            {(state.status === 'uploading' || state.status === 'error') && (
+                                                // Fixed slot whose panels swap (CSS) as uploading → error.
+                                                <motion.div key="bottom" className={s.bottom} {...BOTTOM_MOTION}>
+                                                    {state.status === 'uploading' && (
+                                                        <UploadingPanel
+                                                            fileName={state.file.name.split('.').slice(0, -1).join('.')}
+                                                            progress={state.progress}
+                                                            fileSize={state.file.size}
+                                                        />
+                                                    )}
+                                                    {state.status === 'error' && (
+                                                        <ErrorPanel error={state.error} onRetry={retry} />
+                                                    )}
+                                                </motion.div>
+                                            )}
+                                            {state.status === 'preview' && previewStep === 'capture' && (
+                                                <motion.div
+                                                    key="capture"
+                                                    className={s['capture-controls']}
+                                                    {...BOTTOM_MOTION}
+                                                >
+                                                    <div className={s.separator} />
+                                                    <div className={s['capture-bar']}>
+                                                        <div className={s['capture-thumb']}>
+                                                            {state.thumbnailUrl ? (
+                                                                <img
+                                                                    className={s.thumbnail}
+                                                                    src={state.thumbnailUrl}
+                                                                    alt={state.name || 'Model thumbnail'}
+                                                                />
+                                                            ) : null}
+                                                        </div>
+                                                        <div className={s['capture-main']}>
+                                                            <Typography
+                                                                variant="text-xs"
+                                                                className={s.caption}
+                                                                render={<ol start={1} />}
+                                                            >
+                                                                <li>1. Set the asset thumbnail</li>
+                                                            </Typography>
+                                                            <Button
+                                                                className={s.cta}
+                                                                type="button"
+                                                                variant="brand"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    captureRef.current?.();
+                                                                }}
+                                                            >
+                                                                <PhotoCameraIcon />
+                                                                Capture Thumbnail
+                                                            </Button>
+                                                        </div>
                                                         <Button
+                                                            className={s.next}
                                                             type="button"
-                                                            variant="brand"
+                                                            variant="surface"
                                                             size="sm"
+                                                            isIcon
+                                                            title="Next"
                                                             onClick={() => {
-                                                                captureRef.current?.();
+                                                                setPreviewStep('naming');
                                                             }}
                                                         >
-                                                            <PhotoCameraIcon />
-                                                            Capture Thumbnail
+                                                            <ArrowRightIcon />
+                                                            <span className="sr-only">Next</span>
                                                         </Button>
                                                     </div>
-                                                    <Button
-                                                        className={s.next}
-                                                        type="button"
-                                                        variant="surface"
-                                                        size="sm"
-                                                        isIcon
-                                                        title="Next"
-                                                        onClick={() => {
-                                                            setPreviewStep('naming');
-                                                        }}
-                                                    >
-                                                        <ArrowRightIcon />
-                                                        <span className="sr-only">Next</span>
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        )}
-                                        {previewStep === 'naming' && (
-                                            <div className={s['preview-form']}>
-                                                <NamingStep name={state.name} onChangeName={setName} onSave={save} />
-                                            </div>
-                                        )}
-                                    </div>
-                                </motion.div>
-                            )}
-                            {(state.status === 'uploading' || state.status === 'error') && (
-                                <motion.div key="stage" className={s.view} {...VIEW_MOTION}>
-                                    <Dialog.Title className="sr-only" render={<span />}>
-                                        Upload Assets
-                                    </Dialog.Title>
-                                    {/* Scene box: placeholder while in flight / failed. */}
-                                    <div className={s.scene}>
-                                        <ScenePlaceholder />
-                                    </div>
-                                    {/* Fixed slot whose panels slide-swap (CSS) as uploading → error. */}
-                                    <div className={s.bottom}>
-                                        {state.status === 'uploading' && (
-                                            <UploadingPanel fileName={state.file.name} progress={state.progress} />
-                                        )}
-                                        {state.status === 'error' && <ErrorPanel error={state.error} onRetry={retry} />}
+                                                </motion.div>
+                                            )}
+                                            {state.status === 'preview' && previewStep === 'naming' && (
+                                                <motion.div key="form" className={s['preview-form']} {...BOTTOM_MOTION}>
+                                                    <NamingStep
+                                                        name={state.name}
+                                                        onChangeName={setName}
+                                                        onSave={save}
+                                                    />
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 </motion.div>
                             )}

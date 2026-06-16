@@ -16,7 +16,7 @@ export const NamingStep: React.FC<NamingStepProps> = ({ name, onChangeName, onSa
         >
             <div className={s.field}>
                 <Typography variant="text-xs" className={s.caption} render={<ol start={2} />}>
-                    <li>Check the asset name</li>
+                    <li>2. Check the asset name</li>
                 </Typography>
                 <Input
                     className={s.input}
@@ -29,7 +29,7 @@ export const NamingStep: React.FC<NamingStepProps> = ({ name, onChangeName, onSa
                     }}
                 />
             </div>
-            <Button type="submit" variant="brand" size="md" disabled={!name.trim()}>
+            <Button className={s.cta} type="submit" variant="brand" size="md" disabled={!name.trim()}>
                 Save Asset
             </Button>
         </form>

@@ -11,6 +11,7 @@ import {
 } from '@/services/models/queries';
 import { modelsKeys } from '@/services/models/queryKeys';
 import { toast } from '@/components/ui/Toast';
+import { UPLOAD_FLOW_DEBUG } from '../constants';
 import { getDefaultModelName } from '../components/UploadModelFlow/utils/getDefaultModelName';
 
 const PARSE_ERROR_MESSAGE = 'Could not read that model. Try a different .glb / .gltf file.';
@@ -238,6 +239,11 @@ export const UploadModelProvider: React.FC<{ children: React.ReactNode }> = ({ c
                 revokeObjectUrl();
                 dispatch({ type: 'uploadFailed', error: UPLOAD_ERROR_MESSAGE });
                 toast.error(UPLOAD_ERROR_MESSAGE);
+                return;
+            }
+
+            // Debug: freeze on the uploading step instead of advancing to preview.
+            if (UPLOAD_FLOW_DEBUG.stopAtUploading) {
                 return;
             }
 
