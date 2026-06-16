@@ -8,6 +8,47 @@
     display: block;
 }
 
+.popup.confirm {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 320px;
+    padding: var(--gap-8);
+}
+
+.popup.confirm :is(.title, .description) {
+    padding: 0;
+    margin: 0;
+    text-align: center;
+}
+
+.popup.confirm :is(.title, .icon) {
+    margin-bottom: var(--gap-2);
+}
+
+.popup.confirm .icon {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.popup.confirm .description {
+    margin-bottom: var(--gap-6);
+}
+
+.popup.confirm .footer {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-4);
+}
+
+.popup.confirm .footer .cta {
+    flex: 1;
+    min-width: revert;
+}
+
 /* Static-height window the views slide through; height never animates (by design). */
 .viewport {
     position: relative;

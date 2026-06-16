@@ -10,9 +10,9 @@
 }
 
 .icon {
-    width: 100px;
-    height: 100px;
-    color: rgb(255 255 255 / 0.4);
+    width: 7.375rem;
+    height: 7.375rem;
+    color: rgb(255 255 255 / 0.6);
 }
 
 @keyframes scene-fade {

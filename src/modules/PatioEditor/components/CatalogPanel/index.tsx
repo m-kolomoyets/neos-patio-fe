@@ -1,4 +1,5 @@
 import ChevronRightIcon from '@/icons/chevrone-right_24.svg?react';
+import Cube24Icon from '@/icons/cube_24.svg?react';
 import { Cartesian2 } from 'cesium';
 import clsx from 'clsx';
 import { useModelsQuery } from '@/services/models/queries';
@@ -24,31 +25,38 @@ export const CatalogPanel: React.FC = () => {
     return (
         <aside className={s.panel}>
             {isLoading ? <p className={s.status}>Loading models…</p> : null}
-            {pending ? (
-                <ul className={s.list}>
-                    <li className={s.pending}>
-                        {pending.status === 'preview' && pending.thumbnailUrl ? (
-                            <img src={pending.thumbnailUrl} alt="" className={s.thumb} />
-                        ) : (
-                            <span className={s.thumb} aria-hidden />
-                        )}
-                        <span className={s['label-wrap']}>
-                            <Typography className={clsx(s.label, 'truncate')} variant="text-xs" render={<span />}>
-                                {pending.file.name}
-                            </Typography>
-                        </span>
-                        {pending.status === 'uploading' ? (
-                            <ProgressBar
-                                className={s['pending-progress']}
-                                value={pending.progress}
-                                aria-label="Upload progress"
-                            />
-                        ) : null}
-                    </li>
-                </ul>
-            ) : null}
+
             {data ? (
                 <ul className={s.list}>
+                    {pending ? (
+                        <li>
+                            <div className={clsx(s.item, s.pending)}>
+                                <span className={s['thumb-wrap']}>
+                                    {pending.status === 'preview' && pending.thumbnailUrl ? (
+                                        <img src={pending.thumbnailUrl} alt="" className={s.thumb} />
+                                    ) : (
+                                        <Cube24Icon className={s['thumb-placeholder']} aria-hidden />
+                                    )}
+                                </span>
+                                {/* <span className={s['label-wrap']}>
+                                    <Typography
+                                        className={clsx(s.label, 'truncate')}
+                                        variant="text-xs"
+                                        render={<span />}
+                                    >
+                                        {pending.file.name}
+                                    </Typography>
+                                </span> */}
+                                {pending.status === 'uploading' ? (
+                                    <ProgressBar
+                                        className={s['pending-progress']}
+                                        value={pending.progress}
+                                        aria-label="Upload progress"
+                                    />
+                                ) : null}
+                            </div>
+                        </li>
+                    ) : null}
                     {data.map((model) => {
                         return (
                             <li key={model.id}>
@@ -75,7 +83,9 @@ export const CatalogPanel: React.FC = () => {
                                         });
                                     }}
                                 >
-                                    <img src={model.previewUrl} alt="" className={s.thumb} loading="lazy" />
+                                    <span className={s['thumb-wrap']}>
+                                        <img src={model.previewUrl} alt="" className={s.thumb} loading="lazy" />
+                                    </span>
                                     <span className={s['label-wrap']}>
                                         <Typography
                                             className={clsx(s.label, 'truncate')}

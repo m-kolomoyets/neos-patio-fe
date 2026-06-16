@@ -28,8 +28,8 @@ const Backdrop: React.FC<AlertDialogBackdropProps> = ({ className, ...rest }) =>
     return <BaseAlertDialog.Backdrop className={clsx(s.backdrop, className)} {...rest} />;
 };
 
-const Popup: React.FC<AlertDialogPopupProps> = ({ className, ...rest }) => {
-    return <BaseAlertDialog.Popup className={clsx(s.popup, className)} {...rest} />;
+const Popup: React.FC<AlertDialogPopupProps> = ({ className, variant = 'default', ...rest }) => {
+    return <BaseAlertDialog.Popup className={clsx(s.popup, className)} data-alert-dialog-variant={variant} {...rest} />;
 };
 
 const Title: React.FC<AlertDialogTitleProps> = ({ className, ...rest }) => {

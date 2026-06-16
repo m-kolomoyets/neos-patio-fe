@@ -3,7 +3,9 @@ import ArrowLeftIcon from '@/icons/arrow-left_24.svg?react';
 import ArrowRightIcon from '@/icons/arrow-right_24.svg?react';
 import ImportIcon from '@/icons/import_24.svg?react';
 import PhotoCameraIcon from '@/icons/photocamera_24.svg?react';
+import TrashIcon from '@/icons/trash_24.svg?react';
 import XMarkIcon from '@/icons/x-mark_24.svg?react';
+import clsx from 'clsx';
 import { AnimatePresence, motion } from 'motion/react';
 import { AlertDialog } from '@/components/ui/AlertDialog';
 import { Button } from '@/components/ui/Button';
@@ -271,23 +273,24 @@ export const UploadModelFlow: React.FC = () => {
                     </div>
                 </Dialog.Popup>
             </Dialog.Portal>
-
             <AlertDialog.Root open={confirmOpen} onOpenChange={setConfirmOpen}>
                 <AlertDialog.Portal>
                     <AlertDialog.Backdrop />
-                    <AlertDialog.Popup>
-                        <Typography variant="display-sm" className={s.title} render={<AlertDialog.Title />}>
-                            Discard upload?
+                    <AlertDialog.Popup className={clsx(s.popup, s.confirm)} variant="surface">
+                        <TrashIcon className={s.icon} />
+                        <Typography variant="text-md" className={s.title} render={<AlertDialog.Title />}>
+                            Discard unsaved asset?
                         </Typography>
-                        <AlertDialog.Description className={s.description}>
-                            This cancels the upload and removes anything already created. This can&apos;t be undone.
-                        </AlertDialog.Description>
+                        <Typography variant="text-sm" className={s.description} render={<AlertDialog.Description />}>
+                            This asset hasn&apos;t been saved yet. If you close this window now, the uploaded file will
+                            be lost.
+                        </Typography>
                         <footer className={s.footer}>
-                            <Button variant="surface" size="md" render={<AlertDialog.Close />}>
-                                Keep editing
+                            <Button className={s.cta} variant="surface" size="md" onClick={confirmDiscard}>
+                                Discard asset
                             </Button>
-                            <Button size="md" onClick={confirmDiscard}>
-                                Discard
+                            <Button className={s.cta} size="md" render={<AlertDialog.Close />}>
+                                Keep editing
                             </Button>
                         </footer>
                     </AlertDialog.Popup>

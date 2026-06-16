@@ -29,7 +29,14 @@
         transform 200ms ease-in-out;
 }
 
-.popup::before {
+.popup[data-alert-dialog-variant="surface"] {
+    padding: 0;
+    background: none;
+    background-color: hsl(0deg 0% 46% / 0.5);
+    backdrop-filter: blur(100px);
+}
+
+.popup[data-alert-dialog-variant="default"]::before {
     content: "";
     position: absolute;
     inset: 0;
