@@ -17,8 +17,8 @@ export const useModelsQuery = () => {
 export const uploadModelMutationOptions = () => {
     return mutationOptions({
         mutationKey: [...modelsKeys.root(), 'upload'],
-        mutationFn({ file, ...options }: UploadModelVariables) {
-            return uploadModel(file, options);
+        mutationFn({ entryPath, files, ...options }: UploadModelVariables) {
+            return uploadModel(entryPath, files, options);
         },
     });
 };

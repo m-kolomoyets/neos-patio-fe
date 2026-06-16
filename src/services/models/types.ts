@@ -12,8 +12,17 @@ export type UploadModelOptions = {
     signal?: AbortSignal;
 };
 
-export type UploadModelVariables = UploadModelOptions & {
+/** A bundle file paired with its path relative to the bundle root. */
+export type UploadModelFile = {
+    path: string;
     file: File;
+};
+
+export type UploadModelVariables = UploadModelOptions & {
+    /** Path of the glTF document the backend should treat as the scene entry. */
+    entryPath: string;
+    /** The referenced files to upload; a single `.glb` is a one-element list. */
+    files: UploadModelFile[];
 };
 
 export type UploadModelResult = {

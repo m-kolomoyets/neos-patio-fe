@@ -1,3 +1,5 @@
+import type { BundleFile } from './utils/modelBundle';
+import type { SelectInput } from './utils/readDropInput';
 import { useRef, useState } from 'react';
 import ArrowLeftIcon from '@/icons/arrow-left_24.svg?react';
 import ArrowRightIcon from '@/icons/arrow-right_24.svg?react';
@@ -11,6 +13,10 @@ import { AlertDialog } from '@/components/ui/AlertDialog';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { Typography } from '@/components/ui/Typography';
+import { BUNDLE_TOO_LARGE_ERROR } from './constants';
+import { buildBundleManifest } from './utils/buildBundleManifest';
+import { extractZip, isZipFile, ZIP_TOO_LARGE } from './utils/extractZip';
+import { getBundleDefaultName, getBundleTotalSize, singleFileManifest } from './utils/modelBundle';
 import { validateModelFile } from './utils/validateModelFile';
 import { useUploadModel } from '../../context/UploadModelContext';
 import { ErrorPanel } from './components/ErrorPanel';
@@ -41,11 +47,12 @@ const BOTTOM_MOTION = {
     transition: { duration: 0.25 },
 };
 
+const ZIP_ERROR_MESSAGE = 'Could not read that .zip. Make sure it contains a .gltf bundle.';
+
 type PreviewStep = 'capture' | 'naming';
 
 export const UploadModelFlow: React.FC = () => {
-    const { state, open, selectFile, setError, clearFile, startUpload, retry, setName, save, discard } =
-        useUploadModel();
+    const { state, open, setError, startUpload, retry, setName, save, discard } = useUploadModel();
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [previewStep, setPreviewStep] = useState<PreviewStep>('capture');
     // Capture handler lifted out of the scene so the bottom-bar button can trigger a snapshot.
@@ -60,25 +67,55 @@ export const UploadModelFlow: React.FC = () => {
         setPreviewStep('capture');
     }
 
+    // Single-file pick: validate then start. The bundle is trivial (one file).
     const handleSelectFile = (next: File) => {
         const result = validateModelFile(next);
         if (!result.ok) {
             setError(result.error);
             return;
         }
-        selectFile(next);
-        startUpload();
+        startUpload(singleFileManifest(next));
     };
 
-    const selectingFile = state.status === 'selecting' ? state.file : null;
+    // Build + validate a multi-file bundle before the upload starts, so any structural
+    // error lands on the error screen ahead of the progress bar.
+    const startBundleUpload = async (files: BundleFile[]) => {
+        const result = await buildBundleManifest(files);
+        if (!result.ok) {
+            setError(result.error);
+            return;
+        }
+        startUpload(result.manifest);
+    };
 
-    // Dirty once a file is picked or anything is in flight; a pristine picker — or an
-    // error screen with no retryable file (validation/parse failure) — closes freely.
+    // A picked/dropped file is a `.zip` archive, a self-contained `.glb`/`.gltf`, or
+    // (for folders) an already-walked list. Zips unzip into the same bundle pipeline.
+    const handleSelect = async (input: SelectInput) => {
+        if (input.kind === 'bundle') {
+            startBundleUpload(input.files);
+            return;
+        }
+        if (isZipFile(input.file)) {
+            try {
+                startBundleUpload(await extractZip(input.file));
+            } catch (error) {
+                setError(
+                    error instanceof Error && error.message === ZIP_TOO_LARGE
+                        ? BUNDLE_TOO_LARGE_ERROR
+                        : ZIP_ERROR_MESSAGE
+                );
+            }
+            return;
+        }
+        handleSelectFile(input.file);
+    };
+
+    // Dirty once anything is in flight; a pristine picker — or an error screen with no
+    // retryable bundle (validation/parse failure) — closes freely.
     const isDirty =
         state.status === 'uploading' ||
         state.status === 'preview' ||
-        (state.status === 'error' && state.file !== null) ||
-        (state.status === 'selecting' && state.file !== null);
+        (state.status === 'error' && state.manifest !== null);
 
     const confirmDiscard = () => {
         setConfirmOpen(false);
@@ -128,11 +165,7 @@ export const UploadModelFlow: React.FC = () => {
                                     <Dialog.Title className={s.title} render={<Typography variant="text-lg" />}>
                                         Upload Assets
                                     </Dialog.Title>
-                                    <SelectStep
-                                        file={selectingFile}
-                                        onSelectFile={handleSelectFile}
-                                        onClear={clearFile}
-                                    />
+                                    <SelectStep onSelect={handleSelect} onError={setError} />
                                 </motion.div>
                             )}
                             {(state.status === 'uploading' ||
@@ -192,9 +225,9 @@ export const UploadModelFlow: React.FC = () => {
                                                 <motion.div key="bottom" className={s.bottom} {...BOTTOM_MOTION}>
                                                     {state.status === 'uploading' && (
                                                         <UploadingPanel
-                                                            fileName={state.file.name.split('.').slice(0, -1).join('.')}
+                                                            fileName={getBundleDefaultName(state.bundle)}
                                                             progress={state.progress}
-                                                            fileSize={state.file.size}
+                                                            fileSize={getBundleTotalSize(state.bundle)}
                                                         />
                                                     )}
                                                     {state.status === 'error' && (

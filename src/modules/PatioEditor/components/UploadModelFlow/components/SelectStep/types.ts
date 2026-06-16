@@ -1,8 +1,8 @@
+import type { SelectInput } from '../../utils/readDropInput';
+
 export type SelectStepProps = {
-    /** Currently accepted file, if any. */
-    file: File | null;
-    /** Called with the first chosen file (from browse or drop) for validation upstream. */
-    onSelectFile: (_file: File) => void;
-    /** Clears the current selection. */
-    onClear: () => void;
+    /** A picked file or a walked folder bundle, for validation/processing upstream. */
+    onSelect: (_input: SelectInput) => void;
+    /** A drop that couldn't be read (multiple items, empty folder, …). */
+    onError: (_message: string) => void;
 };

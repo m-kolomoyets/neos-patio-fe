@@ -1,4 +1,10 @@
-import type { Model3D, UploadModelOptions, UploadModelResult, UploadModelThumbnailVariables } from './types';
+import type {
+    Model3D,
+    UploadModelFile,
+    UploadModelOptions,
+    UploadModelResult,
+    UploadModelThumbnailVariables,
+} from './types';
 import { sleep } from '@/lib/utils/sleep';
 
 const MOCK_DELAY_MS = 200;
@@ -24,9 +30,27 @@ export const listModels = async (): Promise<Model3D[]> => {
 /**
  * Mock model upload — drives `onProgress` 0→100 over a simulated duration and
  * resolves with the issued model id. Rejects with an `AbortError` if `signal` fires.
+ *
+ * Accepts the full bundle (entry + referenced files) and the relative paths a real
+ * backend needs to reconstruct it; a single `.glb` is just a one-element list.
  */
-export const uploadModel = async (file: File, options: UploadModelOptions = {}): Promise<UploadModelResult> => {
+export const uploadModel = async (
+    entryPath: string,
+    files: UploadModelFile[],
+    options: UploadModelOptions = {}
+): Promise<UploadModelResult> => {
     const { onProgress, signal } = options;
+
+    // Shape the multipart payload a real API would receive (the mock doesn't send it).
+    const formData = new FormData();
+    formData.set('entryPath', entryPath);
+    files.forEach(({ path, file }) => {
+        formData.append('files', file, path);
+    });
+    const totalSize = files.reduce((sum, { file }) => {
+        return sum + file.size;
+    }, 0);
+
     const ticks = Math.ceil(MOCK_UPLOAD_DURATION_MS / MOCK_UPLOAD_TICK_MS);
 
     for (let tick = 1; tick <= ticks; tick++) {
@@ -37,7 +61,7 @@ export const uploadModel = async (file: File, options: UploadModelOptions = {}):
         onProgress?.(Math.round((tick / ticks) * 100));
     }
 
-    return { id: `model-${crypto.randomUUID()}-${file.size}` };
+    return { id: `model-${crypto.randomUUID()}-${totalSize}` };
 };
 
 /** Mock model delete. */

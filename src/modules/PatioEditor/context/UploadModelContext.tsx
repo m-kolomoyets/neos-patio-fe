@@ -1,7 +1,7 @@
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { Model3D } from '@/services/models/types';
+import type { BundleManifest, ModelBundle } from '../components/UploadModelFlow/utils/modelBundle';
 import { createContext, useCallback, useReducer, useRef } from 'react';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { queryClient } from '@/lib/@queryClient';
 import { useSafeContext } from '@/hooks/useSafeContext';
 import {
@@ -12,7 +12,12 @@ import {
 import { modelsKeys } from '@/services/models/queryKeys';
 import { toast } from '@/components/ui/Toast';
 import { UPLOAD_FLOW_DEBUG } from '../constants';
-import { getDefaultModelName } from '../components/UploadModelFlow/utils/getDefaultModelName';
+import { createBundleLoader } from '../components/UploadModelFlow/utils/createBundleLoader';
+import {
+    getBundleDefaultName,
+    getBundleEntryUrl,
+    materializeBundle,
+} from '../components/UploadModelFlow/utils/modelBundle';
 
 const PARSE_ERROR_MESSAGE = 'Could not read that model. Try a different .glb / .gltf file.';
 const UPLOAD_ERROR_MESSAGE = 'Upload failed. Please try again.';
@@ -22,24 +27,26 @@ const DELETE_ERROR_MESSAGE = 'Could not delete the uploaded model.';
 /**
  * Single active upload, modelled as a discriminated union:
  * - `idle` — dialog closed, nothing in flight.
- * - `selecting` — picker open; `file` tracks the current selection.
+ * - `selecting` — picker open; the bundle is gathered + validated here, before upload.
  * - `uploading` — both tracks (local parse ∥ mock API) running; `progress` is the API track.
- * - `error` — selection/upload failed. `file` is the retryable file for an upload failure,
- *   or `null` for a picker validation / parse failure (where retry reopens the picker).
+ * - `error` — selection/upload failed. `manifest` is the retryable bundle for an upload
+ *   failure, or `null` for a validation / parse failure (where retry reopens the picker).
  * - `preview` — both tracks succeeded; parsed `gltf` + issued `modelId` ready.
+ *
+ * From `uploading` onward the selection is carried as a normalized {@link ModelBundle},
+ * so a single file and a multi-file glTF bundle flow through identically.
  */
 export type UploadModelState =
     | { status: 'idle' }
-    | { status: 'selecting'; file: File | null }
-    | { status: 'uploading'; file: File; objectUrl: string; progress: number }
-    | { status: 'error'; file: File | null; error: string }
+    | { status: 'selecting' }
+    | { status: 'uploading'; bundle: ModelBundle; progress: number }
+    | { status: 'error'; manifest: BundleManifest | null; error: string }
     | {
           status: 'preview';
-          file: File;
-          objectUrl: string;
+          bundle: ModelBundle;
           gltf: GLTF;
           modelId: string;
-          /** Editable asset name; defaulted from the filename without its extension. */
+          /** Editable asset name; defaulted from the folder/zip or filename. */
           name: string;
           /** Captured snapshot `Blob` + its derived object URL; null until the first capture. */
           thumbnailBlob: Blob | null;
@@ -48,15 +55,13 @@ export type UploadModelState =
 
 type UploadModelAction =
     | { type: 'open' }
-    | { type: 'selectFile'; file: File }
     | { type: 'setError'; error: string }
-    | { type: 'clearFile' }
-    | { type: 'uploadStarted'; objectUrl: string }
+    | { type: 'uploadStarted'; bundle: ModelBundle }
     | { type: 'progress'; progress: number }
     | { type: 'previewReady'; gltf: GLTF; modelId: string }
     | { type: 'setName'; name: string }
     | { type: 'setThumbnail'; blob: Blob; url: string }
-    | { type: 'uploadFailed'; error: string }
+    | { type: 'uploadFailed'; manifest: BundleManifest; error: string }
     | { type: 'parseFailed'; error: string }
     | { type: 'reset' };
 
@@ -64,15 +69,11 @@ type UploadModelContextValue = {
     state: UploadModelState;
     /** Open the picker (idle → selecting). */
     open: () => void;
-    /** Store a validated file in the picker. */
-    selectFile: (_file: File) => void;
-    /** Surface a picker validation failure on the error screen. */
+    /** Surface a validation / pre-processing failure on the error screen. */
     setError: (_error: string) => void;
-    /** Clear the current picker selection. */
-    clearFile: () => void;
-    /** Kick off the parallel parse + upload tracks (selecting → uploading). */
-    startUpload: () => void;
-    /** Recover from the error screen: re-upload the same file, or reopen the picker. */
+    /** Kick off the parallel parse + upload tracks for a validated bundle. */
+    startUpload: (_manifest: BundleManifest) => void;
+    /** Recover from the error screen: re-upload the same bundle, or reopen the picker. */
     retry: () => void;
     /** Store a freshly captured thumbnail; revokes the previous derived object URL. */
     captureThumbnail: (_blob: Blob) => void;
@@ -87,21 +88,14 @@ type UploadModelContextValue = {
 const reducer = (state: UploadModelState, action: UploadModelAction): UploadModelState => {
     switch (action.type) {
         case 'open':
-            return { status: 'selecting', file: null };
-        case 'selectFile':
-            return { status: 'selecting', file: action.file };
+            return { status: 'selecting' };
         case 'setError':
-            // Picker validation failed — show the error screen; retry reopens the picker.
-            return { status: 'error', file: null, error: action.error };
-        case 'clearFile':
-            return { status: 'selecting', file: null };
+            // Validation / pre-processing failed — show the error; retry reopens the picker.
+            return { status: 'error', manifest: null, error: action.error };
         case 'uploadStarted':
             // Enter the uploading track from a fresh pick (`selecting`) or a retry (`error`).
-            if (state.status === 'selecting' && state.file) {
-                return { status: 'uploading', file: state.file, objectUrl: action.objectUrl, progress: 0 };
-            }
-            if (state.status === 'error' && state.file) {
-                return { status: 'uploading', file: state.file, objectUrl: action.objectUrl, progress: 0 };
+            if (state.status === 'selecting' || state.status === 'error') {
+                return { status: 'uploading', bundle: action.bundle, progress: 0 };
             }
             return state;
         case 'progress':
@@ -115,11 +109,10 @@ const reducer = (state: UploadModelState, action: UploadModelAction): UploadMode
             }
             return {
                 status: 'preview',
-                file: state.file,
-                objectUrl: state.objectUrl,
+                bundle: state.bundle,
                 gltf: action.gltf,
                 modelId: action.modelId,
-                name: getDefaultModelName(state.file.name),
+                name: getBundleDefaultName(state.bundle),
                 thumbnailBlob: null,
                 thumbnailUrl: null,
             };
@@ -137,11 +130,12 @@ const reducer = (state: UploadModelState, action: UploadModelAction): UploadMode
             if (state.status !== 'uploading') {
                 return state;
             }
-            return { status: 'error', file: state.file, error: action.error };
+            // Retain the manifest so retry can re-materialize the bundle and re-upload.
+            return { status: 'error', manifest: action.manifest, error: action.error };
         case 'parseFailed':
             // Bad model content — surface the error screen; retry reopens the picker
-            // (re-uploading the same unreadable file would just fail again).
-            return { status: 'error', file: null, error: action.error };
+            // (re-uploading the same unreadable bundle would just fail again).
+            return { status: 'error', manifest: null, error: action.error };
         case 'reset':
             return { status: 'idle' };
         default:
@@ -164,14 +158,19 @@ export const UploadModelProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const deleteMutation = useDeleteModelMutation();
 
     const abortRef = useRef<AbortController | null>(null);
-    const objectUrlRef = useRef<string | null>(null);
+    // Every object URL minted for the active bundle — revoked together on teardown.
+    const bundleUrlsRef = useRef<string[]>([]);
     const thumbnailUrlRef = useRef<string | null>(null);
 
-    const revokeObjectUrl = useCallback(() => {
-        if (objectUrlRef.current) {
-            URL.revokeObjectURL(objectUrlRef.current);
-            objectUrlRef.current = null;
-        }
+    const registerBundleUrls = useCallback((bundle: ModelBundle) => {
+        bundleUrlsRef.current = [...bundleUrlsRef.current, ...bundle.blobUrls.values()];
+    }, []);
+
+    const revokeBundleUrls = useCallback(() => {
+        bundleUrlsRef.current.forEach((url) => {
+            URL.revokeObjectURL(url);
+        });
+        bundleUrlsRef.current = [];
     }, []);
 
     const revokeThumbnailUrl = useCallback(() => {
@@ -185,44 +184,45 @@ export const UploadModelProvider: React.FC<{ children: React.ReactNode }> = ({ c
         dispatch({ type: 'open' });
     }, []);
 
-    const selectFile = useCallback((file: File) => {
-        dispatch({ type: 'selectFile', file });
-    }, []);
-
     const setError = useCallback((error: string) => {
         dispatch({ type: 'setError', error });
     }, []);
 
-    const clearFile = useCallback(() => {
-        dispatch({ type: 'clearFile' });
-    }, []);
-
-    // Shared by the initial upload and retry: spins up both tracks for the given file.
+    // Shared by the initial upload and retry: materializes the validated manifest into a
+    // live bundle, then spins up both tracks (local parse ∥ mock API upload).
     const runUpload = useCallback(
-        async (file: File) => {
-            const objectUrl = URL.createObjectURL(file);
-            objectUrlRef.current = objectUrl;
+        async (manifest: BundleManifest) => {
+            const bundle = materializeBundle(manifest);
+            registerBundleUrls(bundle);
 
             const controller = new AbortController();
             abortRef.current = controller;
 
-            dispatch({ type: 'uploadStarted', objectUrl });
+            dispatch({ type: 'uploadStarted', bundle });
 
-            // Track A: parse the model locally. Track B: mock upload with progress.
-            // A failed parse aborts the upload so we don't wait on a doomed flow.
-            let parseFailed = false;
-            const parsePromise = new GLTFLoader().loadAsync(objectUrl).catch((parseError) => {
-                parseFailed = true;
-                controller.abort();
-                throw parseError;
-            });
+            // Track B starts first so the mock upload runs while the loader (and its lazy
+            // Draco decoder) initializes.
             const uploadPromise = uploadMutation.mutateAsync({
-                file,
+                entryPath: bundle.entry.path,
+                files: bundle.payloadFiles,
                 signal: controller.signal,
                 onProgress: (progress) => {
                     dispatch({ type: 'progress', progress });
                 },
             });
+
+            // Track A: parse the model locally via the bundle-aware loader. A failed parse
+            // aborts the upload so we don't wait on a doomed flow.
+            let parseFailed = false;
+            const parsePromise = createBundleLoader(bundle)
+                .then((loader) => {
+                    return loader.loadAsync(bundle.entry.path);
+                })
+                .catch((parseError) => {
+                    parseFailed = true;
+                    controller.abort();
+                    throw parseError;
+                });
 
             const [parseResult, uploadResult] = await Promise.allSettled([parsePromise, uploadPromise]);
 
@@ -232,15 +232,15 @@ export const UploadModelProvider: React.FC<{ children: React.ReactNode }> = ({ c
             }
 
             if (parseFailed) {
-                revokeObjectUrl();
+                revokeBundleUrls();
                 dispatch({ type: 'parseFailed', error: PARSE_ERROR_MESSAGE });
                 toast.error(PARSE_ERROR_MESSAGE);
                 return;
             }
 
             if (uploadResult.status === 'rejected') {
-                revokeObjectUrl();
-                dispatch({ type: 'uploadFailed', error: UPLOAD_ERROR_MESSAGE });
+                revokeBundleUrls();
+                dispatch({ type: 'uploadFailed', manifest, error: UPLOAD_ERROR_MESSAGE });
                 toast.error(UPLOAD_ERROR_MESSAGE);
                 return;
             }
@@ -253,24 +253,24 @@ export const UploadModelProvider: React.FC<{ children: React.ReactNode }> = ({ c
             const gltf = (parseResult as PromiseFulfilledResult<GLTF>).value;
             dispatch({ type: 'previewReady', gltf, modelId: uploadResult.value.id });
         },
-        [uploadMutation, revokeObjectUrl]
+        [uploadMutation, registerBundleUrls, revokeBundleUrls]
     );
 
-    const startUpload = useCallback(() => {
-        if (state.status !== 'selecting' || !state.file) {
-            return;
-        }
-        runUpload(state.file);
-    }, [state, runUpload]);
+    const startUpload = useCallback(
+        (manifest: BundleManifest) => {
+            runUpload(manifest);
+        },
+        [runUpload]
+    );
 
     const retry = useCallback(() => {
         if (state.status !== 'error') {
             return;
         }
-        // Upload failure retains its file → re-run the upload. A validation / parse
-        // failure has no usable file → drop back to the picker for a fresh pick.
-        if (state.file) {
-            runUpload(state.file);
+        // Upload failure retains its manifest → re-run the upload. A validation / parse
+        // failure has no usable manifest → drop back to the picker for a fresh pick.
+        if (state.manifest) {
+            runUpload(state.manifest);
             return;
         }
         dispatch({ type: 'open' });
@@ -301,12 +301,12 @@ export const UploadModelProvider: React.FC<{ children: React.ReactNode }> = ({ c
             return;
         }
 
-        const { modelId, objectUrl, thumbnailUrl, thumbnailBlob } = state;
+        const { modelId, bundle, thumbnailUrl, thumbnailBlob } = state;
 
         const model: Model3D = {
             id: modelId,
             name,
-            gltfUrl: objectUrl,
+            gltfUrl: getBundleEntryUrl(bundle),
             previewUrl: thumbnailUrl ?? '',
         };
         // Append client-side; the fixtures query never refetches this asset.
@@ -314,9 +314,10 @@ export const UploadModelProvider: React.FC<{ children: React.ReactNode }> = ({ c
             return [...(prev ?? []), model];
         });
 
-        // Ownership of the object URLs transfers to the saved asset — null the refs
-        // (without revoking) so teardown doesn't pull them out from under it.
-        objectUrlRef.current = null;
+        // Ownership of the bundle's object URLs transfers to the saved asset — drop the
+        // refs (without revoking) so teardown doesn't pull them out from under it. The
+        // whole bundle stays alive for the session so the catalog tile keeps rendering.
+        bundleUrlsRef.current = [];
         thumbnailUrlRef.current = null;
         abortRef.current = null;
         dispatch({ type: 'reset' });
@@ -343,19 +344,17 @@ export const UploadModelProvider: React.FC<{ children: React.ReactNode }> = ({ c
             });
         }
 
-        revokeObjectUrl();
+        revokeBundleUrls();
         revokeThumbnailUrl();
         dispatch({ type: 'reset' });
-    }, [state, deleteMutation, revokeObjectUrl, revokeThumbnailUrl]);
+    }, [state, deleteMutation, revokeBundleUrls, revokeThumbnailUrl]);
 
     return (
         <UploadModelContext
             value={{
                 state,
                 open,
-                selectFile,
                 setError,
-                clearFile,
                 startUpload,
                 retry,
                 captureThumbnail,
