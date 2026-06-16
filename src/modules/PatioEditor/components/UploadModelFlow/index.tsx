@@ -71,13 +71,13 @@ export const UploadModelFlow: React.FC = () => {
     };
 
     const selectingFile = state.status === 'selecting' ? state.file : null;
-    const selectingError = state.status === 'selecting' ? state.error : null;
 
-    // Dirty once a file is picked or anything is in flight; a pristine picker closes freely.
+    // Dirty once a file is picked or anything is in flight; a pristine picker — or an
+    // error screen with no retryable file (validation/parse failure) — closes freely.
     const isDirty =
         state.status === 'uploading' ||
-        state.status === 'error' ||
         state.status === 'preview' ||
+        (state.status === 'error' && state.file !== null) ||
         (state.status === 'selecting' && state.file !== null);
 
     const confirmDiscard = () => {
@@ -130,7 +130,6 @@ export const UploadModelFlow: React.FC = () => {
                                     </Dialog.Title>
                                     <SelectStep
                                         file={selectingFile}
-                                        error={selectingError}
                                         onSelectFile={handleSelectFile}
                                         onClear={clearFile}
                                     />
@@ -182,7 +181,9 @@ export const UploadModelFlow: React.FC = () => {
                                                 />
                                             )}
                                             {(state.status === 'uploading' || state.status === 'error') && (
-                                                <ScenePlaceholder />
+                                                <ScenePlaceholder
+                                                    variant={state.status === 'error' ? 'error' : 'loading'}
+                                                />
                                             )}
                                         </motion.div>
                                         <AnimatePresence mode="popLayout" initial={false}>

@@ -1,16 +1,13 @@
 import type { SelectStepProps } from './types';
 import { useRef, useState } from 'react';
-import AlertCircleIcon from '@/icons/alert-circle_24.svg?react';
 import CubesFloating100Icon from '@/icons/cubes-floating_100.svg?react';
-// import XMarkIcon from '@/icons/x-mark_24.svg?react';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
 import { ACCEPTED_EXTENSIONS, FILE_INPUT_ACCEPT, MAX_FILE_SIZE_MB } from '../../constants';
-// import { formatFileSize } from '../../utils/formatFileSize';
 import s from './styles.module.css';
 
-export const SelectStep: React.FC<SelectStepProps> = ({ file: _, error, onSelectFile, onClear: __ }) => {
+export const SelectStep: React.FC<SelectStepProps> = ({ file: _, onSelectFile, onClear: __ }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
 
@@ -24,7 +21,7 @@ export const SelectStep: React.FC<SelectStepProps> = ({ file: _, error, onSelect
     return (
         <div className={s.step}>
             <div
-                className={clsx(s.dropzone, isDragging && s['dropzone--dragging'], error && s['dropzone--error'])}
+                className={clsx(s.dropzone, isDragging && s['dropzone--dragging'])}
                 onDragOver={(event) => {
                     event.preventDefault();
                     setIsDragging(true);
@@ -72,14 +69,6 @@ export const SelectStep: React.FC<SelectStepProps> = ({ file: _, error, onSelect
                     Upload File
                 </Button>
             </div>
-            {error ? (
-                <div className={s.error} role="alert">
-                    <AlertCircleIcon className={s['error-icon']} />
-                    <Typography variant="text-xs" render={<span />}>
-                        {error}
-                    </Typography>
-                </div>
-            ) : null}
         </div>
     );
 };

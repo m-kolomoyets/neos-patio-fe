@@ -22,16 +22,17 @@ const DELETE_ERROR_MESSAGE = 'Could not delete the uploaded model.';
 /**
  * Single active upload, modelled as a discriminated union:
  * - `idle` — dialog closed, nothing in flight.
- * - `selecting` — picker open; `file`/`error` track the current selection.
+ * - `selecting` — picker open; `file` tracks the current selection.
  * - `uploading` — both tracks (local parse ∥ mock API) running; `progress` is the API track.
- * - `error` — upload API failed; retains `file` for retry.
+ * - `error` — selection/upload failed. `file` is the retryable file for an upload failure,
+ *   or `null` for a picker validation / parse failure (where retry reopens the picker).
  * - `preview` — both tracks succeeded; parsed `gltf` + issued `modelId` ready.
  */
 export type UploadModelState =
     | { status: 'idle' }
-    | { status: 'selecting'; file: File | null; error: string | null }
+    | { status: 'selecting'; file: File | null }
     | { status: 'uploading'; file: File; objectUrl: string; progress: number }
-    | { status: 'error'; file: File; error: string }
+    | { status: 'error'; file: File | null; error: string }
     | {
           status: 'preview';
           file: File;
@@ -65,13 +66,13 @@ type UploadModelContextValue = {
     open: () => void;
     /** Store a validated file in the picker. */
     selectFile: (_file: File) => void;
-    /** Surface an inline validation error in the picker. */
+    /** Surface a picker validation failure on the error screen. */
     setError: (_error: string) => void;
     /** Clear the current picker selection. */
     clearFile: () => void;
     /** Kick off the parallel parse + upload tracks (selecting → uploading). */
     startUpload: () => void;
-    /** Re-run the upload with the same file after a failure (error → uploading). */
+    /** Recover from the error screen: re-upload the same file, or reopen the picker. */
     retry: () => void;
     /** Store a freshly captured thumbnail; revokes the previous derived object URL. */
     captureThumbnail: (_blob: Blob) => void;
@@ -86,19 +87,20 @@ type UploadModelContextValue = {
 const reducer = (state: UploadModelState, action: UploadModelAction): UploadModelState => {
     switch (action.type) {
         case 'open':
-            return { status: 'selecting', file: null, error: null };
+            return { status: 'selecting', file: null };
         case 'selectFile':
-            return { status: 'selecting', file: action.file, error: null };
+            return { status: 'selecting', file: action.file };
         case 'setError':
-            return { status: 'selecting', file: null, error: action.error };
+            // Picker validation failed — show the error screen; retry reopens the picker.
+            return { status: 'error', file: null, error: action.error };
         case 'clearFile':
-            return { status: 'selecting', file: null, error: null };
+            return { status: 'selecting', file: null };
         case 'uploadStarted':
             // Enter the uploading track from a fresh pick (`selecting`) or a retry (`error`).
             if (state.status === 'selecting' && state.file) {
                 return { status: 'uploading', file: state.file, objectUrl: action.objectUrl, progress: 0 };
             }
-            if (state.status === 'error') {
+            if (state.status === 'error' && state.file) {
                 return { status: 'uploading', file: state.file, objectUrl: action.objectUrl, progress: 0 };
             }
             return state;
@@ -137,8 +139,9 @@ const reducer = (state: UploadModelState, action: UploadModelAction): UploadMode
             }
             return { status: 'error', file: state.file, error: action.error };
         case 'parseFailed':
-            // Send the user back to the picker so they can choose a different file.
-            return { status: 'selecting', file: null, error: action.error };
+            // Bad model content — surface the error screen; retry reopens the picker
+            // (re-uploading the same unreadable file would just fail again).
+            return { status: 'error', file: null, error: action.error };
         case 'reset':
             return { status: 'idle' };
         default:
@@ -264,7 +267,13 @@ export const UploadModelProvider: React.FC<{ children: React.ReactNode }> = ({ c
         if (state.status !== 'error') {
             return;
         }
-        runUpload(state.file);
+        // Upload failure retains its file → re-run the upload. A validation / parse
+        // failure has no usable file → drop back to the picker for a fresh pick.
+        if (state.file) {
+            runUpload(state.file);
+            return;
+        }
+        dispatch({ type: 'open' });
     }, [state, runUpload]);
 
     const captureThumbnail = useCallback(

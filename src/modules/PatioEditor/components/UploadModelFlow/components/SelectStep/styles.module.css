@@ -29,10 +29,6 @@
     background: rgb(255 255 255 / 0.08);
 }
 
-.dropzone--error {
-    border-color: var(--color-error-500);
-}
-
 .cta {
     min-width: 6.9375rem;
 }
@@ -103,17 +99,4 @@
 
 .file-size {
     color: rgb(255 255 255 / 0.5);
-}
-
-.error {
-    display: flex;
-    align-items: center;
-    gap: var(--gap-2);
-    color: var(--color-error-400);
-}
-
-.error-icon {
-    flex-shrink: 0;
-    width: 1rem;
-    height: 1rem;
 }
