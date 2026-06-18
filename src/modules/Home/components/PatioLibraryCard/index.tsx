@@ -7,6 +7,7 @@ import { useSpotlight } from '@/hooks/useSpotlight';
 import { Typography } from '@/components/ui/Typography';
 import { CONTINENT_LABELS } from '../../constants';
 import { useHomeNavigate } from '../../hooks/useHomeRouteApi';
+import { useDownscaledImage } from './hooks/useDownscaledImage';
 import { useParallax } from './hooks/useParallax';
 import s from './styles.module.css';
 
@@ -14,6 +15,11 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
     const navigate = useHomeNavigate();
     const spotlightRef = useSpotlight<HTMLElement>();
     const { cardRef, imgRef } = useParallax();
+    const { canvasRef } = useDownscaledImage({
+        url: patio.previewHighUrl,
+        lowUrl: patio.previewLowUrl,
+        alt: patio.name,
+    });
 
     const setArticleRef = useCallback(
         (el: HTMLElement | null) => {
@@ -21,6 +27,14 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
             cardRef(el);
         },
         [spotlightRef, cardRef]
+    );
+
+    const setImageRef = useCallback(
+        (el: HTMLCanvasElement | null) => {
+            imgRef(el);
+            canvasRef(el);
+        },
+        [imgRef, canvasRef]
     );
 
     const navigateToPatio = () => {
@@ -51,7 +65,7 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
             <div className={s.media}>
                 <div className={clsx(s.decor, s.top)} aria-hidden />
                 <div className={clsx(s.decor, s.bottom)} aria-hidden />
-                <img ref={imgRef} className={s.image} src={patio.previewHighUrl} alt={patio.name} loading="lazy" />
+                <canvas ref={setImageRef} className={s.image} />
             </div>
             <div className={s.body}>
                 <header className={s.top}>

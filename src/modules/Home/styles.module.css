@@ -54,9 +54,10 @@
 .scroll :global(.scroll-area-scrollbar-vertical) {
     --scrollbar-height: 168px;
     --scrollbar-width: 16px;
+    --scrollbar-offset-y: var(--gap-12);
 
-    top: calc(50% - var(--scrollbar-height) / 2) !important;
-    right: 4px !important;
+    top: calc(50% - var(--scrollbar-height) / 2 + var(--scrollbar-offset-y)) !important;
+    right: -24px !important;
     height: var(--scrollbar-height);
     padding: var(--gap-1);
     width: var(--scrollbar-width);

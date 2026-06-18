@@ -176,6 +176,10 @@
     color: var(--color-base-white);
 }
 
+.title {
+    font-weight: 600;
+}
+
 .subtitle {
     color: hsl(var(--color-hsl-white) / 0.6);
     margin-bottom: var(--gap-6);

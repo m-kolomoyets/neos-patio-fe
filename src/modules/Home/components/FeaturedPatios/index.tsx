@@ -29,13 +29,23 @@ export const FeaturedPatios: React.FC = () => {
     });
 
     useCarouselVideoScrub({ emblaApi, enabled: !reducedMotion });
-    useCarouselProximityAutoplay({ emblaApi, enabled: videoCapable && !reducedMotion });
+    const { boost, unboost } = useCarouselProximityAutoplay({ emblaApi, enabled: videoCapable && !reducedMotion });
 
     const hasMultipleSlides = snapList.length > 1;
     const totalSlides = data?.length ?? 0;
 
     const handleSkipButtonClick = () => {
         document.getElementById('search-bar-trigger')?.focus();
+    };
+
+    const handlePrevClick = () => {
+        boost();
+        scrollPrev();
+    };
+
+    const handleNextClick = () => {
+        boost();
+        scrollNext();
     };
 
     return (
@@ -85,7 +95,8 @@ export const FeaturedPatios: React.FC = () => {
                             data-direction="prev"
                             className={clsx(s['control-button'], s.prev)}
                             aria-controls={viewportId}
-                            onClick={scrollPrev}
+                            onClick={handlePrevClick}
+                            onMouseLeave={unboost}
                         >
                             <ChevronLeftIcon />
                             <span className="sr-only">Previous featured patios</span>
@@ -98,7 +109,8 @@ export const FeaturedPatios: React.FC = () => {
                             data-direction="next"
                             className={clsx(s['control-button'], s.next)}
                             aria-controls={viewportId}
-                            onClick={scrollNext}
+                            onClick={handleNextClick}
+                            onMouseLeave={unboost}
                         >
                             <ChevronRightIcon />
                             <span className="sr-only">Next featured patios</span>

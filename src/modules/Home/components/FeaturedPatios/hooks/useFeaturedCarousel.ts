@@ -104,7 +104,10 @@ export const useFeaturedCarousel = ({ dataKey }: Params): Result => {
         const EAGER_MOUNT_THRESHOLD = 8;
         const sync = () => {
             const inView = emblaApi.slidesInView();
-            const total = emblaApi.scrollSnapList().length;
+            // Slide count, not snap count: containScroll: 'trimSnaps' yields fewer snaps than
+            // slides, and slidesInView() reports slide indices — using snap count drops the
+            // trailing slides so the last card's video never mounts.
+            const total = emblaApi.slideNodes().length;
             if (total === 0) {
                 setSlidesInViewWithNeighbors(EMPTY_SET);
                 return;
