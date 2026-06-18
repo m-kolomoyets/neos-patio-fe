@@ -57,7 +57,7 @@
     --scrollbar-offset-y: var(--gap-12);
 
     top: calc(50% - var(--scrollbar-height) / 2 + var(--scrollbar-offset-y)) !important;
-    right: 4px !important;
+    right: -24px !important;
     height: var(--scrollbar-height);
     padding: var(--gap-1);
     width: var(--scrollbar-width);

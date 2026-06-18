@@ -20,14 +20,13 @@
     touch-action: none;
     user-select: none;
     padding: var(--gap-0-5);
-    opacity: 0;
     transition: opacity 0.15s ease-in-out;
 }
 
-.scrollbar[data-scrolling],
+/* .scrollbar[data-scrolling],
 .scrollbar[data-hovering] {
     opacity: 1;
-}
+} */
 
 .scrollbar[data-orientation="vertical"] {
     width: calc(var(--gap-2) + var(--gap-0-5));
