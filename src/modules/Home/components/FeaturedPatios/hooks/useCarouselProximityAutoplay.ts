@@ -1,5 +1,5 @@
 import type { EmblaCarouselType, ScrollBodyType } from 'embla-carousel';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { computeHalfScrollSpeed } from '../utils/computeHalfScrollSpeed';
 import { createMarqueeScrollBody } from '../utils/createMarqueeScrollBody';
 
@@ -8,16 +8,43 @@ type Params = {
     enabled: boolean;
 };
 
+type Result = {
+    // Scales marquee speed by BOOST_MULTIPLIER. One-shot: repeat calls are no-ops until unboost.
+    boost: () => void;
+    // Clears the boost, restoring default speed.
+    unboost: () => void;
+};
+
 // Marquee velocity magnitude in px/frame at the area edge; ramps from 0 at the center line.
 const SPEED_MAX = 12;
 const EPSILON = 1e-4;
 // Extra px added above and below the carousel wrapper so the magnetic trigger zone reaches
 // past the visual bounds vertically. Horizontal extent stays tied to the wrapper rect.
 const VERTICAL_TRIGGER_PADDING = 40;
+// One-time speed bump applied after the first navigation-arrow click.
+const BOOST_MULTIPLIER = 2;
 
 type Rect = { left: number; top: number; width: number; height: number };
 
-export const useCarouselProximityAutoplay = ({ emblaApi, enabled }: Params): void => {
+export const useCarouselProximityAutoplay = ({ emblaApi, enabled }: Params): Result => {
+    // Persist across effect re-runs: the boost is permanent once triggered.
+    const boostedRef = useRef(false);
+    // Bridges the exposed boost() to the effect-internal recompute so a click takes effect
+    // immediately even when the cursor is stationary inside the area.
+    const recomputeRef = useRef<(() => void) | null>(null);
+
+    const boost = useCallback(() => {
+        if (boostedRef.current) return;
+        boostedRef.current = true;
+        recomputeRef.current?.();
+    }, []);
+
+    const unboost = useCallback(() => {
+        if (!boostedRef.current) return;
+        boostedRef.current = false;
+        recomputeRef.current?.();
+    }, []);
+
     useEffect(
         function configureProximityAutoplay() {
             if (!emblaApi || !enabled) return;
@@ -108,7 +135,7 @@ export const useCarouselProximityAutoplay = ({ emblaApi, enabled }: Params): voi
                               cursorX,
                               areaLeft: area.left,
                               areaWidth: area.width,
-                              maxSpeed: SPEED_MAX,
+                              maxSpeed: boostedRef.current ? SPEED_MAX * BOOST_MULTIPLIER : SPEED_MAX,
                           })
                         : 0;
                 sync();
@@ -144,6 +171,7 @@ export const useCarouselProximityAutoplay = ({ emblaApi, enabled }: Params): voi
                 recompute();
             };
 
+            recomputeRef.current = recompute;
             refreshArea();
             window.addEventListener('pointermove', onPointerMove);
             window.addEventListener('resize', onResize);
@@ -159,9 +187,12 @@ export const useCarouselProximityAutoplay = ({ emblaApi, enabled }: Params): voi
                 emblaApi.off('pointerDown', onPointerDown);
                 emblaApi.off('pointerUp', onPointerUp);
                 emblaApi.off('scroll', onScroll);
+                recomputeRef.current = null;
                 stop();
             };
         },
         [emblaApi, enabled]
     );
+
+    return { boost, unboost };
 };
