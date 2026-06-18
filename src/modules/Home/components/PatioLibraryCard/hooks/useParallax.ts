@@ -190,7 +190,7 @@ export const useParallax = () => {
     );
 
     const imgRef = useCallback(
-        (el: HTMLImageElement | null) => {
+        (el: HTMLElement | null) => {
             imgElRef.current = el;
             wire();
         },
