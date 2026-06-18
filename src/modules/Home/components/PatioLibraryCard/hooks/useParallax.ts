@@ -160,7 +160,7 @@ const subscribe = (cardEl: HTMLElement, imgEl: HTMLElement) => {
     };
 };
 
-export const useParallax = () => {
+export const useParallax = (enabled = true) => {
     const cardElRef = useRef<HTMLElement | null>(null);
     const imgElRef = useRef<HTMLElement | null>(null);
     const unsubscribeRef = useRef<(() => void) | null>(null);
@@ -175,11 +175,15 @@ export const useParallax = () => {
         if (!cardEl || !imgEl) {
             return;
         }
+        if (!enabled) {
+            imgEl.style.transform = '';
+            return;
+        }
         if (prefersReducedMotion()) {
             return;
         }
         unsubscribeRef.current = subscribe(cardEl, imgEl);
-    }, []);
+    }, [enabled]);
 
     const cardRef = useCallback(
         (el: HTMLElement | null) => {
