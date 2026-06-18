@@ -11,6 +11,9 @@ type Params = {
 // Marquee velocity magnitude in px/frame at the area edge; ramps from 0 at the center line.
 const SPEED_MAX = 12;
 const EPSILON = 1e-4;
+// Extra px added above and below the carousel wrapper so the magnetic trigger zone reaches
+// past the visual bounds vertically. Horizontal extent stays tied to the wrapper rect.
+const VERTICAL_TRIGGER_PADDING = 40;
 
 type Rect = { left: number; top: number; width: number; height: number };
 
@@ -36,7 +39,12 @@ export const useCarouselProximityAutoplay = ({ emblaApi, enabled }: Params): voi
 
             const refreshArea = () => {
                 const r = emblaApi.rootNode().getBoundingClientRect();
-                area = { left: r.left, top: r.top, width: r.width, height: r.height };
+                area = {
+                    left: r.left,
+                    top: r.top - VERTICAL_TRIGGER_PADDING,
+                    width: r.width,
+                    height: r.height + VERTICAL_TRIGGER_PADDING * 2,
+                };
             };
 
             // Loop is off: at a scroll boundary, suppress speed that would push further out.
