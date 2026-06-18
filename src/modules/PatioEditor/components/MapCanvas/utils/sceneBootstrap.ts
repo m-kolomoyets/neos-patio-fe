@@ -1,16 +1,7 @@
 import type { PatioBounds } from '@/services/patios/types';
-import {
-    BoundingSphere,
-    Math as CesiumMath,
-    createGooglePhotorealistic3DTileset,
-    HeadingPitchRange,
-    Ion,
-    Rectangle,
-    Viewer,
-} from 'cesium';
+import { BoundingSphere, Cesium3DTileset, Math as CesiumMath, HeadingPitchRange, Ion, Rectangle, Viewer } from 'cesium';
 
 const ION_TOKEN = import.meta.env.VITE_CESIUM_ACCESS_TOKEN;
-const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 /** Pitch the camera looks down at when framing the patio (PRD: -45°). */
 const INITIAL_PITCH = CesiumMath.toRadians(-45);
@@ -70,7 +61,8 @@ export const bootstrapScene = (viewer: Viewer, bounds: PatioBounds): (() => void
 
     void (async () => {
         try {
-            const tileset = await createGooglePhotorealistic3DTileset({ key: GOOGLE_MAPS_KEY });
+            // Google Photorealistic 3D Tiles asset ID
+            const tileset = await Cesium3DTileset.fromIonAssetId(2275207);
 
             if (cancelled || viewer.isDestroyed()) {
                 return;
