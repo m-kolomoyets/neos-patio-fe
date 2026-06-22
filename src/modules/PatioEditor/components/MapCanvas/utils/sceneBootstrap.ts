@@ -49,6 +49,22 @@ export const configureViewer = (container: HTMLDivElement): Viewer => {
 };
 
 /**
+ * Fallback delay after which the scene is reported "ready" even if the tileset
+ * never settles, so a loading overlay waiting on {@link bootstrapScene} can never
+ * get stuck.
+ */
+const READY_TIMEOUT_MS = 5000;
+
+type BootstrapSceneOptions = {
+    /**
+     * Called once the patio place is framed and its first LOD has settled
+     * (tileset `initialTilesLoaded`), or after {@link READY_TIMEOUT_MS} as a
+     * safety net — whichever fires first.
+     */
+    onReady?: () => void;
+};
+
+/**
  * Load Google Photorealistic 3D Tiles for the patio and frame the camera on its
  * bounds (heading 0, pitch -45°). Returns a teardown that cancels the in-flight
  * load so a Viewer torn down mid-fetch is not mutated after destruction.
@@ -56,8 +72,27 @@ export const configureViewer = (container: HTMLDivElement): Viewer => {
  * Note: persisting this framing as the saved Home view is deferred to the
  * ViewCube camera adapter slice (S6), which owns Home-view storage.
  */
-export const bootstrapScene = (viewer: Viewer, bounds: PatioBounds): (() => void) => {
+export const bootstrapScene = (
+    viewer: Viewer,
+    bounds: PatioBounds,
+    options: BootstrapSceneOptions = {}
+): (() => void) => {
+    const { onReady } = options;
+
     let cancelled = false;
+    let readySignalled = false;
+    let removeTilesListener: (() => void) | null = null;
+
+    const signalReady = () => {
+        if (readySignalled || cancelled) {
+            return;
+        }
+        readySignalled = true;
+        onReady?.();
+    };
+
+    // Safety net: report ready even if the tileset never finishes settling.
+    const readyTimer = setTimeout(signalReady, READY_TIMEOUT_MS);
 
     void (async () => {
         try {
@@ -73,16 +108,24 @@ export const bootstrapScene = (viewer: Viewer, bounds: PatioBounds): (() => void
             viewer.scene.primitives.add(tileset);
 
             frameBounds(viewer, bounds);
+
+            // Fires once when all tiles requested for the framed view have loaded
+            // their first LOD — the moment the place is actually rendered.
+            removeTilesListener = tileset.initialTilesLoaded.addEventListener(signalReady);
         } catch (error) {
             if (!cancelled) {
                 // eslint-disable-next-line no-console
                 console.error('Failed to load Google Photorealistic 3D Tiles', error);
+                // Don't strand a waiting overlay if the tileset failed to load.
+                signalReady();
             }
         }
     })();
 
     return () => {
         cancelled = true;
+        clearTimeout(readyTimer);
+        removeTilesListener?.();
     };
 };
 

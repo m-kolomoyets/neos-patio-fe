@@ -3,16 +3,16 @@ import { useCallback } from 'react';
 import Id24Icon from '@/icons/id_24.svg?react';
 import MapPin24Icon from '@/icons/map-pin_24.svg?react';
 import clsx from 'clsx';
+import { usePatioTransitionNavigate } from '@/hooks/usePatioTransitionNavigate';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import { Typography } from '@/components/ui/Typography';
 import { CONTINENT_LABELS } from '../../constants';
-import { useHomeNavigate } from '../../hooks/useHomeRouteApi';
 import { useDownscaledImage } from './hooks/useDownscaledImage';
 import { useParallax } from './hooks/useParallax';
 import s from './styles.module.css';
 
 export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => {
-    const navigate = useHomeNavigate();
+    const { navigateToPatio: navigate } = usePatioTransitionNavigate();
     const spotlightRef = useSpotlight<HTMLElement>();
     const { cardRef, imgRef } = useParallax();
     const { canvasRef } = useDownscaledImage({
@@ -38,12 +38,7 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
     );
 
     const navigateToPatio = () => {
-        navigate({
-            to: '/patios/$id',
-            params: {
-                id: patio.id,
-            },
-        });
+        navigate(patio);
     };
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {

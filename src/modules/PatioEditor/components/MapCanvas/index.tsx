@@ -1,5 +1,6 @@
 import type { PatioBounds } from '@/services/patios/types';
 import { useEffect, useRef } from 'react';
+import { usePageTransition } from '@/contexts/PageTransitionContext';
 import { bootstrapScene, configureViewer } from './utils/sceneBootstrap';
 import { useRegisterCesiumViewer } from '../../context/CesiumViewerContext';
 
@@ -20,6 +21,7 @@ type MapCanvasProps = {
 export const MapCanvas: React.FC<MapCanvasProps> = ({ bounds }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const registerViewer = useRegisterCesiumViewer();
+    const { finish } = usePageTransition();
 
     useEffect(() => {
         const container = containerRef.current;
@@ -28,7 +30,9 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ bounds }) => {
         const viewer = configureViewer(container);
         registerViewer(viewer);
 
-        const teardownScene = bootstrapScene(viewer, bounds);
+        // Clear the loading overlay once the place is framed and its first LOD
+        // has settled (or after the bootstrap safety timeout).
+        const teardownScene = bootstrapScene(viewer, bounds, { onReady: finish });
 
         return () => {
             teardownScene();
@@ -37,7 +41,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ bounds }) => {
                 viewer.destroy();
             }
         };
-    }, [bounds, registerViewer]);
+    }, [bounds, registerViewer, finish]);
 
     return (
         <div className={s.wrap}>

@@ -3,6 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import MapPin24Icon from '@/icons/map-pin_24.svg?react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
+import { usePatioTransitionNavigate } from '@/hooks/usePatioTransitionNavigate';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import { Tag } from '@/components/ui/Tag';
 import { Typography } from '@/components/ui/Typography';
@@ -32,6 +33,7 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
         shouldMountVideo,
     });
 
+    const { seed } = usePatioTransitionNavigate();
     const spotlightRef = useSpotlight<HTMLElement>();
     const setRootRef = useCallback(
         (el: HTMLElement | null) => {
@@ -48,6 +50,9 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
             to="/patios/$id"
             params={{ id: patio.id }}
             ref={setRootRef}
+            onClick={() => {
+                return seed(patio);
+            }}
             className={clsx(s.wrap, 'focus-primary')}
             aria-label={`Open ${patio.name}`}
             title={`Open ${patio.name}`}
