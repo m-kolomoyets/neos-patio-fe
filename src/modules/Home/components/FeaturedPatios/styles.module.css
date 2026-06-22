@@ -69,6 +69,10 @@
     padding-left: var(--gap-5);
 }
 
+.slide:last-child {
+    padding-right: var(--gap-5);
+}
+
 .skeleton-card {
     flex: 0 0 100cqi;
     aspect-ratio: 4 / 5;
