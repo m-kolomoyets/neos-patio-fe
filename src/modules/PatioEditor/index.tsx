@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { usePageTransition } from '@/contexts/PageTransitionContext';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { getPatioQueryOptions } from '@/services/patios/queries';
 import { Typography } from '@/components/ui/Typography';
@@ -50,6 +52,16 @@ const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds }) => {
 const PatioEditor: React.FC = () => {
     const { id } = usePatioEditorParams();
     const { data: patio } = useSuspenseQuery(getPatioQueryOptions(id));
+    const { update } = usePageTransition();
+
+    // Fill the loading overlay with the real background + name once the patio
+    // resolves. On the Home path these already match the seeded values; on a
+    // deep-link they replace the bare dark fallback.
+    useEffect(() => {
+        if (patio) {
+            update({ backgroundUrl: patio.previewBackgroundUrl, name: patio.name });
+        }
+    }, [patio, update]);
 
     if (!patio) {
         return (
