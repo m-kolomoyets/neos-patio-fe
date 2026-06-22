@@ -20,7 +20,7 @@
     cursor: default;
 }
 
-.skip-button:focus {
+.skip-button:focus:not(:hover) {
     opacity: 1;
     cursor: pointer;
 }
