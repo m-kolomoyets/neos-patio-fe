@@ -53,8 +53,10 @@ export const CLICK_THRESHOLD_PX = 4;
  * Values are display units (pitch 0 = top-down, {@link MAX_PITCH} ≈ horizon),
  * converted to Cesium heading/pitch radians by the camera adapter. Side
  * "elevations" sit at {@link SIDE_PITCH} (angled down, not near-horizon, so the
- * framed patio fills the view) and there are no edge targets — only the top face
- * + 4 sides + 4 corners.
+ * framed patio fills the view); the 4 corners are true top-vertex isometric 3/4
+ * views (pitch 35, a balanced top + two sides). The 4 vertical edges (corner-on,
+ * pitch 60) and 4 top edges (top tilted to one side, pitch 30) complete the 17
+ * targets the 3×3 hit model exposes.
  *
  * `bearing: null` means "leave bearing unchanged" (used by the top face).
  * Consumed by the snap logic; defined here so the mapping lives in one pure,
@@ -66,8 +68,23 @@ export const CUBE_TARGETS: Record<CubeTarget, { bearing: number | null; pitch: n
     east: { bearing: 90, pitch: SIDE_PITCH },
     south: { bearing: 180, pitch: SIDE_PITCH },
     west: { bearing: 270, pitch: SIDE_PITCH },
-    northeast: { bearing: 45, pitch: 60 },
-    southeast: { bearing: 135, pitch: 60 },
-    southwest: { bearing: 225, pitch: 60 },
-    northwest: { bearing: 315, pitch: 60 },
+    // Corners / edges use direct manipulation: the CLICKED corner/edge ends up
+    // facing the viewer. The cube mirrors the camera heading, so the target
+    // facing the viewer is opposite the heading — hence each bearing is its
+    // geometric compass direction + 180 (e.g. the NE corner faces the viewer
+    // when the camera looks SW, heading 225).
+    northeast: { bearing: 225, pitch: 35 },
+    southeast: { bearing: 315, pitch: 35 },
+    southwest: { bearing: 45, pitch: 35 },
+    northwest: { bearing: 135, pitch: 35 },
+    // Vertical edges: corner-on between two sides (steeper pitch than the corner).
+    'edge-ne': { bearing: 225, pitch: 60 },
+    'edge-se': { bearing: 315, pitch: 60 },
+    'edge-sw': { bearing: 45, pitch: 60 },
+    'edge-nw': { bearing: 135, pitch: 60 },
+    // Top edges: top tilted toward one side (shallower pitch).
+    'edge-top-n': { bearing: 180, pitch: 30 },
+    'edge-top-e': { bearing: 270, pitch: 30 },
+    'edge-top-s': { bearing: 0, pitch: 30 },
+    'edge-top-w': { bearing: 90, pitch: 30 },
 };

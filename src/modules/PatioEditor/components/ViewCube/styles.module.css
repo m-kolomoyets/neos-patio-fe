@@ -59,13 +59,11 @@
     width: 40px;
     height: 40px;
     perspective: 160px;
-    cursor:
-        url("/images/cursor-360.svg") 12 12,
-        grab;
     touch-action: none;
 }
 
-/* While drag-orbiting (set by useCubeInteraction) keep the 360 orbit cursor. */
+/* Show the 360 orbit cursor only while drag-orbiting (set by useCubeInteraction),
+   not on hover. */
 .scene[data-dragging] {
     cursor:
         url("/images/cursor-360.svg") 12 12,
@@ -83,26 +81,59 @@
 .face {
     position: absolute;
     inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 3px solid var(--color-base-black);
     background-color: hsl(56deg 19% 84%);
     color: var(--color-base-black);
     font-size: 1rem;
     font-weight: 700;
     text-transform: uppercase;
     backface-visibility: hidden;
-    transition: background-color 0.12s ease;
     user-select: none;
+}
+
+/* Cube edge frame drawn ON TOP of the hit grid (not as a border, which would
+   shrink the padding box and push the 3×3 grid off the true face corners).
+   Painted last so the black edges stay visible over zone highlights. */
+.face::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 0 3px var(--color-base-black);
+    backface-visibility: hidden;
+    pointer-events: none;
+}
+
+/* 3×3 hit grid filling the FULL face so corner/edge cells reach the real
+   corners; cells carry the clickable target identity. */
+.grid {
+    position: absolute;
+    inset: 0;
+    display: grid;
+
+    /* Thin edge/corner rim, fat face center (Autodesk-style proportions).
+       minmax(0, …) stops the label's min-content from growing the center track
+       past its share and overflowing the fixed-height grid at the bottom. */
+    grid-template-columns: 25% minmax(0, 1fr) 25%;
+    grid-template-rows: 25% minmax(0, 1fr) 25%;
+    backface-visibility: hidden;
+}
+
+.cell {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    align-items: center;
+    justify-content: center;
+    backface-visibility: hidden;
+    transition: background-color 0.12s ease;
 }
 
 .label {
     pointer-events: none;
 }
 
-/* Flat-shaded hover highlight (no click wiring yet — that arrives in #03). */
-.face:hover {
+/* Per-zone highlight: every cell sharing the hovered target lights together,
+   so a corner reads as a wedge across the faces that meet there (#01). */
+.cell[data-active] {
     background: var(--color-brand-700);
     color: var(--color-base-black);
 }
