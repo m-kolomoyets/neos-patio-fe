@@ -53,7 +53,7 @@ export const configureViewer = (container: HTMLDivElement): Viewer => {
  * never settles, so a loading overlay waiting on {@link bootstrapScene} can never
  * get stuck.
  */
-const READY_TIMEOUT_MS = 5000;
+const READY_TIMEOUT_MS = 8000;
 
 type BootstrapSceneOptions = {
     /**
