@@ -87,7 +87,8 @@
             to bottom,
             hsl(var(--color-hsl-black) / 0) 0%,
             hsl(var(--color-hsl-black) / 0) 50%,
-            hsl(var(--color-hsl-black) / 0.5) 100%
+            hsl(var(--color-hsl-black) / 0.8) 95%,
+            hsl(var(--color-hsl-black) / 1) 100%
         );
     background-blend-mode: overlay, multiply;
     box-shadow:
