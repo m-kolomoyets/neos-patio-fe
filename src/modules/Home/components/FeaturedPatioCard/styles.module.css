@@ -86,15 +86,14 @@
         linear-gradient(
             to bottom,
             hsl(var(--color-hsl-black) / 0) 0%,
-            hsl(var(--color-hsl-black) / 0) 50%,
-            hsl(var(--color-hsl-black) / 0.8) 95%,
+            hsl(var(--color-hsl-black) / 0) 70%,
             hsl(var(--color-hsl-black) / 1) 100%
         );
     background-blend-mode: overlay, multiply;
     box-shadow:
-        1px 1.5px 2px hsl(var(--color-hsl-black) / 0.16) inset,
-        1px 1.5px 4px hsl(var(--color-hsl-black) / 0.48) inset,
-        0 -1px 1px hsl(26deg 0.2% 8.8 / 0.8) inset,
+        0.5px 1.5px 2px hsl(var(--color-hsl-black) / 0.16) inset,
+        0.5px 1.5px 4px hsl(var(--color-hsl-black) / 0.48) inset,
+        0 1px 1px hsl(26deg 0.2% 8.8 / 0.8) inset,
         0 -3px 3px hsl(var(--color-hsl-black) / 0.3) inset;
 }
 
