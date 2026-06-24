@@ -1,27 +1,37 @@
 import type { AnimationClip, Object3D, PerspectiveCamera } from 'three';
-import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import PauseIcon from '@/icons/pause-square_24.svg?react';
 import PlayIcon from '@/icons/play_24.svg?react';
 import { Center, OrbitControls, useAnimations } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Box3, LoopOnce, Vector3 } from 'three';
+import { captureCanvasThumbnail } from '@/lib/utils/captureCanvasThumbnail';
 import { Button } from '@/components/ui/Button';
-import { toast } from '@/components/ui/Toast';
-import { captureCanvasThumbnail } from '../../utils/captureCanvasThumbnail';
-import { useUploadModel } from '../../../../context/UploadModelContext';
 import s from './styles.module.css';
 
-const THUMBNAIL_ERROR_MESSAGE = 'Could not capture a thumbnail from the preview.';
+/**
+ * Structural subset of a parsed glTF the preview needs — decoupled from any
+ * specific loader's `GLTF` type (three-stdlib vs drei differ on optional fields).
+ */
+export type PreviewableModel = {
+    scene: Object3D;
+    animations: AnimationClip[];
+};
 
 type ModelPreviewSceneProps = {
-    /** Locally-parsed model to display. */
-    gltf: GLTF;
+    /** Already-parsed model to display. */
+    gltf: PreviewableModel;
+    /** Receives a freshly-captured thumbnail blob when the canvas is snapshotted. */
+    onCapture?: (_blob: Blob) => void;
+    /** Fired when a capture fails (decoding/context errors). Consumer owns the UX. */
+    onCaptureError?: (_error: unknown) => void;
     /** Hands the capture handler to the parent so an external control can snapshot the canvas. */
     onRegisterCapture?: (_capture: () => void) => void;
-    /** Show the in-scene play/pause overlay. Hidden on the naming step. @default true */
+    /** Auto-snapshot a default thumbnail once the scene settles. @default true */
+    autoCapture?: boolean;
+    /** Show the in-scene play/pause overlay. @default true */
     showControls?: boolean;
-    /** Allow orbit/zoom interaction. Disabled on the naming step. @default true */
+    /** Allow orbit/zoom interaction. @default true */
     interactive?: boolean;
 };
 
@@ -105,7 +115,7 @@ const FitCamera: React.FC<FitCameraProps> = ({ object }) => {
 };
 
 type ModelAnimatorProps = {
-    /** Clips embedded in the uploaded glb (first clip is the one played). */
+    /** Clips embedded in the glb (first clip is the one played). */
     clips: AnimationClip[];
     /** Root object the clips animate against. */
     root: Object3D;
@@ -169,23 +179,25 @@ const ModelAnimator: React.FC<ModelAnimatorProps> = ({ clips, root, playing, onF
 };
 
 /**
- * Standalone R3F preview of the uploaded model. Centers the model and frames it
- * once on mount via a layout-effect camera fit ({@link FitCamera}) — no resize
- * observe, so user zoom/orbit persists across the morph and into the naming step.
- * Lit locally; rotate/zoom with OrbitControls. `preserveDrawingBuffer` keeps the
- * framebuffer readable so the canvas can be snapshotted for the thumbnail at the
- * current zoom.
+ * Standalone R3F preview of a parsed model. Centers the model and frames it once
+ * on mount via a layout-effect camera fit ({@link FitCamera}) — no resize observe,
+ * so user zoom/orbit persists. Lit locally; rotate/zoom with OrbitControls.
+ * `preserveDrawingBuffer` keeps the framebuffer readable so the canvas can be
+ * snapshotted for a thumbnail at the current zoom.
  *
- * This Canvas is entirely separate from the Cesium-backed MapCanvas — only mounted
- * while the upload flow is in its `preview` state.
+ * Decoupled from any specific feature: captured blobs are handed to the consumer
+ * via {@link ModelPreviewSceneProps.onCapture}. This Canvas is entirely separate
+ * from the Cesium-backed MapCanvas.
  */
 export const ModelPreviewScene: React.FC<ModelPreviewSceneProps> = ({
     gltf,
+    onCapture,
+    onCaptureError,
     onRegisterCapture,
+    autoCapture = true,
     showControls = true,
     interactive = true,
 }) => {
-    const { captureThumbnail } = useUploadModel();
     const getCanvasRef = useRef<(() => HTMLCanvasElement) | null>(null);
     const autoCapturedRef = useRef(false);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -198,27 +210,30 @@ export const ModelPreviewScene: React.FC<ModelPreviewSceneProps> = ({
         }
         try {
             const blob = await captureCanvasThumbnail(getCanvas());
-            captureThumbnail(blob);
-        } catch {
-            // Non-blocking: the user can re-capture; the flow still proceeds.
-            toast.error(THUMBNAIL_ERROR_MESSAGE);
+            onCapture?.(blob);
+        } catch (error) {
+            // Non-blocking: the consumer decides how to surface this.
+            onCaptureError?.(error);
         }
-    }, [captureThumbnail]);
+    }, [onCapture, onCaptureError]);
 
     const register = useCallback((getCanvas: () => HTMLCanvasElement) => {
         getCanvasRef.current = getCanvas;
     }, []);
 
     const handleReady = useCallback(() => {
-        if (autoCapturedRef.current) {
+        // Only seed a default thumbnail when a consumer opted into auto-capture and is
+        // listening for it. The catalog preview opts out so opening an asset never
+        // silently overwrites its existing thumbnail.
+        if (autoCapturedRef.current || !onCapture || !autoCapture) {
             return;
         }
         autoCapturedRef.current = true;
         captureThumbnailFromCanvas();
-    }, [captureThumbnailFromCanvas]);
+    }, [captureThumbnailFromCanvas, onCapture, autoCapture]);
 
-    // Lift the capture trigger so the Capture Thumbnail button (rendered outside the
-    // morphing scene box, in the bottom bar) can snapshot this canvas.
+    // Lift the capture trigger so an external control (e.g. a bottom-bar button)
+    // can snapshot this canvas.
     useEffect(() => {
         onRegisterCapture?.(captureThumbnailFromCanvas);
     }, [onRegisterCapture, captureThumbnailFromCanvas]);
@@ -231,7 +246,7 @@ export const ModelPreviewScene: React.FC<ModelPreviewSceneProps> = ({
                 <directionalLight position={[-5, 5, -7]} intensity={0.6} />
                 <Suspense fallback={null}>
                     {/* Center at origin + one-shot camera fit (layout effect, pre-first-frame).
-                        No resize observe, so user zoom/orbit persists across the morph. */}
+                        No resize observe, so user zoom/orbit persists. */}
                     <Center>
                         <primitive object={gltf.scene} />
                     </Center>
@@ -264,7 +279,10 @@ export const ModelPreviewScene: React.FC<ModelPreviewSceneProps> = ({
                         });
                     }}
                 >
-                    {isPlaying ? <PauseIcon /> : <PlayIcon />}
+                    <span className={s.icons} aria-hidden="true">
+                        <PauseIcon className={s.icon} data-visible={isPlaying} />
+                        <PlayIcon className={s.icon} data-visible={!isPlaying} />
+                    </span>
                     <span className="sr-only">{isPlaying ? 'Pause' : 'Play'}</span>
                 </Button>
             )}

@@ -12,15 +12,22 @@ const MOCK_UPLOAD_DURATION_MS = 2500;
 const MOCK_UPLOAD_TICK_MS = 100;
 const SAMPLE_ASSETS_BASE = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models';
 
-const buildAsset = (name: string, dirName?: string): Pick<Model3D, 'gltfUrl' | 'previewUrl'> => {
+const buildAsset = (
+    name: string,
+    sizeBytes: number,
+    dirName?: string
+): Pick<Model3D, 'gltfUrl' | 'previewUrl' | 'format' | 'sizeBytes'> => {
     const dir = dirName ?? name;
     return {
         gltfUrl: `${SAMPLE_ASSETS_BASE}/${dir}/glTF-Binary/${name}.glb`,
         previewUrl: `${SAMPLE_ASSETS_BASE}/${dir}/screenshot/screenshot.jpg`,
+        // Sample assets ship as `.glb` (binary glTF); the backend would supply this.
+        format: 'glTF',
+        sizeBytes,
     };
 };
 
-const MODELS_FIXTURES: Model3D[] = [{ id: 'lantern', name: 'Lantern', ...buildAsset('Lantern') }];
+const MODELS_FIXTURES: Model3D[] = [{ id: 'lantern', name: 'Lantern', ...buildAsset('Lantern', 9_146_368) }];
 
 export const listModels = async (): Promise<Model3D[]> => {
     await sleep(MOCK_DELAY_MS);

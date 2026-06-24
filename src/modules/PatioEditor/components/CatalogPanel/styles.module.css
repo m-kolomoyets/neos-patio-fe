@@ -43,7 +43,7 @@
     transition: background 120ms ease;
 }
 
-.item:is(:hover, .pending) {
+.item:is(:hover, .pending, [data-selected]) {
     background: var(--surface-thin);
 }
 
@@ -103,7 +103,7 @@
     transition: opacity 120ms ease;
 }
 
-.item:hover .icon {
+.item:is(:hover, [data-selected]) .icon {
     opacity: 1;
 }
 

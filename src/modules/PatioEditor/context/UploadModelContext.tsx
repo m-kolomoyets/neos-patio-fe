@@ -16,6 +16,7 @@ import { createBundleLoader } from '../components/UploadModelFlow/utils/createBu
 import {
     getBundleDefaultName,
     getBundleEntryUrl,
+    getBundleTotalSize,
     materializeBundle,
 } from '../components/UploadModelFlow/utils/modelBundle';
 
@@ -308,6 +309,9 @@ export const UploadModelProvider: React.FC<{ children: React.ReactNode }> = ({ c
             name,
             gltfUrl: getBundleEntryUrl(bundle),
             previewUrl: thumbnailUrl ?? '',
+            // Both `.glb` and `.gltf` bundles are glTF documents.
+            format: 'glTF',
+            sizeBytes: getBundleTotalSize(bundle),
         };
         // Append client-side; the fixtures query never refetches this asset.
         queryClient.setQueryData<Model3D[]>(modelsKeys.list(), (prev) => {

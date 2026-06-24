@@ -1,4 +1,4 @@
-import { Activity, useState } from 'react';
+import { Activity, useRef, useState } from 'react';
 import ArrowLeftIcon from '@/icons/arrow-left_24.svg?react';
 import SearchIcon from '@/icons/search_24.svg?react';
 import { useSuspenseQuery } from '@tanstack/react-query';
@@ -25,9 +25,10 @@ export const Sidebar: React.FC = () => {
     const { data: patio } = useSuspenseQuery(getPatioQueryOptions(id));
     const [tab, setTab] = useState<SidebarTab>('assets');
     const { width, isResizing, handleProps } = useSidebarResize();
+    const sidebarRef = useRef<HTMLElement>(null);
 
     return (
-        <aside className={clsx(s.sidebar, 'surface-regular')} style={{ width }}>
+        <aside ref={sidebarRef} className={clsx(s.sidebar, 'surface-regular')} style={{ width }}>
             <header className={s.header}>
                 <Button className={s.back} render={<Link to="/" />} size="md" variant="link" isIcon title="Back">
                     <ArrowLeftIcon />
@@ -61,7 +62,7 @@ export const Sidebar: React.FC = () => {
                     isRounded
                     size="sm"
                 />
-                <CatalogPanel />
+                <CatalogPanel anchorRef={sidebarRef} active={tab === 'assets'} />
                 <Separator orientation="horizontal" />
                 <footer className={s.footer}>
                     <UploadModelFlow />

@@ -1,0 +1,144 @@
+.popup {
+    display: flex;
+    flex-direction: column;
+    width: 280px;
+    color: white;
+    border: none;
+}
+
+.popup::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--stroke-surface);
+    z-index: 3;
+    mask:
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.preview {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+
+    /* Dotted surface mirrors the upload preview block. */
+    background-color: hsl(0deg 0% 31% / 0.5);
+    background-image: radial-gradient(hsl(var(--color-hsl-white) / 0.08) 1px, transparent 1px);
+    background-position: center;
+    background-size: 16px 16px;
+}
+
+.close.close {
+    position: absolute;
+    top: var(--gap-2);
+    right: var(--gap-2);
+    z-index: 1;
+    min-height: auto;
+    padding: var(--gap-1);
+}
+
+.close > svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Action bar, bottom-right; the scene owns the play toggle on the bottom-left. */
+.actions {
+    position: absolute;
+    right: var(--gap-2);
+    bottom: var(--gap-2);
+    z-index: 1;
+    display: flex;
+    gap: var(--gap-2);
+}
+
+.actions .cta {
+    border-radius: var(--gap-2);
+    min-height: auto;
+}
+
+.actions .cta > svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.icons {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 1rem;
+    height: 1rem;
+}
+
+.icon {
+    grid-area: 1 / 1;
+    width: 1rem;
+    height: 1rem;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.icon[data-visible="true"] {
+    opacity: 1;
+}
+
+.actions .group {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-px);
+}
+
+.actions .group .cta:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.actions .group .cta:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* Camera-shutter flash: a white overlay that fades out over the preview. */
+.flash {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background-color: hsl(var(--color-hsl-white));
+    animation: thumbnail-flash 0.45s ease-out forwards;
+}
+
+@keyframes thumbnail-flash {
+    from {
+        opacity: 0.9;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-1);
+    padding: var(--gap-4);
+}
+
+.name {
+    margin: 0;
+}
+
+.meta {
+    opacity: 0.6;
+}
+
+.spawn {
+    margin-top: var(--gap-3);
+    width: 100%;
+}

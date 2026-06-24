@@ -7,6 +7,7 @@ import type { TypographyVariant } from '@/components/ui/Typography/types';
 import type { LabelValueOption } from '@/lib/types';
 import React from 'react';
 import ArrowRightIcon from '@/icons/arrow-right_24.svg?react';
+import DotsHorizontalIcon from '@/icons/dots-horizontal_24.svg?react';
 import EditIcon from '@/icons/edit_24.svg?react';
 import SearchIcon from '@/icons/search_24.svg?react';
 import TrashIcon from '@/icons/trash_24.svg?react';
@@ -17,6 +18,7 @@ import { Autocomplete } from '@/components/ui/Autocomplete';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Input } from '@/components/ui/Input';
+import { Menu } from '@/components/ui/Menu';
 import { NotificationBadge } from '@/components/ui/NotificationBadge';
 import { OptionItem } from '@/components/ui/OptionItem';
 import { ScrollArea } from '@/components/ui/ScrollArea';
@@ -596,6 +598,30 @@ export const UiKit: React.FC = () => {
                                 }
                             />
                         </Tooltip.Root>
+                    </Row>
+                </Section>
+
+                <Section title="Menu">
+                    <Row label="dots menu">
+                        <Menu.Root>
+                            <Menu.Trigger render={<Button variant="surface" size="sm" isIcon title="More actions" />}>
+                                <DotsHorizontalIcon />
+                                <span className="sr-only">More actions</span>
+                            </Menu.Trigger>
+                            <Menu.Positioner side="bottom" align="start">
+                                <Menu.Popup>
+                                    <Menu.Item>
+                                        <EditIcon />
+                                        Edit
+                                    </Menu.Item>
+                                    <Menu.Separator />
+                                    <Menu.Item disabled>
+                                        <TrashIcon />
+                                        Delete
+                                    </Menu.Item>
+                                </Menu.Popup>
+                            </Menu.Positioner>
+                        </Menu.Root>
                     </Row>
                 </Section>
 
