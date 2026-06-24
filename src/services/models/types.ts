@@ -3,6 +3,10 @@ export type Model3D = {
     name: string;
     gltfUrl: string;
     previewUrl: string;
+    /** Human-readable file format label, shown verbatim in the preview (e.g. `glTF`). */
+    format: string;
+    /** Raw file size in bytes; rendered as MB in the preview. */
+    sizeBytes: number;
 };
 
 export type UploadModelOptions = {

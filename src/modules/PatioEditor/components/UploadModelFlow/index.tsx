@@ -9,9 +9,11 @@ import TrashIcon from '@/icons/trash_24.svg?react';
 import XMarkIcon from '@/icons/x-mark_24.svg?react';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'motion/react';
+import { ModelPreviewScene } from '@/components/ModelPreviewScene';
 import { AlertDialog } from '@/components/ui/AlertDialog';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
+import { toast } from '@/components/ui/Toast';
 import { Typography } from '@/components/ui/Typography';
 import { BUNDLE_TOO_LARGE_ERROR } from './constants';
 import { buildBundleManifest } from './utils/buildBundleManifest';
@@ -20,7 +22,6 @@ import { getBundleDefaultName, getBundleTotalSize, singleFileManifest } from './
 import { validateModelFile } from './utils/validateModelFile';
 import { useUploadModel } from '../../context/UploadModelContext';
 import { ErrorPanel } from './components/ErrorPanel';
-import { ModelPreviewScene } from './components/ModelPreviewScene';
 import { NamingStep } from './components/NamingStep';
 import { ScenePlaceholder } from './components/ScenePlaceholder';
 import { SelectStep } from './components/SelectStep';
@@ -52,7 +53,7 @@ const ZIP_ERROR_MESSAGE = 'Could not read that .zip. Make sure it contains a .gl
 type PreviewStep = 'capture' | 'naming';
 
 export const UploadModelFlow: React.FC = () => {
-    const { state, open, setError, startUpload, retry, setName, save, discard } = useUploadModel();
+    const { state, open, setError, startUpload, retry, setName, save, discard, captureThumbnail } = useUploadModel();
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [previewStep, setPreviewStep] = useState<PreviewStep>('capture');
     // Capture handler lifted out of the scene so the bottom-bar button can trigger a snapshot.
@@ -208,6 +209,10 @@ export const UploadModelFlow: React.FC = () => {
                                                     gltf={state.gltf}
                                                     showControls={previewStep === 'capture'}
                                                     interactive={previewStep === 'capture'}
+                                                    onCapture={captureThumbnail}
+                                                    onCaptureError={() => {
+                                                        toast.error('Could not capture a thumbnail from the preview.');
+                                                    }}
                                                     onRegisterCapture={(capture) => {
                                                         captureRef.current = capture;
                                                     }}
