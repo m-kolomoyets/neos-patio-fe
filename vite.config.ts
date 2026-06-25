@@ -1,7 +1,8 @@
 import { fileURLToPath } from 'node:url';
+import babel from '@rolldown/plugin-babel';
 import { devtools } from '@tanstack/devtools-vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
-import react from '@vitejs/plugin-react';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vite';
 import eslint from 'vite-plugin-eslint2';
@@ -25,10 +26,9 @@ export default defineConfig(({ mode }) => {
                 target: 'react',
                 autoCodeSplitting: true,
             }),
-            react({
-                babel: {
-                    plugins: ['babel-plugin-react-compiler'],
-                },
+            react(),
+            babel({
+                presets: [reactCompilerPreset()],
             }),
             svgr({
                 include: '**/*.svg?react',
@@ -81,9 +81,38 @@ export default defineConfig(({ mode }) => {
             CESIUM_BASE_URL: JSON.stringify(`/${CESIUM_BASE_DIR}`),
         },
         build: {
-            target: ['es2022', 'edge100', 'firefox100', 'chrome100', 'safari15.4', 'opera90'],
+            target: 'baseline-widely-available',
+            chunkSizeWarningLimit: 500,
             assetsInlineLimit(filePath) {
                 return !filePath.endsWith('.svg');
+            },
+            rolldownOptions: {
+                output: {
+                    codeSplitting: {
+                        groups: [
+                            {
+                                name: 'vendor-react',
+                                test: /[\\/]node_modules[\\/](react|react-dom|scheduler|use-sync-external-store)[\\/]/,
+                                priority: 50,
+                            },
+                            {
+                                name: 'vendor-tanstack',
+                                test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
+                                priority: 40,
+                            },
+                            {
+                                name: 'vendor-zod',
+                                test: /[\\/]node_modules[\\/]zod[\\/]/,
+                                priority: 30,
+                            },
+                            {
+                                name: 'vendor-cesium',
+                                test: /[\\/]node_modules[\\/]cesium[\\/]/,
+                                priority: 20,
+                            },
+                        ],
+                    },
+                },
             },
         },
         resolve: {

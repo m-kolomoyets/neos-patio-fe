@@ -96,15 +96,6 @@ export const CatalogPanel: React.FC<CatalogPanelProps> = ({ anchorRef, active })
                                         <Cube24Icon className={s['thumb-placeholder']} aria-hidden />
                                     )}
                                 </span>
-                                {/* <span className={s['label-wrap']}>
-                                    <Typography
-                                        className={clsx(s.label, 'truncate')}
-                                        variant="text-xs"
-                                        render={<span />}
-                                    >
-                                        {pending.file.name}
-                                    </Typography>
-                                </span> */}
                                 {pending.status === 'uploading' ? (
                                     <ProgressBar
                                         className={s['pending-progress']}

@@ -30,7 +30,15 @@ export const Sidebar: React.FC = () => {
     return (
         <aside ref={sidebarRef} className={clsx(s.sidebar, 'surface-regular')} style={{ width }}>
             <header className={s.header}>
-                <Button className={s.back} render={<Link to="/" />} size="md" variant="link" isIcon title="Back">
+                <Button
+                    className={s.back}
+                    nativeButton={false}
+                    render={<Link to="/" />}
+                    size="md"
+                    variant="link"
+                    isIcon
+                    title="Back"
+                >
                     <ArrowLeftIcon />
                     <span className="sr-only">Back</span>
                 </Button>
