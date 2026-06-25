@@ -5,6 +5,8 @@
     transition:
         font-size 0.2s ease,
         line-height 0.2s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .wrap[data-typography-variant="display-2xl"] {

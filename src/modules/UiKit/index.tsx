@@ -138,6 +138,15 @@ export const UiKit: React.FC = () => {
                         <ConnectWalletButton />
                     </Row>
                 </Section>
+                <h1>Typography</h1>
+                <h2>Typography</h2>
+                <h3>Typography</h3>
+                <h4>Typography</h4>
+                <h5>Typography</h5>
+                <h6>Typography</h6>
+                <p>Typography</p>
+                <span>Typography</span>
+                <div>Typography</div>
 
                 <Section title="Typography">
                     {TYPOGRAPHY_VARIANTS.map((variant) => {
