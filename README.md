@@ -61,70 +61,71 @@ Table of contents:
 
 1. Install [Node.js](https://nodejs.org);
     > Require [Node.js](https://nodejs.org) version >=22
-2. Install the NPM dependencies by running `npm ci`;
-3. Create `.env.local` then add variables. You can look at the `.env.local.example` file;
+2. Enable Corepack (`corepack enable`) so the pinned pnpm version is used;
+3. Install dependencies by running `pnpm install --frozen-lockfile`;
+4. Create `.env.local` then add variables. You can look at the `.env.local.example` file;
 
 ## 🤖 Commands
 
 -   Runs the local dev server at `localhost:9777`:
     ```
-    npm run dev:vite
+    pnpm dev:vite
     ```
 -   Runs the local dev server at `localhost:9777` in the scan mode:
     ```
-    npm run dev:vite:scan
+    pnpm dev:vite:scan
     ```
 -   Runs `tsc` CLI in watch mode:
     ```
-    npm run dev:tsc
+    pnpm dev:tsc
     ```
 -   Runs the local dev server and `tsc` together:
     ```
-    npm run dev
+    pnpm dev
     ```
 -   Runs the local dev server in the scan mode and `tsc` together:
     ```
-    npm run dev:scan
+    pnpm dev:scan
     ```
 -   Builds your production site to `./dist/`:
     ```
-    npm run build
+    pnpm build
     ```
 -   Previews your build locally, before deploying at `localhost:9111`:
     ```
-    npm run preview
+    pnpm preview
     ```
 -   Runs `tsc` CLI:
     ```
-    npm run tsc
+    pnpm tsc
     ```
 -   Checks your JavaScript/TypeScript for errors and warnings:
     ```
-    npm run lint:eslint
+    pnpm lint:eslint
     ```
 -   Checks your CSS for errors and warnings:
     ```
-    npm run lint:stylelint
+    pnpm lint:stylelint
     ```
 -   Checks your code formatting:
     ```
-    npm run lint:prettier
+    pnpm lint:prettier
     ```
 -   Checks your code all together:
     ```
-    npm run lint
+    pnpm lint
     ```
 -   Fixes your code formatting:
     ```
-    npm run fix:prettier
+    pnpm fix:prettier
     ```
 -   Finds and fixes unused dependencies, exports and files:
     ```
-    npm run knip
+    pnpm knip
     ```
 -   Installs husky:
     ```
-    npm run prepare
+    pnpm prepare
     ```
 
 ## 🧶 Structure
@@ -221,7 +222,7 @@ Table of contents:
 
 #### Build and output directories
 
--   `dist/` - production build output directory (generated after `npm run build`);
+-   `dist/` - production build output directory (generated after `pnpm build`);
 -   `tmp/` - temporary files directory containing:
     -   `bundle-visualizer.html` - bundle size analysis report (generated after build with rollup-plugin-visualizer);
 
@@ -252,7 +253,7 @@ Table of contents:
 #### Editor and environment configurations
 
 -   `.editorconfig` - editor configuration for consistent coding styles;
--   `.npmrc` - NPM configuration settings;
+-   `pnpm-workspace.yaml` - pnpm configuration (approved build scripts);
 -   `.env.local.example` - example environment variables file (template for `.env.local`);
 -   `.env.local` - local environment variables (should be created manually, not committed to git);
 
