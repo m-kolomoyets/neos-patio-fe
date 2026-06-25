@@ -50,6 +50,9 @@ h4,
 h5,
 h6 {
     text-wrap: balance;
+    font-size: unset;
+    font-weight: unset;
+    line-height: unset;
 }
 
 ol,
