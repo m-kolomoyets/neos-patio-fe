@@ -105,8 +105,8 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
                     <Typography className={s.title} variant="text-xl" render={<h3 />}>
                         {patio.name}
                     </Typography>
-                    <Typography className={s.subtitle} variant="text-sm" render={<p />}>
-                        by {patio.author}
+                    <Typography className={s.id} variant="text-sm" render={<span />}>
+                        ID {patio.id}
                     </Typography>
                     <ul className={s.meta}>
                         <Tag render={<li />}>
@@ -114,11 +114,6 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
                             <Typography variant="text-sm" render={<span />}>
                                 <span className="sr-only">Continent: </span>
                                 {CONTINENT_LABELS?.[patio.continent] ?? 'N/A'}
-                            </Typography>
-                        </Tag>
-                        <Tag render={<li />}>
-                            <Typography variant="text-sm" render={<span />}>
-                                ID {patio.id}
                             </Typography>
                         </Tag>
                     </ul>

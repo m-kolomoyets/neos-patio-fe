@@ -185,11 +185,12 @@
 
 .title {
     font-weight: 600;
+    margin-bottom: var(--gap-1);
 }
 
-.subtitle {
-    color: hsl(var(--color-hsl-white) / 0.6);
+.id {
     margin-bottom: var(--gap-6);
+    color: hsl(var(--color-hsl-white) / 0.6);
 }
 
 .open-button {

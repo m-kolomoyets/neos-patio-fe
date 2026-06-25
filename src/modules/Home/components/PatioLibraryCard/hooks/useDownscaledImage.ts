@@ -9,8 +9,8 @@ import { HOME_SCROLL_ROOT_SELECTOR } from '../../../constants';
 
 // Painted image box, mirrors --image-width / --image-height in styles.module.css
 // plus the parallax overshoot (.image height is 140%).
-const BOX_WIDTH = 184;
-const BOX_HEIGHT = 110;
+const BOX_WIDTH = 221;
+const BOX_HEIGHT = 132;
 const PARALLAX_OVERSHOOT = 1.4;
 const MAX_DPR = 2;
 

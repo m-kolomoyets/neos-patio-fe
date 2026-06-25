@@ -69,8 +69,9 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
                             {patio.name}
                         </Typography>
                     </div>
-                    <Typography className={s.author} variant="text-sm" render={<p />}>
-                        by Neos
+
+                    <Typography className={s.id} variant="text-sm" render={<p />}>
+                        <Id24Icon className={s.icon} aria-label="ID" /> {patio.id}
                     </Typography>
                 </header>
                 <footer className={s.footer}>
@@ -78,9 +79,6 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
                         <MapPin24Icon className={s.icon} aria-hidden />
                         <span className="sr-only">Continent: </span>
                         {CONTINENT_LABELS?.[patio.continent] ?? 'N/A'}
-                    </Typography>
-                    <Typography className={s.id} variant="text-sm" render={<p />}>
-                        <Id24Icon className={s.icon} aria-label="ID" /> {patio.id}
                     </Typography>
                 </footer>
             </div>
