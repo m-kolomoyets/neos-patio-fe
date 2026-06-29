@@ -74,10 +74,10 @@
     position: relative;
     width: var(--image-width);
     height: var(--image-height);
+    box-sizing: border-box;
     flex-shrink: 0;
     z-index: 2;
     border-radius: calc(var(--radius-md) + 1px);
-    border: 1px solid hsl(var(--color-hsl-white) / 0.2);
     overflow: hidden;
     transition: box-shadow 250ms ease;
     box-shadow: 0 0 2px 1px hsl(var(--color-hsl-white) / 0.15);
@@ -91,10 +91,10 @@
     isolation: isolate;
     z-index: 3;
     box-shadow:
-        -1px -1px 4px hsl(var(--color-hsl-black) / 0.1) inset,
-        -1px 1px 4px hsl(var(--color-hsl-black) / 0.2) inset,
-        1px -1px 4px hsl(116deg 2% 9% / 0.4) inset,
-        0 -3px 4px hsl(var(--color-hsl-black) / 0.2) inset;
+        -1px -1px 1px hsl(var(--color-hsl-black) / 0.1) inset,
+        -1px 1px 1px hsl(var(--color-hsl-black) / 0.2) inset,
+        1px -1px 1px hsl(116deg 2% 9% / 0.4) inset,
+        0 -3px 1px hsl(var(--color-hsl-black) / 0.2) inset;
 }
 
 .image {
