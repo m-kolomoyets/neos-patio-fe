@@ -1,6 +1,7 @@
 .wrap {
     --home-content-offset-y: 3.5rem;
     --home-content-offset-x: 3.5rem;
+    --home-content-bottom-offset: 2.0625rem;
 
     position: relative;
     min-height: 100svh;
@@ -8,13 +9,14 @@
     flex-direction: column;
     isolation: isolate;
     padding-block: var(--home-content-offset-y);
+    padding-bottom: calc(var(--home-content-offset-y) + var(--home-content-bottom-offset));
 }
 
 .main {
     position: relative;
     flex: 1;
     width: calc(100vw - var(--home-content-offset-x) * 2);
-    height: calc(100vh - var(--home-content-offset-y) * 2);
+    height: calc(100vh - (var(--home-content-offset-y) * 2) - var(--home-content-bottom-offset));
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -44,7 +46,7 @@
 .scroll .scroll-viewport,
 .main::after {
     border-radius: 2.5rem;
-    corner-shape: superellipse(1.5);
+    corner-shape: superellipse(0.9);
 }
 
 .scroll .scroll-viewport {
@@ -73,6 +75,20 @@
 
 .scroll :global(.scroll-area-scrollbar-vertical .scroll-area-thumb):hover {
     background: hsl(var(--color-hsl-white) / 0.5);
+}
+
+@media screen and (max-width: 1439px) {
+    .wrap {
+        --home-content-offset-y: 2.5rem;
+        --home-content-offset-x: 2.5rem;
+        --home-content-bottom-offset: 32px;
+    }
+}
+
+@media screen and (min-width: 1920px) {
+    .wrap {
+        --home-content-offset-x: 9.5rem;
+    }
 }
 
 @media (max-width: 1024px) {

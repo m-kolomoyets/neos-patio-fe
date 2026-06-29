@@ -1,9 +1,10 @@
 .wrap {
-    --spot-radius: 200px;
+    --spot-radius: 12.5rem;
+    --card-height: 32rem;
 
     position: relative;
     display: block;
-    height: 512px;
+    height: var(--card-height);
     margin: 2px;
     padding: var(--gap-3);
     border-radius: var(--radius-4xl);
@@ -18,15 +19,15 @@
     background-color: hsl(0deg 0% 10% / 0.3);
 }
 
-@media screen and (max-width: 1279px) {
+@media screen and (max-width: 1727px) {
     .wrap {
-        height: 348px;
+        --card-height: 424px;
     }
 }
 
 @media screen and (max-width: 1439px) {
     .wrap {
-        height: 424px;
+        --card-height: 348px;
     }
 }
 
