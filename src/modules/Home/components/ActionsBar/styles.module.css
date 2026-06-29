@@ -1,7 +1,7 @@
 .shell {
     position: absolute;
-    bottom: -24px;
-    left: calc(50% - 200px);
+    bottom: -2rem;
+    left: calc(50% - 12.5rem);
     width: 400px;
     min-height: 64px;
     z-index: 10;
