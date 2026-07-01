@@ -51,7 +51,7 @@ export const PatioSort: React.FC = () => {
                 <Menu.Positioner side="bottom" align="end" sideOffset={8}>
                     <Menu.Popup render={<PopupWrapper className={s.popup} />}>
                         <div className={s.header}>
-                            <Typography variant="text-sm" className={s.heading}>
+                            <Typography variant="text-xs" className={s.heading}>
                                 Sort by:
                             </Typography>
                             <Button
