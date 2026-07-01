@@ -40,18 +40,32 @@ const prefersReducedMotion = (): boolean => {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 };
 
+// Left gutter (red-line visual point) = var(--gap-5) - var(--gap-0-5) = 1.25rem - 0.125rem.
+const SLIDE_GUTTER_REM = 1.125;
+
+// Embla clamps the first/last snap to the scroll bounds (ScrollContain.measureBounded), so this
+// offset is ignored for the edge slides — their gutter comes from the .slide:first/last-child
+// padding — and applied only to the middle slides, aligning their content to the same gutter.
+const alignToGutter = (): number => {
+    if (typeof window === 'undefined') {
+        return 0;
+    }
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    return SLIDE_GUTTER_REM * rootFontSize;
+};
+
 const buildOptions = (reducedMotion: boolean): EmblaOptionsType => {
     if (reducedMotion) {
         return {
             loop: false,
-            align: 'start',
+            align: alignToGutter,
             dragFree: false,
             containScroll: 'trimSnaps',
             duration: 0,
             skipSnaps: true,
         };
     }
-    return { loop: false, align: 'start', dragFree: false, containScroll: 'trimSnaps' };
+    return { loop: false, align: alignToGutter, dragFree: false, containScroll: 'trimSnaps' };
 };
 
 export const useFeaturedCarousel = ({ dataKey }: Params): Result => {

@@ -1,6 +1,6 @@
 .wrap {
     --spot-radius: 12.5rem;
-    --card-height: 32rem;
+    --card-height: 512px;
 
     position: relative;
     display: block;
