@@ -46,6 +46,7 @@
 
 .label {
     flex: 1;
+    color: hsl(var(--color-hsl-white) / 0.9);
 }
 
 .checkmark {
