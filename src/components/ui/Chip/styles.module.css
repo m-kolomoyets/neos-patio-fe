@@ -57,7 +57,7 @@
 }
 
 .wrap[data-pressed] {
-    background: var(--color-brand-600);
+    background: var(--color-brand-650);
     backdrop-filter: blur(100px);
 }
 
