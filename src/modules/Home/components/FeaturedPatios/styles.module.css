@@ -1,5 +1,5 @@
 .wrap {
-    --slides-pre-view: 2.19;
+    --slides-pre-view: 2.229;
 
     display: flex;
     flex-direction: column;
@@ -72,11 +72,15 @@
 }
 
 .slide:first-child {
-    padding-left: calc(var(--gap-5) - var(--gap-0-5));
+    --slide-padding-left: calc(var(--gap-5) - var(--gap-0-5));
+    padding-left: var(--slide-padding-left);
+    flex: 0 0 calc((100 / var(--slides-pre-view)) * 1cqi + var(--slide-padding-left));
 }
 
 .slide:last-child {
-    padding-right: calc(var(--gap-5) - var(--gap-0-5));
+    --slide-padding-right: calc(var(--gap-5) - var(--gap-0-5));
+    padding-right: var(--slide-padding-right);
+    flex: 0 0 calc((100 / var(--slides-pre-view)) * 1cqi + var(--slide-padding-right));
 }
 
 .skeleton-card {
