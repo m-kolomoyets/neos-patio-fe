@@ -71,7 +71,7 @@ export const PatioFilters: React.FC = () => {
                 <Popover.Positioner side="bottom" align="end" sideOffset={8}>
                     <Popover.Popup render={<PopupWrapper className={s.popup} />}>
                         <div className={s.header}>
-                            <Typography variant="text-sm" className={s.heading}>
+                            <Typography variant="text-xs" className={s.heading}>
                                 Filter by:
                             </Typography>
                             <Button
