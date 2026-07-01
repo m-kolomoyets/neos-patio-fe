@@ -75,7 +75,7 @@ export const PatioSort: React.FC = () => {
                                 return (
                                     <Menu.RadioItem key={value} value={value} className={s.item}>
                                         <Icon className={s.icon} />
-                                        <Typography variant="text-md" className={s.label}>
+                                        <Typography variant="text-sm" className={s.label}>
                                             {label}
                                         </Typography>
                                         <Menu.RadioItemIndicator>
