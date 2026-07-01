@@ -7,4 +7,5 @@ export const envSchema = z.object({
     VITE_ANKR_API_KEY: z.string(),
     VITE_MAPTILER_API_KEY: z.string(),
     VITE_CESIUM_ACCESS_TOKEN: z.string(),
+    VITE_MAPBOX_TOKEN: z.string(),
 });

@@ -7,6 +7,7 @@ interface ImportMetaEnv {
     readonly VITE_ANKR_API_KEY: string;
     readonly VITE_MAPTILER_API_KEY: string;
     readonly VITE_CESIUM_ACCESS_TOKEN: string;
+    readonly VITE_MAPBOX_TOKEN: string;
 }
 
 interface ImportMeta {
