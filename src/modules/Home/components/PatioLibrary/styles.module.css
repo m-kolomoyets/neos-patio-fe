@@ -103,8 +103,9 @@
     padding-inline: var(--gap-8);
 }
 
-.group-separator {
+.group .group-separator {
     margin-inline: var(--gap-8);
+    height: 2px;
     width: calc(100% - var(--gap-8) * 2) !important;
 }
 
