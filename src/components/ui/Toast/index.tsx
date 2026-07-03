@@ -1,14 +1,12 @@
 import type { ToastType } from './types';
 import AlertCircleIcon from '@/icons/alert-circle_24.svg?react';
-import CheckmarkCircleIcon from '@/icons/checkmark-circle-filled_24.svg?react';
-import XMarkIcon from '@/icons/x-mark_24.svg?react';
+import CheckmarkIcon from '@/icons/checkmark_24.svg?react';
 import { Toast as BaseToast } from '@base-ui/react/toast';
-import clsx from 'clsx';
 import { toastManager } from './manager';
 import s from './styles.module.css';
 
 const TYPE_ICONS: Record<ToastType, React.FC<React.SVGProps<SVGSVGElement>>> = {
-    success: CheckmarkCircleIcon,
+    success: CheckmarkIcon,
     error: AlertCircleIcon,
     info: AlertCircleIcon,
 };
@@ -21,20 +19,9 @@ const ToastList: React.FC = () => {
         const Icon = TYPE_ICONS[type] ?? TYPE_ICONS.info;
 
         return (
-            <BaseToast.Root
-                key={toast.id}
-                toast={toast}
-                className={clsx(s.toast, 'surface-thick')}
-                data-toast-type={type}
-            >
+            <BaseToast.Root key={toast.id} toast={toast} className={s.toast} data-toast-type={type}>
                 <Icon className={s.icon} />
-                <div className={s.content}>
-                    <BaseToast.Title className={s.title} />
-                    {toast.description ? <BaseToast.Description className={s.description} /> : null}
-                </div>
-                <BaseToast.Close className={clsx(s.close, 'focus-primary')} aria-label="Close">
-                    <XMarkIcon className={s['close-icon']} />
-                </BaseToast.Close>
+                <BaseToast.Title className={s.title} />
             </BaseToast.Root>
         );
     });
