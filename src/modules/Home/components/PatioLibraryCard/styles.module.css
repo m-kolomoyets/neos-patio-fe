@@ -141,10 +141,6 @@
     min-width: 0;
 }
 
-.id {
-    color: rgb(255 255 255 / 0.6);
-}
-
 .title-wrap {
     display: flex;
     width: 100%;
@@ -155,7 +151,7 @@
 }
 
 .name {
-    color: var(--color-base-white);
+    color: hsl(var(--color-hsl-white) / 0.9);
     font-weight: 600;
     min-width: 0;
     flex: 1 1 auto;
@@ -178,7 +174,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--gap-1);
-    color: var(--color-base-white);
+    color: hsl(var(--color-hsl-white) / 0.9);
     font-weight: 500;
 }
 
@@ -192,6 +188,7 @@
 .country {
     display: inline-flex;
     align-items: center;
+    color: hsl(var(--color-hsl-white) / 0.9);
     gap: var(--gap-1);
 }
 
