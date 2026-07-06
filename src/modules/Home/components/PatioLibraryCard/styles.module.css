@@ -6,7 +6,6 @@
     position: relative;
     overflow: hidden;
     border-radius: var(--radius-2xl);
-    corner-shape: superellipse(1.2);
     display: flex;
     text-decoration: none;
     color: var(--color-base-white);
@@ -23,7 +22,6 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    corner-shape: superellipse(1.2);
     pointer-events: none;
     background: radial-gradient(
         circle var(--spot-radius, 200px) at var(--spot-x, 50%) var(--spot-y, 50%),
@@ -52,7 +50,6 @@
     inset: 0;
     opacity: 0;
     border-radius: inherit;
-    corner-shape: superellipse(1.2);
     padding: 1px;
     background: var(--stroke-surface);
     mask:
@@ -81,7 +78,6 @@
     flex-shrink: 0;
     z-index: 2;
     border-radius: var(--radius-md);
-    corner-shape: superellipse(1.2);
     overflow: hidden;
     transition: box-shadow 250ms ease;
     box-shadow: 0 0 2px 1px hsl(var(--color-hsl-white) / 0.15);
@@ -92,7 +88,6 @@
     position: absolute;
     inset: 0;
     border-radius: var(--radius-md);
-    corner-shape: superellipse(1.2);
     isolation: isolate;
     z-index: 3;
     box-shadow:
@@ -110,7 +105,6 @@
     object-fit: cover;
     display: block;
     border-radius: var(--radius-md);
-    corner-shape: superellipse(1.2);
 }
 
 .image[data-parallax-active="true"] {

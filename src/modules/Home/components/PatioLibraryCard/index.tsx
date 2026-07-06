@@ -1,9 +1,11 @@
 import type { PatioLibraryCardProps } from './types';
+import { useCallback } from 'react';
 import Id24Icon from '@/icons/id_24.svg?react';
 import MapPin24Icon from '@/icons/map-pin_24.svg?react';
 import clsx from 'clsx';
 import { usePatioTransitionNavigate } from '@/hooks/usePatioTransitionNavigate';
 import { useSpotlight } from '@/hooks/useSpotlight';
+import { useSquircleClipPath } from '@/hooks/useSquircleClipPath';
 import { Typography } from '@/components/ui/Typography';
 import { CONTINENT_LABELS } from '../../constants';
 import { useDownscaledImage } from './hooks/useDownscaledImage';
@@ -18,6 +20,18 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
         alt: patio.name,
     });
 
+    // Squircle corners matching Figma's 60% iOS smoothing.
+    const [wrapSquircleRef, wrapSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: 16 });
+    const [mediaSquircleRef, mediaSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius: 8 });
+
+    const setWrapRef = useCallback(
+        (el: HTMLElement | null) => {
+            spotlightRef(el);
+            wrapSquircleRef.current = el;
+        },
+        [spotlightRef, wrapSquircleRef]
+    );
+
     const navigateToPatio = () => {
         navigate(patio);
     };
@@ -30,7 +44,8 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
 
     return (
         <article
-            ref={spotlightRef}
+            ref={setWrapRef}
+            style={wrapSquircleStyle}
             className={clsx(s.wrap, 'focus-primary')}
             data-card-id={patio.id}
             role="button"
@@ -38,7 +53,7 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
             onClick={navigateToPatio}
             onKeyDown={handleKeyDown}
         >
-            <div className={s.media}>
+            <div ref={mediaSquircleRef} className={s.media} style={mediaSquircleStyle}>
                 <div className={clsx(s.decor, s.top)} aria-hidden />
                 <div className={clsx(s.decor, s.bottom)} aria-hidden />
                 <canvas ref={canvasRef} className={s.image} />
