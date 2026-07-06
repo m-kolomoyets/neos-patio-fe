@@ -2,6 +2,8 @@ import type { EmblaCarouselType, EmblaOptionsType } from 'embla-carousel';
 import { useCallback, useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { computeActiveSet } from '../utils/computeActiveSet';
+import { isWeakDevice } from '../utils/detectDeviceSeed';
+import { useVideoPerfGuard } from './useVideoPerfGuard';
 
 type Params = {
     dataKey: unknown;
@@ -71,9 +73,12 @@ const buildOptions = (reducedMotion: boolean): EmblaOptionsType => {
 export const useFeaturedCarousel = ({ dataKey }: Params): Result => {
     const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotion);
     const [staticCapable] = useState<boolean>(() => {
-        return supportsHover() && !isSlowConnection();
+        return supportsHover() && !isSlowConnection() && !isWeakDevice();
     });
-    const videoCapable = staticCapable && !reducedMotion;
+    // Runtime FPS is the source of truth; the static seed above only culls obviously weak hardware.
+    // Sample only while videos would actually be mounted/scrubbing.
+    const { degraded } = useVideoPerfGuard({ enabled: staticCapable && !reducedMotion });
+    const videoCapable = staticCapable && !reducedMotion && !degraded;
 
     const [emblaRef, emblaApi] = useEmblaCarousel(buildOptions(reducedMotion));
     const [selectedIndex, setSelectedIndex] = useState(0);
