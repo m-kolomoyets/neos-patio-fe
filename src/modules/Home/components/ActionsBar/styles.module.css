@@ -1,6 +1,6 @@
 .shell {
     position: absolute;
-    bottom: -2rem;
+    bottom: calc(var(--home-content-bottom-offset) + var(--home-content-offset-y) - 2rem);
     left: calc(50% - 12.5rem);
     width: 400px;
     min-height: 64px;

@@ -1,5 +1,5 @@
 import type { ScrollArea as BaseScrollArea } from '@base-ui/react/scroll-area';
-import type { Ref } from 'react';
+import type { CSSProperties, Ref } from 'react';
 
 export type ScrollAreaOrientation = 'vertical' | 'horizontal' | 'both';
 
@@ -19,4 +19,8 @@ export type ScrollAreaProps = BaseScrollArea.Root.Props & {
      * that needs to observe the scroll container directly.
      */
     viewportRef?: Ref<HTMLDivElement>;
+    /**
+     * Inline style applied to the inner viewport (e.g. a squircle `clip-path`).
+     */
+    viewportStyle?: CSSProperties;
 };

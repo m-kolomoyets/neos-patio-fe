@@ -7,8 +7,8 @@
     height: var(--card-height);
     margin: 2px;
     padding: var(--gap-3);
+    /* Fallback rounding before JS measures the squircle clip-path (useSquircleClipPath). */
     border-radius: var(--radius-4xl);
-    corner-shape: superellipse(1.2);
     user-select: none;
     transition:
         box-shadow 250ms ease,
@@ -37,7 +37,6 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    corner-shape: superellipse(1.2);
     pointer-events: none;
     background: radial-gradient(
         circle var(--spot-radius, 360px) at var(--spot-x, 50%) var(--spot-y, 50%),
