@@ -28,7 +28,7 @@ export const FeaturedPatios: React.FC = () => {
         dataKey: data,
     });
 
-    useCarouselVideoScrub({ emblaApi, enabled: !reducedMotion });
+    useCarouselVideoScrub({ emblaApi, enabled: videoCapable });
     const { boost, unboost } = useCarouselProximityAutoplay({ emblaApi, enabled: videoCapable && !reducedMotion });
 
     const hasMultipleSlides = snapList.length > 1;
