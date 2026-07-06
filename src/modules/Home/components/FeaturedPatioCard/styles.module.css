@@ -7,7 +7,6 @@
     height: var(--card-height);
     margin: 2px;
     padding: var(--gap-3);
-    /* Fallback rounding before JS measures the squircle clip-path (useSquircleClipPath). */
     border-radius: var(--radius-4xl);
     user-select: none;
     transition:
