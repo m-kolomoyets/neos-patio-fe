@@ -1,5 +1,13 @@
 @import url("./reset.css");
 
+@font-face {
+    font-family: "Inter";
+    src: url("/fonts/Inter.ttf") format("truetype-variations");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
     /* Colors HSL partitions */
     --color-hsl-white: 0deg 0% 100%;
