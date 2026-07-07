@@ -32,10 +32,10 @@ export type Squares = {
  * real-world orientation plus the projected screen angle of north at its location
  * — so patios stay pinned to the world at any bearing and rotate rigidly with the
  * map. The morph markers in `ClusterMarkers` use the same helper to stay in sync.
- * The `_bearing` arg is unused now (projection drives orientation) but re-renders
- * still flow through `useMapCamera`.
+ * Orientation is driven entirely by the projection, so no bearing arg is needed;
+ * re-renders flow through `useMapCamera`.
  */
-export const useSquares = (_bearing: number): Squares | null => {
+export const useSquares = (): Squares | null => {
     // `map.project` reads Mapbox's live (mutable) transform, which changes on every
     // rotate/pan/zoom without any React-tracked dep changing. The React Compiler
     // sees only a stable `map` ref + literal coords and would memoize the projected

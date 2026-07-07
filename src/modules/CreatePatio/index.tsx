@@ -13,7 +13,6 @@ import {
 } from './constants';
 import { prefersReducedMotion } from './utils/prefersReducedMotion';
 import { CreatePatioProvider } from './context/CreatePatioContext';
-import { useAzimuth } from './hooks/useAzimuth';
 import { ClusterMarkers } from './components/ClusterMarkers';
 import { Header } from './components/Header';
 import { MapViewTabs } from './components/MapViewTabs';
@@ -39,9 +38,6 @@ export const CreatePatio: React.FC = () => {
     const [surfaceRef, surfaceSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: 40 });
     // Inner squircle clipping the map region (22px).
     const [mapRef, mapSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius: 22 });
-
-    // Center square's bounds azimuth, derived from the live map bearing.
-    const bearing = useAzimuth();
 
     return (
         <MapProvider>
@@ -81,7 +77,7 @@ export const CreatePatio: React.FC = () => {
                                     <SatelliteLayer />
                                     <PatioClusterSource />
                                     <ClusterMarkers />
-                                    <SquaresOverlay bearing={bearing} />
+                                    <SquaresOverlay />
                                 </Map>
                             </div>
                             <MapViewTabs />

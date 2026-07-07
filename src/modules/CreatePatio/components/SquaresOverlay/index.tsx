@@ -21,15 +21,6 @@ type CrossfadeVars = CSSProperties & { '--crossfade-opacity': string };
 /** Stable registry key for the single placement-layer overlay element. */
 const OVERLAY_KEY = 'squares-overlay';
 
-type SquaresOverlayProps = {
-    /**
-     * Live map bearing, in degrees clockwise from north. The center square stays
-     * screen-upright; existing patios rotate with it (screen azimuth =
-     * worldAzimuth + bearing) so they stay pinned to the world.
-     */
-    bearing: number;
-};
-
 const centerClipId = 'center-clip';
 const patioClipId = (id: string) => {
     return `patio-clip-${id}`;
@@ -43,7 +34,7 @@ const patioClipId = (id: string) => {
  * the red border-inside segments. Rounded corners are exact because the browser
  * does the clipping. Only center-vs-patio overlaps are drawn.
  */
-export const SquaresOverlay: React.FC<SquaresOverlayProps> = ({ bearing }) => {
+export const SquaresOverlay: React.FC = () => {
     useSelectPatioOnClick();
 
     const registerCrossfade = useCrossfadeDriver();
@@ -52,7 +43,7 @@ export const SquaresOverlay: React.FC<SquaresOverlayProps> = ({ bearing }) => {
     // *interactions* stay gated at `PLACEMENT_MIN_ZOOM` inside `useSelectPatioOnClick`
     // and the overlay is `pointer-events: none`, so rendering early is purely visual.
     const visible = useZoomAtLeast(CROSSFADE_BAND.min);
-    const squares = useSquares(bearing);
+    const squares = useSquares();
     if (!squares) return null;
     if (!visible) return null;
 
