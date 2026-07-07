@@ -8,10 +8,10 @@ import {
     SQUARE_CORNER_RADIUS,
 } from '../../constants';
 import { getCrossfadeOpacity } from '../../utils/getCrossfadeOpacity';
-import { getRectAttrs } from '../../utils/squareGeometry';
 import { useCrossfadeDriver } from '../../hooks/useCrossfadeDriver';
+import { usePatioGeometries } from '../../hooks/usePatioGeometries';
 import { useSelectPatioOnClick } from '../../hooks/useSelectPatioOnClick';
-import { useSquares } from '../../hooks/useSquares';
+import { patioGeoId, useSquaresDriver } from '../../hooks/useSquaresDriver';
 import { useZoomAtLeast } from '../../hooks/useZoomAtLeast';
 import s from './styles.module.css';
 
@@ -33,34 +33,39 @@ const patioClipId = (id: string) => {
  * patio paints the overlap, and each square's stroke clipped to the other paints
  * the red border-inside segments. Rounded corners are exact because the browser
  * does the clipping. Only center-vs-patio overlaps are drawn.
+ *
+ * The tree here is *structural only* — one keyed node set per patio, re-rendered
+ * only when the patio list or visibility changes. Every rect's pixel position is
+ * written imperatively by `useSquaresDriver` on the map's `render` event (via the
+ * registered refs), so panning/zooming never re-renders React and the overlay
+ * tracks the GL canvas without swimming. Rects that mirror the same geometry
+ * (base, clip, and intersection copies) register under the same geo id.
  */
 export const SquaresOverlay: React.FC = () => {
     useSelectPatioOnClick();
 
     const registerCrossfade = useCrossfadeDriver();
+    const patios = usePatioGeometries();
+    const registerRect = useSquaresDriver(patios);
+
     // Mount from the bottom of the cross-fade band (below the placement threshold)
     // so the squares can fade in against the outgoing browse markers. Placement
     // *interactions* stay gated at `PLACEMENT_MIN_ZOOM` inside `useSelectPatioOnClick`
     // and the overlay is `pointer-events: none`, so rendering early is purely visual.
     const visible = useZoomAtLeast(CROSSFADE_BAND.min);
-    const squares = useSquares();
-    if (!squares) return null;
     if (!visible) return null;
-
-    const { camera, center, patios } = squares;
 
     // Seed the driver's opacity from the current zoom so the first paint is already
     // at the right cross-fade value (no full-opacity flash on mount); the driver
-    // then updates `--crossfade-opacity` every frame.
-    const crossfadeVars: CrossfadeVars = { '--crossfade-opacity': `${getCrossfadeOpacity(camera.zoom, 'placement')}` };
-
-    const centerAttrs = getRectAttrs(center);
+    // then updates `--crossfade-opacity` every frame. Positions are seeded by
+    // `useSquaresDriver`'s layout-effect paint before the browser first paints.
+    const crossfadeVars: CrossfadeVars = {
+        '--crossfade-opacity': `${getCrossfadeOpacity(CROSSFADE_BAND.min, 'placement')}`,
+    };
 
     return (
         <svg
             className={s.overlay}
-            width={camera.width}
-            height={camera.height}
             style={crossfadeVars}
             ref={(el) => {
                 registerCrossfade(OVERLAY_KEY, el ? { el, layer: 'placement' } : null);
@@ -113,23 +118,35 @@ export const SquaresOverlay: React.FC = () => {
                 </filter>
 
                 <clipPath id={centerClipId}>
-                    <rect {...centerAttrs} rx={SQUARE_CORNER_RADIUS} />
+                    <rect
+                        ref={(el) => {
+                            return registerRect('center-clip', 'center', el);
+                        }}
+                        rx={SQUARE_CORNER_RADIUS}
+                    />
                 </clipPath>
-                {patios.map(({ id, rect }) => {
+                {patios.map(({ id }) => {
                     return (
                         <clipPath key={id} id={patioClipId(id)}>
-                            <rect {...getRectAttrs(rect)} rx={SQUARE_CORNER_RADIUS} />
+                            <rect
+                                ref={(el) => {
+                                    return registerRect(`patio-clip-${id}`, patioGeoId(id), el);
+                                }}
+                                rx={SQUARE_CORNER_RADIUS}
+                            />
                         </clipPath>
                     );
                 })}
             </defs>
 
             {/* Base blue patio squares (geo-anchored). */}
-            {patios.map(({ id, rect }) => {
+            {patios.map(({ id }) => {
                 return (
                     <rect
                         key={id}
-                        {...getRectAttrs(rect)}
+                        ref={(el) => {
+                            return registerRect(`patio-base-${id}`, patioGeoId(id), el);
+                        }}
                         rx={SQUARE_CORNER_RADIUS}
                         fill="url(#patio-square-gradient)"
                         stroke={PATIO_SQUARE.border}
@@ -141,7 +158,9 @@ export const SquaresOverlay: React.FC = () => {
 
             {/* Base orange center square (pinned to viewport). */}
             <rect
-                {...centerAttrs}
+                ref={(el) => {
+                    return registerRect('center-base', 'center', el);
+                }}
                 rx={SQUARE_CORNER_RADIUS}
                 fill="url(#center-square-gradient)"
                 stroke={CENTER_SQUARE.border}
@@ -150,8 +169,7 @@ export const SquaresOverlay: React.FC = () => {
             />
 
             {/* Red collision layer: one independent overlap per patio. */}
-            {patios.map(({ id, rect }) => {
-                const patioAttrs = getRectAttrs(rect);
+            {patios.map(({ id }) => {
                 const clipToPatio = `url(#${patioClipId(id)})`;
                 const clipToCenter = `url(#${centerClipId})`;
 
@@ -164,7 +182,9 @@ export const SquaresOverlay: React.FC = () => {
                         {/* Overlap region: center filled red, clipped to the patio. */}
                         <g clipPath={clipToPatio}>
                             <rect
-                                {...centerAttrs}
+                                ref={(el) => {
+                                    return registerRect(`x-fill-${id}`, 'center', el);
+                                }}
                                 rx={SQUARE_CORNER_RADIUS}
                                 fill={INTERSECTION.fill}
                                 fillOpacity={INTERSECTION.fillOpacity}
@@ -173,7 +193,9 @@ export const SquaresOverlay: React.FC = () => {
                         {/* Center border segments inside the patio. */}
                         <g clipPath={clipToPatio}>
                             <rect
-                                {...centerAttrs}
+                                ref={(el) => {
+                                    return registerRect(`x-center-border-${id}`, 'center', el);
+                                }}
                                 rx={SQUARE_CORNER_RADIUS}
                                 fill="none"
                                 stroke={INTERSECTION.border}
@@ -183,7 +205,9 @@ export const SquaresOverlay: React.FC = () => {
                         {/* Patio border segments inside the center. */}
                         <g clipPath={clipToCenter}>
                             <rect
-                                {...patioAttrs}
+                                ref={(el) => {
+                                    return registerRect(`x-patio-border-${id}`, patioGeoId(id), el);
+                                }}
                                 rx={SQUARE_CORNER_RADIUS}
                                 fill="none"
                                 stroke={INTERSECTION.border}

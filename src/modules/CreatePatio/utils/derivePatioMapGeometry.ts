@@ -57,7 +57,7 @@ const HUB_JITTER_M = 180;
 
 /**
  * Maps a patio id to a stable position near `start`, plus its footprint size and
- * azimuth. The single source of map geometry: `useSquares`, the click hit-test,
+ * azimuth. The single source of map geometry: `usePatioGeometries`, the click hit-test,
  * and the clustering source all relocate the same fixture set through this, so
  * the squares seen while placing are exactly the points that cluster on zoom-out.
  * Pure.

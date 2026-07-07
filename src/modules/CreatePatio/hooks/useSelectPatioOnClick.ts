@@ -1,12 +1,11 @@
 import type { SquareRect } from '../types';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useMap } from 'react-map-gl/mapbox';
-import { usePatioPoints } from '@/services/patios/queries';
-import { CREATE_PATIO_MAP_ID, PATIO_SIZE_M, PLACEMENT_MIN_ZOOM, START_COORDINATE } from '../constants';
-import { derivePatioMapGeometry } from '../utils/derivePatioMapGeometry';
+import { CREATE_PATIO_MAP_ID, PATIO_SIZE_M, PLACEMENT_MIN_ZOOM } from '../constants';
 import { metersToPixels } from '../utils/metersToPixels';
 import { isPointInSquare } from '../utils/squareGeometry';
 import { useCreatePatioMode } from '../context/CreatePatioContext';
+import { usePatioGeometries } from './usePatioGeometries';
 
 /**
  * Subscribes to the map `click` event and hit-tests the click against every
@@ -19,14 +18,9 @@ import { useCreatePatioMode } from '../context/CreatePatioContext';
 export const useSelectPatioOnClick = (): void => {
     const maps = useMap();
     const { setMode, setSelectedPatioId } = useCreatePatioMode();
-    const { data: points } = usePatioPoints();
     // Same relocated fixture set the squares render, so a geo hit-test selects a
     // real patio id (the DOM singleton path uses the same ids).
-    const patios = useMemo(() => {
-        return (points?.features ?? []).map((feature) => {
-            return { id: feature.properties.id, ...derivePatioMapGeometry(feature.properties.id, START_COORDINATE) };
-        });
-    }, [points]);
+    const patios = usePatioGeometries();
 
     useEffect(() => {
         const mapRef = maps.current ?? maps[CREATE_PATIO_MAP_ID];

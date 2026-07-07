@@ -11,6 +11,7 @@ import {
     MAPBOX_STYLE,
     START_COORDINATE,
 } from './constants';
+import { hideAerialClutter } from './utils/hideAerialClutter';
 import { prefersReducedMotion } from './utils/prefersReducedMotion';
 import { CreatePatioProvider } from './context/CreatePatioContext';
 import { ClusterMarkers } from './components/ClusterMarkers';
@@ -72,6 +73,8 @@ export const CreatePatio: React.FC = () => {
                                             ...GLOBE_FOG,
                                             'star-intensity': prefersReducedMotion() ? 0 : GLOBE_FOG['star-intensity'],
                                         });
+                                        // Bare aerial base: no roads, places, or labels.
+                                        hideAerialClutter(e.target);
                                     }}
                                 >
                                     <SatelliteLayer />
