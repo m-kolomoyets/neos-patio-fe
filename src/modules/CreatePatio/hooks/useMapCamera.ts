@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useMap } from 'react-map-gl/mapbox';
+import { CREATE_PATIO_MAP_ID } from '../constants';
 
 export type MapCamera = {
     width: number;
     height: number;
     latitude: number;
     zoom: number;
+    /** Map bearing (azimuth) in degrees, clockwise from north. Pitch is locked top-down. */
+    bearing: number;
 };
 
 const readCamera = (map: mapboxgl.Map): MapCamera => {
@@ -16,6 +19,7 @@ const readCamera = (map: mapboxgl.Map): MapCamera => {
         height: container.clientHeight,
         latitude: map.getCenter().lat,
         zoom: map.getZoom(),
+        bearing: map.getBearing(),
     };
 };
 
@@ -25,7 +29,10 @@ const readCamera = (map: mapboxgl.Map): MapCamera => {
  * `move`) keeps overlays tracking smoothly through inertial pans and zooms.
  */
 export const useMapCamera = (): MapCamera | null => {
-    const { current: mapRef } = useMap();
+    const maps = useMap();
+    // `current` is set only inside the `<Map>` subtree; the header button reads
+    // the same map by id from the `MapProvider` registry.
+    const mapRef = maps.current ?? maps[CREATE_PATIO_MAP_ID];
     const [camera, setCamera] = useState<MapCamera | null>(null);
 
     useEffect(() => {

@@ -20,9 +20,28 @@ export const DEFAULT_ZOOM = 16;
 export const PATIO_SIZE_M = 100;
 
 /**
- * Default azimuth (degrees, clockwise from north) of the center square. Held at
- * 0 so the square stays axis-aligned to the viewport; map rotation (future) will
- * turn the world under it rather than rotating the square.
+ * `id` given to the create-patio `<Map>` so `useMap()` can resolve it from the
+ * `MapProvider` registry outside the map subtree (e.g. the header button).
+ */
+export const CREATE_PATIO_MAP_ID = 'create-patio';
+
+/**
+ * The 100m footprint must fill at least this share of the shorter viewport
+ * dimension for the camera to count as "zoomed enough" to place a patio.
+ */
+export const ZOOM_ENOUGH_RATIO = 0.2;
+
+/**
+ * "Zoom in" flies to the zoom where the 100m footprint fills this share of the
+ * shorter viewport dimension. Above `ZOOM_ENOUGH_RATIO` so the button reliably
+ * flips to "Create patio" after the fly — no boundary flicker.
+ */
+export const ZOOM_IN_TARGET_RATIO = 0.3;
+
+/**
+ * Fallback azimuth (degrees, clockwise from north) before the map camera reports
+ * its bearing. The center square renders screen-upright; map drag-rotate turns the
+ * world under it rather than rotating the square.
  */
 export const DEFAULT_AZIMUTH = 0;
 

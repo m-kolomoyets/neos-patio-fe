@@ -24,8 +24,12 @@ export type Squares = {
  * and the geo-anchored patio squares (each projected from its coordinate). One
  * shared computation keeps the base squares and the clipped intersection aligned
  * pixel-for-pixel. Returns null until the map is ready.
+ *
+ * `bearing` is the live map azimuth: the center square is drawn screen-upright
+ * (screen azimuth 0) while each patio's screen azimuth is `worldAzimuth − bearing`,
+ * so patios stay pinned to the world and visually rotate as the map rotates.
  */
-export const useSquares = (azimuthDeg: number): Squares | null => {
+export const useSquares = (bearing: number): Squares | null => {
     const patios = useMemo(() => {
         return generatePatios(PATIO_SEED, START_COORDINATE);
     }, []);
@@ -39,7 +43,8 @@ export const useSquares = (azimuthDeg: number): Squares | null => {
     const center: SquareRect = {
         center: { x: camera.width / 2, y: camera.height / 2 },
         size: metersToPixels(PATIO_SIZE_M, camera.latitude, camera.zoom),
-        azimuthDeg,
+        // Screen-upright regardless of bearing; its bounds azimuth equals the bearing.
+        azimuthDeg: 0,
     };
 
     const patioSquares: PatioSquare[] = patios.features.map((feature, index) => {
@@ -51,7 +56,8 @@ export const useSquares = (azimuthDeg: number): Squares | null => {
             rect: {
                 center: { x: point.x, y: point.y },
                 size: metersToPixels(feature.properties.sizeMeters, latitude, camera.zoom),
-                azimuthDeg: feature.properties.azimuthDeg,
+                // Geo-anchored: counter-rotate by bearing so it stays pinned to the world.
+                azimuthDeg: feature.properties.azimuthDeg - bearing,
             },
         };
     });

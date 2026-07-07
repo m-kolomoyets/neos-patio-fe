@@ -1,13 +1,15 @@
-import { useState } from 'react';
 import { DEFAULT_AZIMUTH } from '../constants';
+import { useMapCamera } from './useMapCamera';
 
 /**
- * Holds the center square's azimuth (degrees, clockwise from north). The setter
- * is exposed for a future control panel to drive rotation; no UI consumes it in
- * this slice.
+ * The center square's bounds azimuth — its real-world orientation, in degrees
+ * clockwise from north — which equals the live map bearing. Read-only and
+ * derived: the map drag-rotate gesture is the only thing that turns it. There is
+ * no manual setter, because the square stays screen-upright while the world (and
+ * thus the recorded footprint's azimuth) rotates under it.
  */
-export const useAzimuth = () => {
-    const [azimuth, setAzimuth] = useState(DEFAULT_AZIMUTH);
+export const useAzimuth = (): number => {
+    const camera = useMapCamera();
 
-    return { azimuth, setAzimuth };
+    return camera?.bearing ?? DEFAULT_AZIMUTH;
 };

@@ -1,0 +1,97 @@
+.input.input {
+    width: 20rem;
+    max-width: 100%;
+    box-shadow: none;
+    background: none;
+}
+
+.positioner {
+    z-index: 50;
+    width: var(--anchor-width);
+    min-width: var(--anchor-width);
+}
+
+.popup {
+    padding: var(--gap-3);
+    width: 100%;
+    border-radius: var(--radius-4xl);
+    background: var(--surface-thick);
+    backdrop-filter: blur(64px);
+}
+
+.list {
+    outline: none;
+}
+
+.scroll-area {
+    --row-count: 6;
+    --row-height: 56px;
+
+    width: 100%;
+    max-height: calc(var(--row-count) * var(--row-height));
+}
+
+.state {
+    display: flex;
+    align-items: center;
+    padding: var(--gap-2) calc(var(--gap-2) + var(--gap-0-5));
+    color: var(--color-base-white);
+    opacity: 0.7;
+}
+
+.state.error {
+    color: var(--color-error-400, #f87171);
+    opacity: 1;
+}
+
+.row {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--gap-6) 1fr;
+    align-items: center;
+    gap: var(--gap-4);
+    width: 100%;
+    padding: var(--gap-2) var(--gap-3);
+    border-radius: var(--radius-xl);
+    color: var(--color-base-white);
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.row:is([data-highlighted], :focus-visible, :hover) {
+    background: hsl(var(--color-hsl-black) / 0.2);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 3px 2px hsl(var(--color-hsl-black) / 0.05) inset;
+}
+
+.addon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.addon > svg {
+    width: var(--gap-6);
+    height: var(--gap-6);
+    color: var(--color-base-white);
+}
+
+.text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-0-5);
+    min-width: 0;
+}
+
+.label {
+    font-weight: 600;
+}
+
+.description.description {
+    color: hsl(var(--color-hsl-white) / 0.6);
+    font-weight: 400;
+}

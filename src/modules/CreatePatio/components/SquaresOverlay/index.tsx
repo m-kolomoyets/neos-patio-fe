@@ -1,11 +1,16 @@
 import { CENTER_SQUARE, INTERSECTION, PATIO_SQUARE, SQUARE_BORDER_WIDTH, SQUARE_CORNER_RADIUS } from '../../constants';
 import { getRectAttrs } from '../../utils/squareGeometry';
+import { useSelectPatioOnClick } from '../../hooks/useSelectPatioOnClick';
 import { useSquares } from '../../hooks/useSquares';
 import s from './styles.module.css';
 
 type SquaresOverlayProps = {
-    /** Azimuth of the center square, in degrees clockwise from north. */
-    azimuth: number;
+    /**
+     * Live map bearing, in degrees clockwise from north. The center square stays
+     * screen-upright; existing patios counter-rotate by it (screen azimuth =
+     * worldAzimuth − bearing) so they stay pinned to the world.
+     */
+    bearing: number;
 };
 
 const centerClipId = 'center-clip';
@@ -21,8 +26,10 @@ const patioClipId = (id: string) => {
  * the red border-inside segments. Rounded corners are exact because the browser
  * does the clipping. Only center-vs-patio overlaps are drawn.
  */
-export const SquaresOverlay: React.FC<SquaresOverlayProps> = ({ azimuth }) => {
-    const squares = useSquares(azimuth);
+export const SquaresOverlay: React.FC<SquaresOverlayProps> = ({ bearing }) => {
+    useSelectPatioOnClick();
+
+    const squares = useSquares(bearing);
     if (!squares) return null;
 
     const { camera, center, patios } = squares;

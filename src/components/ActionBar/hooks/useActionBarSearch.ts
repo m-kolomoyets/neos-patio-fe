@@ -1,12 +1,26 @@
 import React from 'react';
 import { useDebouncedEffect } from '@react-hookz/web';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { SEARCH_TRIGGER_ID } from '../constants';
-import { usePatioFilters } from '../../../hooks/usePatioFilters';
 
 export const useActionBarSearch = () => {
-    const { filters, setQ } = usePatioFilters();
+    // Route-agnostic: syncs the `q` search param on whatever route hosts the bar.
+    const navigate = useNavigate();
+    const search = useSearch({ strict: false }) as { q?: string };
+    const setQ = React.useCallback(
+        (value: string) => {
+            navigate({
+                to: '.',
+                search: (prev: Record<string, unknown>) => {
+                    return { ...prev, q: value.trim() ? value : undefined };
+                },
+                replace: true,
+            });
+        },
+        [navigate]
+    );
     const [isSearchOpened, setIsSearchOpened] = React.useState(false);
-    const [query, setQuery] = React.useState(filters.q ?? '');
+    const [query, setQuery] = React.useState(search.q ?? '');
     const wrapRef = React.useRef<HTMLDivElement>(null);
 
     const openSearch = React.useCallback(() => {

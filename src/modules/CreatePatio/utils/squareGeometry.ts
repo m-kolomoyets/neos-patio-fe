@@ -31,6 +31,28 @@ export const getSquareCorners = (center: Point, size: number, azimuthDeg: number
 };
 
 /**
+ * Point-in-rotated-square hit test in screen-pixel space. Translates the point
+ * into the square's local frame (inverse-rotating by its azimuth) and checks it
+ * against the axis-aligned half-extent box. Pure — used to click existing patio
+ * squares, which are rotated by `worldAzimuth − bearing`.
+ */
+export const isPointInSquare = (point: Point, rect: SquareRect): boolean => {
+    const { center, size, azimuthDeg } = rect;
+    const half = size / 2;
+    const azimuthRad = (azimuthDeg * Math.PI) / 180;
+    const cos = Math.cos(azimuthRad);
+    const sin = Math.sin(azimuthRad);
+
+    const dx = point.x - center.x;
+    const dy = point.y - center.y;
+    // Inverse rotation (by −azimuth) of the forward rotate in getSquareCorners.
+    const localX = dx * cos + dy * sin;
+    const localY = -dx * sin + dy * cos;
+
+    return Math.abs(localX) <= half && Math.abs(localY) <= half;
+};
+
+/**
  * SVG transform that rotates a rect around the given center by the azimuth.
  * Lets a rounded `<rect>` (with `rx`) keep its corner radius under rotation,
  * which a hand-built polygon path could not express as cleanly.
