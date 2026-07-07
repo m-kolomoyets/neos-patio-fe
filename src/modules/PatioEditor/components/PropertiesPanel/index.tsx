@@ -8,6 +8,7 @@ import { Tabs } from '@/components/ui/Tabs';
 import { Typography } from '@/components/ui/Typography';
 import { createLocalFrame, geoToLocal, localToGeo } from '../../utils/geoPlacement';
 import { useEditorDispatch, useEditorState } from '../../context/EditorContext';
+import { ScaleField } from './components/ScaleField';
 import { EditorMode } from '../../types';
 import s from './styles.module.css';
 
@@ -88,24 +89,6 @@ const GROUPS: FieldGroup[] = [
                 },
                 toPatch: (v) => {
                     return { heading: v * DEG_TO_RAD };
-                },
-            },
-        ],
-    },
-    {
-        value: 'scale',
-        title: 'Scale',
-        fields: [
-            {
-                key: 'scale',
-                label: '×',
-                step: 0.1,
-                decimals: 2,
-                fromObject: (o) => {
-                    return o.scale;
-                },
-                toPatch: (v) => {
-                    return { scale: v };
                 },
             },
         ],
@@ -248,6 +231,16 @@ export const PropertiesPanel: React.FC = () => {
                         </Tabs.Panel>
                     );
                 })}
+                <Tabs.Panel value="scale">
+                    <section className={s.group}>
+                        <Typography variant="text-xs" className={s['group-title']} render={<h4 />}>
+                            Scale
+                        </Typography>
+                        <div className={s.fields}>
+                            <ScaleField object={selected} />
+                        </div>
+                    </section>
+                </Tabs.Panel>
             </Tabs.Root>
         </aside>
     );

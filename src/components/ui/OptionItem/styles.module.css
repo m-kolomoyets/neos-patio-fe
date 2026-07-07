@@ -41,6 +41,7 @@
     flex: 1;
     font-weight: 500;
     min-width: 0;
+    color: hsl(var(--color-hsl-white) / 0.9);
 }
 
 .wrap .checkmark {
