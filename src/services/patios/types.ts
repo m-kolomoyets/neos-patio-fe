@@ -1,3 +1,5 @@
+import type { Feature, FeatureCollection, Point as GeoPoint } from 'geojson';
+
 export const CONTINENTS = ['africa', 'asia', 'europe', 'north-america', 'south-america', 'oceania'] as const;
 export type Continent = (typeof CONTINENTS)[number];
 
@@ -49,11 +51,25 @@ export type Patio = {
     bounds: PatioBounds;
     objects: PlacedObject[];
     isFeatured: boolean;
+    isPublished: boolean;
     videoUrl?: string;
     previewLowUrl?: string;
     previewHighUrl: string;
     previewBackgroundUrl: string;
 };
+
+/**
+ * Minimal per-point properties for the clustering source. Deliberately excludes
+ * heavy fields (objects, previews) so the whole patio set stays cheap to load.
+ */
+export type PatioPointProperties = {
+    id: string;
+    isPublished: boolean;
+    type: PatioType;
+};
+
+export type PatioPointFeature = Feature<GeoPoint, PatioPointProperties>;
+export type PatioPointCollection = FeatureCollection<GeoPoint, PatioPointProperties>;
 
 export type ListPatiosParams = {
     q?: string;

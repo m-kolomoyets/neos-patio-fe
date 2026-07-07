@@ -1,6 +1,7 @@
 import { useMap } from 'react-map-gl/mapbox';
 import { Button } from '@/components/ui/Button';
 import { CREATE_PATIO_MAP_ID, PATIO_SIZE_M, ZOOM_ENOUGH_RATIO, ZOOM_IN_TARGET_RATIO } from '../../../../constants';
+import { prefersReducedMotion } from '../../../../utils/prefersReducedMotion';
 import { isZoomEnough, minViewportDimension, zoomForFootprint } from '../../../../utils/zoomForFootprint';
 import { useCreatePatioMode } from '../../../../context/CreatePatioContext';
 import { useMapCamera } from '../../../../hooks/useMapCamera';
@@ -39,8 +40,15 @@ export const ModeZoomButton: React.FC = () => {
         const minDimension = minViewportDimension(camera.width, camera.height);
         const targetZoom = zoomForFootprint(PATIO_SIZE_M, camera.latitude, ZOOM_IN_TARGET_RATIO * minDimension);
 
-        // Center is preserved (omitted); flyTo is animated by default.
-        mapRef.getMap().flyTo({ zoom: targetZoom });
+        // Center is preserved (omitted) so the globe returns to placement zoom at
+        // the current center; placement re-enables from the derived camera zoom.
+        // Reduced motion turns the flight into an instant jump.
+        const map = mapRef.getMap();
+        if (prefersReducedMotion()) {
+            map.jumpTo({ zoom: targetZoom });
+            return;
+        }
+        map.flyTo({ zoom: targetZoom });
     };
 
     const handleClick = () => {

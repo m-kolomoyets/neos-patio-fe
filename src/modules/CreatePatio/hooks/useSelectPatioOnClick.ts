@@ -1,7 +1,7 @@
 import type { SquareRect } from '../types';
 import { useEffect, useMemo } from 'react';
 import { useMap } from 'react-map-gl/mapbox';
-import { CREATE_PATIO_MAP_ID, PATIO_SEED, START_COORDINATE } from '../constants';
+import { CREATE_PATIO_MAP_ID, PATIO_SEED, PLACEMENT_MIN_ZOOM, START_COORDINATE } from '../constants';
 import { metersToPixels } from '../utils/metersToPixels';
 import { generatePatios } from '../utils/seededPatios';
 import { isPointInSquare } from '../utils/squareGeometry';
@@ -30,6 +30,11 @@ export const useSelectPatioOnClick = (): void => {
         const handleClick = (event: mapboxgl.MapMouseEvent) => {
             const bearing = map.getBearing();
             const zoom = map.getZoom();
+
+            // Placement-band affordance only. Below the threshold the map is
+            // browse-only and the DOM markers own patio taps (singleton select),
+            // so this geo hit-test stays out to avoid a second selection path.
+            if (zoom < PLACEMENT_MIN_ZOOM) return;
 
             const hitIndex = patios.features.findIndex((feature) => {
                 const [longitude, latitude] = feature.geometry.coordinates;

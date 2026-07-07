@@ -1,0 +1,62 @@
+/**
+ * Count-bubble badge (Figma 9289:27106). Reused by both cluster badges and lone
+ * patio circles — size is set inline (per count), color flips via
+ * `data-unpublished`. Green by default; blue when the cluster holds unpublished
+ * work (or the lone patio itself is unpublished).
+ */
+.badge {
+    --badge-ring: #00a63e;
+    --badge-from: rgb(48 209 88 / 0.6);
+    --badge-to: rgb(36 138 61 / 0.6);
+
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background-color: rgb(255 255 255 / 0.08);
+    background-image: linear-gradient(168deg, var(--badge-from), var(--badge-to));
+    box-shadow: inset 0 0 0 4px var(--badge-ring);
+    backdrop-filter: blur(6px);
+    color: var(--color-base-white);
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    appearance: none;
+}
+
+.badge:focus-visible {
+    outline: 2px solid var(--color-base-white);
+    outline-offset: 2px;
+}
+
+/**
+ * Morphing marker (individual patio + create marker). Size and corner radius are
+ * driven per frame via `--morph-size` / `--morph-radius`, written by the morph
+ * driver from the map `render` event (square at z17 → circle at z14). Fallbacks
+ * keep it a settled circle before the first tick.
+ */
+.badge.morph {
+    width: var(--morph-size, 42px);
+    height: var(--morph-size, 42px);
+    border-radius: var(--morph-radius, 50%);
+}
+
+/* Blue variant — cluster (or lone patio) holds unpublished work. */
+.badge[data-unpublished] {
+    --badge-ring: #1e40af;
+    --badge-from: rgb(49 91 228 / 0.6);
+    --badge-to: rgb(30 58 138 / 0.6);
+}
+
+/* Orange variant — the patio being created (its own always-on-top marker). */
+.badge[data-variant="create"] {
+    --badge-ring: #ff6a00;
+    --badge-from: rgb(255 113 0 / 0.6);
+    --badge-to: rgb(161 94 5 / 0.6);
+}

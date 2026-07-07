@@ -1,5 +1,6 @@
 import { CENTER_SQUARE, INTERSECTION, PATIO_SQUARE, SQUARE_BORDER_WIDTH, SQUARE_CORNER_RADIUS } from '../../constants';
 import { getRectAttrs } from '../../utils/squareGeometry';
+import { usePlacementEnabled } from '../../hooks/usePlacementEnabled';
 import { useSelectPatioOnClick } from '../../hooks/useSelectPatioOnClick';
 import { useSquares } from '../../hooks/useSquares';
 import s from './styles.module.css';
@@ -29,10 +30,17 @@ const patioClipId = (id: string) => {
 export const SquaresOverlay: React.FC<SquaresOverlayProps> = ({ bearing }) => {
     useSelectPatioOnClick();
 
+    const placementEnabled = usePlacementEnabled();
     const squares = useSquares(bearing);
     if (!squares) return null;
 
+    // Source of truth only at the placement threshold and above. Below it the map
+    // is browse-only: patios (and the create marker) hand off to the morphing DOM
+    // markers in `ClusterMarkers`, so nothing here co-renders with them.
+    if (!placementEnabled) return null;
+
     const { camera, center, patios } = squares;
+
     const centerAttrs = getRectAttrs(center);
 
     return (

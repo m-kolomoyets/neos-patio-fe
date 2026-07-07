@@ -3,10 +3,20 @@ import { getAppBackground } from '@/lib/appBackground';
 import { useSquircleClipPath } from '@/hooks/useSquircleClipPath';
 import { ActionBar } from '@/components/ActionBar';
 import { AppBackground } from '@/components/AppBackground';
-import { CREATE_PATIO_MAP_ID, DEFAULT_ZOOM, MAPBOX_STYLE, START_COORDINATE } from './constants';
+import {
+    CREATE_PATIO_MAP_ID,
+    DEFAULT_ZOOM,
+    GLOBE_FOG,
+    GLOBE_MIN_ZOOM,
+    MAPBOX_STYLE,
+    START_COORDINATE,
+} from './constants';
+import { prefersReducedMotion } from './utils/prefersReducedMotion';
 import { CreatePatioProvider } from './context/CreatePatioContext';
 import { useAzimuth } from './hooks/useAzimuth';
+import { ClusterMarkers } from './components/ClusterMarkers';
 import { Header } from './components/Header';
+import { PatioClusterSource } from './components/PatioClusterSource';
 import { SquaresOverlay } from './components/SquaresOverlay';
 
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -51,12 +61,23 @@ export const CreatePatio: React.FC = () => {
                                         pitch: 0,
                                         bearing: 0,
                                     }}
-                                    projection="mercator"
+                                    projection="globe"
+                                    minZoom={GLOBE_MIN_ZOOM}
                                     dragRotate
                                     pitchWithRotate={false}
                                     touchPitch={false}
                                     maxPitch={0}
+                                    onLoad={(e) => {
+                                        // Atmosphere on the globe: sky tint + subtle star haze.
+                                        // Reduced motion kills the star shimmer (intensity 0).
+                                        e.target.setFog({
+                                            ...GLOBE_FOG,
+                                            'star-intensity': prefersReducedMotion() ? 0 : GLOBE_FOG['star-intensity'],
+                                        });
+                                    }}
                                 >
+                                    <PatioClusterSource />
+                                    <ClusterMarkers />
                                     <SquaresOverlay bearing={bearing} />
                                 </Map>
                             </div>

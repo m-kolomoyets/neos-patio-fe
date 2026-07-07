@@ -87,3 +87,57 @@ export const PATIO_SIZE_RANGE_M = { min: 80, max: 160 } as const;
 
 /** Max distance a mock patio is offset from the start coordinate, in meters. */
 export const PATIO_SPREAD_M = 250;
+
+/**
+ * Zoom at/below which the GeoJSON source merges patios into count bubbles.
+ * Kept just under the morph band so morphing and clustering never overlap.
+ */
+export const CLUSTER_MAX_ZOOM = 13;
+
+/** Supercluster grouping radius, in pixels. */
+export const CLUSTER_RADIUS = 60;
+
+/**
+ * Shared id of the clustering GeoJSON source. `PatioClusterSource` registers it;
+ * `ClusterMarkers` reads it back via `querySourceFeatures` to draw DOM badges.
+ */
+export const PATIO_CLUSTER_SOURCE_ID = 'patio-points';
+
+/**
+ * Morph band: across this zoom range each marker tweens between its geo-accurate
+ * square (top) and the fixed circle (bottom). Disjoint from `CLUSTER_MAX_ZOOM`
+ * by design — retune both together or morphing and clustering will conflict.
+ */
+export const MORPH_BAND = { min: 14, max: 17 } as const;
+
+/**
+ * Placement threshold. Footprint placement/reposition and every create-mode
+ * placement interaction are live only at/above this zoom; below it the map is
+ * browse-only (pan, zoom, tap cluster → expand, tap patio → select). Equals the
+ * top of the morph band so the geo squares (placement) and the morphing browse
+ * markers never co-render. Shared by `SquaresOverlay`, the map click handler,
+ * and `usePlacementEnabled` so the gate never drifts.
+ */
+export const PLACEMENT_MIN_ZOOM = MORPH_BAND.max;
+
+/** Globe projection reaches the full planet at this zoom. */
+export const GLOBE_MIN_ZOOM = 0;
+
+/** Count-bubble diameter (px) by member count. Extendable to a third tier. */
+export const BADGE_SIZE_SM = 42;
+export const BADGE_SIZE_LG = 48;
+
+/** At/above this count a bubble steps up from `BADGE_SIZE_SM` to `BADGE_SIZE_LG`. */
+export const BADGE_SIZE_LG_THRESHOLD = 10;
+
+/**
+ * Mapbox atmosphere (`setFog`) applied on globe load — sky tint plus a subtle
+ * star haze. No 3D terrain; the flat satellite style wraps the sphere.
+ */
+export const GLOBE_FOG = {
+    color: 'rgb(186, 210, 235)',
+    'high-color': 'rgb(36, 92, 223)',
+    'horizon-blend': 0.02,
+    'space-color': 'rgb(11, 11, 25)',
+    'star-intensity': 0.6,
+} as const;

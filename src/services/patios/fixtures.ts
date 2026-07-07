@@ -37,6 +37,7 @@ const RAW_PATIOS: PatioFixture[] = [
         // mont saint michel
         coords: { lat: 48.6361, lng: -1.5115 },
         isFeatured: true,
+        isPublished: true,
     },
     {
         id: '2',
@@ -54,6 +55,7 @@ const RAW_PATIOS: PatioFixture[] = [
         popularity: 1200,
         coords: { lat: 41.8902, lng: 12.4922 },
         isFeatured: true,
+        isPublished: true,
     },
     {
         id: '3',
@@ -71,6 +73,7 @@ const RAW_PATIOS: PatioFixture[] = [
         popularity: 540,
         coords: { lat: 50.0903, lng: 14.4006 },
         isFeatured: true,
+        isPublished: false,
     },
     {
         id: '4',
@@ -88,6 +91,7 @@ const RAW_PATIOS: PatioFixture[] = [
         popularity: 1100,
         coords: { lat: 41.4036, lng: 2.1744 },
         isFeatured: true,
+        isPublished: true,
     },
     {
         id: '5',
@@ -105,6 +109,7 @@ const RAW_PATIOS: PatioFixture[] = [
         popularity: 410,
         coords: { lat: 47.616, lng: 1.5167 },
         isFeatured: true,
+        isPublished: false,
     },
     {
         id: '6',
@@ -122,6 +127,7 @@ const RAW_PATIOS: PatioFixture[] = [
         popularity: 380,
         coords: { lat: 53.5413, lng: 9.9842 },
         isFeatured: true,
+        isPublished: true,
     },
 
     {
@@ -140,6 +146,7 @@ const RAW_PATIOS: PatioFixture[] = [
         popularity: 760,
         coords: { lat: 43.2687, lng: -2.934 },
         isFeatured: true,
+        isPublished: true,
     },
     {
         id: '8',
@@ -156,6 +163,7 @@ const RAW_PATIOS: PatioFixture[] = [
         popularity: 220,
         coords: { lat: 55.6884, lng: 12.5777 },
         isFeatured: false,
+        isPublished: false,
     },
     {
         id: '9',
@@ -173,6 +181,7 @@ const RAW_PATIOS: PatioFixture[] = [
         popularity: 890,
         coords: { lat: 40.7829, lng: -73.959 },
         isFeatured: true,
+        isPublished: true,
     },
     {
         id: '10',
@@ -189,6 +198,7 @@ const RAW_PATIOS: PatioFixture[] = [
         popularity: 670,
         coords: { lat: 38.8895, lng: -77.0353 },
         isFeatured: false,
+        isPublished: true,
     },
     {
         id: '11',
@@ -205,6 +215,7 @@ const RAW_PATIOS: PatioFixture[] = [
         popularity: 1320,
         coords: { lat: 40.7829, lng: -73.9654 },
         isFeatured: false,
+        isPublished: false,
     },
     {
         id: '12',
@@ -221,6 +232,7 @@ const RAW_PATIOS: PatioFixture[] = [
         popularity: 800,
         coords: { lat: -22.912, lng: -43.2302 },
         isFeatured: false,
+        isPublished: true,
     },
     {
         id: '13',
@@ -237,6 +249,7 @@ const RAW_PATIOS: PatioFixture[] = [
         popularity: 1500,
         coords: { lat: -22.9519, lng: -43.2105 },
         isFeatured: false,
+        isPublished: false,
     },
     {
         id: '14',
@@ -253,6 +266,7 @@ const RAW_PATIOS: PatioFixture[] = [
         popularity: 1700,
         coords: { lat: -13.1631, lng: -72.545 },
         isFeatured: false,
+        isPublished: false,
     },
     // {
     //     id: '15',

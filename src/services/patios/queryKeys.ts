@@ -19,6 +19,9 @@ export const patiosKeys = {
     fullList() {
         return [...patiosKeys.root(), 'full-list'] as const;
     },
+    points() {
+        return [...patiosKeys.root(), 'points'] as const;
+    },
     fullListWithParams(filters: PatiosListFilters) {
         return [...patiosKeys.fullList(), filters] as const;
     },

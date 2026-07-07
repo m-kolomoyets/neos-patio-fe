@@ -1,0 +1,48 @@
+import type { CircleLayerSpecification } from 'mapbox-gl';
+import type { PatioPointCollection } from '@/services/patios/types';
+import { Layer, Source } from 'react-map-gl/mapbox';
+import { usePatioPoints } from '@/services/patios/queries';
+import { CLUSTER_MAX_ZOOM, CLUSTER_RADIUS, PATIO_CLUSTER_SOURCE_ID } from '../../constants';
+
+const EMPTY_COLLECTION: PatioPointCollection = { type: 'FeatureCollection', features: [] };
+
+/**
+ * Invisible probe layer. Mapbox only tiles (and clusters) a GeoJSON source when
+ * a layer references it — with none, `querySourceFeatures` returns nothing and no
+ * badges appear. This zero-opacity circle forces the source to load without
+ * drawing anything; the visible markers are DOM `<Marker>`s in `ClusterMarkers`.
+ */
+const probeLayer: CircleLayerSpecification = {
+    id: `${PATIO_CLUSTER_SOURCE_ID}-probe`,
+    type: 'circle',
+    source: PATIO_CLUSTER_SOURCE_ID,
+    paint: { 'circle-opacity': 0, 'circle-radius': 0 },
+};
+
+/**
+ * Native Mapbox clustering source feeding the browse/globe view. `cluster: true`
+ * lets supercluster compute counts + expansion zoom; `clusterProperties`
+ * aggregates `hasUnpublished` so a cluster colors blue without walking leaves.
+ * Rendering is DOM-based (`ClusterMarkers` queries this source); the only GL
+ * layer is an invisible probe that keeps the source tiled.
+ */
+export const PatioClusterSource: React.FC = () => {
+    const { data } = usePatioPoints();
+
+    return (
+        <Source
+            id={PATIO_CLUSTER_SOURCE_ID}
+            type="geojson"
+            data={data ?? EMPTY_COLLECTION}
+            cluster
+            clusterRadius={CLUSTER_RADIUS}
+            clusterMaxZoom={CLUSTER_MAX_ZOOM}
+            clusterProperties={{
+                // true when any member is unpublished (isPublished === false).
+                hasUnpublished: ['any', ['!', ['get', 'isPublished']]],
+            }}
+        >
+            <Layer {...probeLayer} />
+        </Source>
+    );
+};
