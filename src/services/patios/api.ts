@@ -1,5 +1,6 @@
-import type { ListPatiosParams, ListPatiosResponse, Patio, PlacedObject } from './types';
+import type { ListPatiosParams, ListPatiosResponse, Patio, PatioPointCollection, PlacedObject } from './types';
 import { sleep } from '@/lib/utils/sleep';
+import { patiosToPointCollection } from './utils/patiosToPointCollection';
 import { PATIOS_FIXTURES } from './fixtures';
 
 const MOCK_DELAY_MS = 200;
@@ -145,6 +146,11 @@ export const listPatioLetters = async (
         if (b === '#') return -1;
         return a.localeCompare(b);
     });
+};
+
+export const getPatioPoints = async (): Promise<PatioPointCollection> => {
+    await sleep(MOCK_DELAY_MS);
+    return patiosToPointCollection(PATIOS_FIXTURES);
 };
 
 export const listFeaturedPatios = async (): Promise<Patio[]> => {

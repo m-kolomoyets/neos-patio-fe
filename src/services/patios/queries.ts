@@ -1,11 +1,34 @@
 import type { PatioLettersFilters, PatiosListFilters } from './queryKeys';
 import type { Patio, PlacedObject } from './types';
-import { infiniteQueryOptions, keepPreviousData, mutationOptions, queryOptions } from '@tanstack/react-query';
+import { infiniteQueryOptions, keepPreviousData, mutationOptions, queryOptions, useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/@queryClient';
-import { getPatio, listAllPatios, listFeaturedPatios, listPatioLetters, listPatios, updatePatioObjects } from './api';
+import {
+    getPatio,
+    getPatioPoints,
+    listAllPatios,
+    listFeaturedPatios,
+    listPatioLetters,
+    listPatios,
+    updatePatioObjects,
+} from './api';
 import { patiosKeys } from './queryKeys';
 
 export const PATIOS_PAGE_SIZE = 12;
+
+/** Points rarely change; keep the clustering source cached for a long time. */
+const PATIO_POINTS_STALE_TIME_MS = 60 * 60 * 1000;
+
+export const getPatioPointsQueryOptions = () => {
+    return queryOptions({
+        queryKey: patiosKeys.points(),
+        queryFn: getPatioPoints,
+        staleTime: PATIO_POINTS_STALE_TIME_MS,
+    });
+};
+
+export const usePatioPoints = () => {
+    return useQuery(getPatioPointsQueryOptions());
+};
 
 export const getFeaturedPatiosQueryOptions = () => {
     return queryOptions({

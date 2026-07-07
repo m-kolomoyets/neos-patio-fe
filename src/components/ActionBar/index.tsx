@@ -3,6 +3,7 @@ import React from 'react';
 import Search24Icon from '@/icons/search_24.svg?react';
 import VrHeadset20Icon from '@/icons/vr-headset_20.svg?react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAccount } from 'wagmi';
@@ -11,7 +12,6 @@ import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { Button } from '@/components/ui/Button';
 import { XRConnectDialog } from '@/components/XRConnectDialog';
 import { SEARCH_TRIGGER_ID } from './constants';
-import { useHomeNavigate } from '../../hooks/useHomeRouteApi';
 import { useActionBarSearch } from './hooks/useActionBarSearch';
 import { PatioAutocomplete } from './components/PatioAutocomplete';
 import s from './styles.module.css';
@@ -25,7 +25,7 @@ const stateVariants = {
 const stateTransition = { duration: 0.2, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] };
 
 export const ActionBar: React.FC = () => {
-    const navigate = useHomeNavigate();
+    const navigate = useNavigate();
     const { isSearchOpened, openSearch, query, setQuery, wrapRef } = useActionBarSearch();
 
     const { isConnected } = useAccount();

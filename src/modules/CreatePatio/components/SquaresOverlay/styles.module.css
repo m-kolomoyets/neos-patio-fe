@@ -1,0 +1,16 @@
+.overlay {
+    position: absolute;
+    inset: 0;
+
+    /* No width/height attrs on the <svg> (geometry is written per frame by
+       `useSquaresDriver`, not React) — size it here so its user-space viewport
+       matches the container 1:1, otherwise it collapses to the 300×150 SVG
+       default and every projected rect falls outside and is clipped away. */
+    width: 100%;
+    height: 100%;
+
+    /* Placement side of the browse ⇆ placement cross-fade; driven per frame by
+       `useCrossfadeDriver` across `CROSSFADE_BAND` (1 above the placement threshold). */
+    opacity: var(--crossfade-opacity, 1);
+    pointer-events: none;
+}
