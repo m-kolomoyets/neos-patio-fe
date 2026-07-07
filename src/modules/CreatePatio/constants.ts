@@ -77,11 +77,11 @@ export const CENTER_SQUARE = {
     insetShadow: 'rgba(161, 94, 5, 0.44)',
 } as const;
 
-/** Existing-patio palette (blue), lifted from Figma node 9478:19647. */
+/** Existing-patio palette (blue), lifted from Figma node 9555:14606. */
 export const PATIO_SQUARE = {
     border: '#258dff',
     gradientEdge: '#007aff',
-    gradientOpacity: 0.6,
+    gradientOpacity: 0.35,
     insetShadow: 'rgba(0, 122, 255, 0.7)',
 } as const;
 
@@ -90,9 +90,9 @@ export const PATIO_SQUARE = {
  * red is lifted from the Figma intersection node — confirm against the design.
  */
 export const INTERSECTION = {
-    fill: '#ff2d2d',
-    fillOpacity: 0.55,
-    border: '#ff2d2d',
+    fill: '#ff0000',
+    fillOpacity: 0.8,
+    border: '##FF0404',
 } as const;
 
 /**

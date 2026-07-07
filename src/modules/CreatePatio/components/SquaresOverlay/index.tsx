@@ -22,6 +22,7 @@ type CrossfadeVars = CSSProperties & { '--crossfade-opacity': string };
 const OVERLAY_KEY = 'squares-overlay';
 
 const centerClipId = 'center-clip';
+
 const patioClipId = (id: string) => {
     return `patio-clip-${id}`;
 };
@@ -116,7 +117,6 @@ export const SquaresOverlay: React.FC = () => {
                         <feMergeNode />
                     </feMerge>
                 </filter>
-
                 <clipPath id={centerClipId}>
                     <rect
                         ref={(el) => {
@@ -138,7 +138,6 @@ export const SquaresOverlay: React.FC = () => {
                     );
                 })}
             </defs>
-
             {/* Base blue patio squares (geo-anchored). */}
             {patios.map(({ id }) => {
                 return (
@@ -149,8 +148,6 @@ export const SquaresOverlay: React.FC = () => {
                         }}
                         rx={SQUARE_CORNER_RADIUS}
                         fill="url(#patio-square-gradient)"
-                        stroke={PATIO_SQUARE.border}
-                        strokeWidth={SQUARE_BORDER_WIDTH}
                         filter="url(#patio-square-inset)"
                     />
                 );
@@ -171,7 +168,6 @@ export const SquaresOverlay: React.FC = () => {
             {/* Red collision layer: one independent overlap per patio. */}
             {patios.map(({ id }) => {
                 const clipToPatio = `url(#${patioClipId(id)})`;
-                const clipToCenter = `url(#${centerClipId})`;
 
                 // clip-path (userSpaceOnUse) is applied in the user space of the
                 // element it sits on — including that element's own transform. So
@@ -195,18 +191,6 @@ export const SquaresOverlay: React.FC = () => {
                             <rect
                                 ref={(el) => {
                                     return registerRect(`x-center-border-${id}`, 'center', el);
-                                }}
-                                rx={SQUARE_CORNER_RADIUS}
-                                fill="none"
-                                stroke={INTERSECTION.border}
-                                strokeWidth={SQUARE_BORDER_WIDTH}
-                            />
-                        </g>
-                        {/* Patio border segments inside the center. */}
-                        <g clipPath={clipToCenter}>
-                            <rect
-                                ref={(el) => {
-                                    return registerRect(`x-patio-border-${id}`, patioGeoId(id), el);
                                 }}
                                 rx={SQUARE_CORNER_RADIUS}
                                 fill="none"
