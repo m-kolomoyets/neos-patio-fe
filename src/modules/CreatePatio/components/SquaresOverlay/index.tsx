@@ -1,15 +1,31 @@
-import { CENTER_SQUARE, INTERSECTION, PATIO_SQUARE, SQUARE_BORDER_WIDTH, SQUARE_CORNER_RADIUS } from '../../constants';
+import type { CSSProperties } from 'react';
+import {
+    CENTER_SQUARE,
+    CROSSFADE_BAND,
+    INTERSECTION,
+    PATIO_SQUARE,
+    SQUARE_BORDER_WIDTH,
+    SQUARE_CORNER_RADIUS,
+} from '../../constants';
+import { getCrossfadeOpacity } from '../../utils/getCrossfadeOpacity';
 import { getRectAttrs } from '../../utils/squareGeometry';
-import { usePlacementEnabled } from '../../hooks/usePlacementEnabled';
+import { useCrossfadeDriver } from '../../hooks/useCrossfadeDriver';
 import { useSelectPatioOnClick } from '../../hooks/useSelectPatioOnClick';
 import { useSquares } from '../../hooks/useSquares';
+import { useZoomAtLeast } from '../../hooks/useZoomAtLeast';
 import s from './styles.module.css';
+
+/** Custom property the cross-fade driver writes onto the overlay each frame. */
+type CrossfadeVars = CSSProperties & { '--crossfade-opacity': string };
+
+/** Stable registry key for the single placement-layer overlay element. */
+const OVERLAY_KEY = 'squares-overlay';
 
 type SquaresOverlayProps = {
     /**
      * Live map bearing, in degrees clockwise from north. The center square stays
-     * screen-upright; existing patios counter-rotate by it (screen azimuth =
-     * worldAzimuth − bearing) so they stay pinned to the world.
+     * screen-upright; existing patios rotate with it (screen azimuth =
+     * worldAzimuth + bearing) so they stay pinned to the world.
      */
     bearing: number;
 };
@@ -30,21 +46,35 @@ const patioClipId = (id: string) => {
 export const SquaresOverlay: React.FC<SquaresOverlayProps> = ({ bearing }) => {
     useSelectPatioOnClick();
 
-    const placementEnabled = usePlacementEnabled();
+    const registerCrossfade = useCrossfadeDriver();
+    // Mount from the bottom of the cross-fade band (below the placement threshold)
+    // so the squares can fade in against the outgoing browse markers. Placement
+    // *interactions* stay gated at `PLACEMENT_MIN_ZOOM` inside `useSelectPatioOnClick`
+    // and the overlay is `pointer-events: none`, so rendering early is purely visual.
+    const visible = useZoomAtLeast(CROSSFADE_BAND.min);
     const squares = useSquares(bearing);
     if (!squares) return null;
-
-    // Source of truth only at the placement threshold and above. Below it the map
-    // is browse-only: patios (and the create marker) hand off to the morphing DOM
-    // markers in `ClusterMarkers`, so nothing here co-renders with them.
-    if (!placementEnabled) return null;
+    if (!visible) return null;
 
     const { camera, center, patios } = squares;
+
+    // Seed the driver's opacity from the current zoom so the first paint is already
+    // at the right cross-fade value (no full-opacity flash on mount); the driver
+    // then updates `--crossfade-opacity` every frame.
+    const crossfadeVars: CrossfadeVars = { '--crossfade-opacity': `${getCrossfadeOpacity(camera.zoom, 'placement')}` };
 
     const centerAttrs = getRectAttrs(center);
 
     return (
-        <svg className={s.overlay} width={camera.width} height={camera.height}>
+        <svg
+            className={s.overlay}
+            width={camera.width}
+            height={camera.height}
+            style={crossfadeVars}
+            ref={(el) => {
+                registerCrossfade(OVERLAY_KEY, el ? { el, layer: 'placement' } : null);
+            }}
+        >
             <defs>
                 <radialGradient id="center-square-gradient">
                     <stop offset="0%" stopColor={CENTER_SQUARE.gradientEdge} stopOpacity={0} />
@@ -76,6 +106,20 @@ export const SquaresOverlay: React.FC<SquaresOverlayProps> = ({ bearing }) => {
                         <feMergeNode />
                     </feMerge>
                 </filter>
+                <filter id="patio-square-inset">
+                    <feComponentTransfer in="SourceAlpha">
+                        <feFuncA type="table" tableValues="1 0" />
+                    </feComponentTransfer>
+                    <feGaussianBlur stdDeviation={6} />
+                    <feOffset result="offsetblur" />
+                    <feFlood floodColor={PATIO_SQUARE.insetShadow} />
+                    <feComposite in2="offsetblur" operator="in" />
+                    <feComposite in2="SourceAlpha" operator="in" />
+                    <feMerge>
+                        <feMergeNode in="SourceGraphic" />
+                        <feMergeNode />
+                    </feMerge>
+                </filter>
 
                 <clipPath id={centerClipId}>
                     <rect {...centerAttrs} rx={SQUARE_CORNER_RADIUS} />
@@ -99,6 +143,7 @@ export const SquaresOverlay: React.FC<SquaresOverlayProps> = ({ bearing }) => {
                         fill="url(#patio-square-gradient)"
                         stroke={PATIO_SQUARE.border}
                         strokeWidth={SQUARE_BORDER_WIDTH}
+                        filter="url(#patio-square-inset)"
                     />
                 );
             })}

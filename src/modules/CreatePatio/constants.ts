@@ -1,8 +1,26 @@
 /**
- * Mapbox base style. Top-down satellite with street labels so creators can
- * recognise real-world locations while placing a patio.
+ * Mapbox base style — the "aerial" view (light vector street map). Satellite is
+ * layered on top as a raster overlay (`SatelliteLayer`) whose opacity cross-fades
+ * on view change, so switching never calls `setStyle` and never disturbs the
+ * clustering source, DOM markers, or globe fog. See `MapView`.
  */
-export const MAPBOX_STYLE = 'mapbox://styles/mapbox/satellite-streets-v12';
+export const MAPBOX_STYLE = 'mapbox://styles/mapbox/streets-v12';
+
+/** Mapbox-hosted satellite raster tileset feeding the satellite overlay. */
+export const SATELLITE_RASTER_URL = 'mapbox://mapbox.satellite';
+
+/** Source/layer ids for the satellite raster overlay toggled by the view tabs. */
+export const SATELLITE_RASTER_SOURCE_ID = 'satellite-raster';
+export const SATELLITE_RASTER_LAYER_ID = 'satellite-raster-layer';
+
+/** localStorage key persisting the last-selected map view across reloads. */
+export const MAP_VIEW_STORAGE_KEY = 'create-patio:map-view';
+
+/** Default map view before any user choice is stored. */
+export const DEFAULT_MAP_VIEW = 'satellite';
+
+/** Duration (ms) of the satellite⇆aerial raster-opacity cross-fade. */
+export const MAP_VIEW_CROSSFADE_MS = 350;
 
 /**
  * Hardcoded camera start: Barcelona, matching the Figma reference. Stored as
@@ -46,7 +64,7 @@ export const ZOOM_IN_TARGET_RATIO = 0.3;
 export const DEFAULT_AZIMUTH = 0;
 
 /** Corner radius of every square, in pixels (Figma). */
-export const SQUARE_CORNER_RADIUS = 24;
+export const SQUARE_CORNER_RADIUS = 28;
 
 /** Border width of every square, in pixels (Figma). */
 export const SQUARE_BORDER_WIDTH = 4;
@@ -59,11 +77,12 @@ export const CENTER_SQUARE = {
     insetShadow: 'rgba(161, 94, 5, 0.44)',
 } as const;
 
-/** Existing-patio palette (blue equivalent of the center square), per Figma. */
+/** Existing-patio palette (blue), lifted from Figma node 9478:19647. */
 export const PATIO_SQUARE = {
-    border: '#315be4',
-    gradientEdge: '#315be4',
-    gradientOpacity: 0.55,
+    border: '#258dff',
+    gradientEdge: '#007aff',
+    gradientOpacity: 0.6,
+    insetShadow: 'rgba(0, 122, 255, 0.7)',
 } as const;
 
 /**
@@ -76,21 +95,12 @@ export const INTERSECTION = {
     border: '#ff2d2d',
 } as const;
 
-/** Deterministic seed for the mock patio generator — stable across reloads. */
-export const PATIO_SEED = 0x5eed;
-
-/** Inclusive bounds for how many mock patios to generate. */
-export const PATIO_COUNT_RANGE = { min: 6, max: 8 } as const;
-
-/** Inclusive bounds for a mock patio's side length, in meters. */
-export const PATIO_SIZE_RANGE_M = { min: 80, max: 160 } as const;
-
-/** Max distance a mock patio is offset from the start coordinate, in meters. */
-export const PATIO_SPREAD_M = 250;
-
 /**
- * Zoom at/below which the GeoJSON source merges patios into count bubbles.
- * Kept just under the morph band so morphing and clustering never overlap.
+ * Zoom at/below which the GeoJSON source merges patios into count bubbles. Set
+ * well below the morph band so individual patios (squares up top, circles lower)
+ * persist across a wide range and the user must zoom out a lot before the cluster
+ * view takes over. Must stay under `MORPH_BAND.min` so morphing and clustering
+ * never overlap.
  */
 export const CLUSTER_MAX_ZOOM = 13;
 
@@ -114,11 +124,36 @@ export const MORPH_BAND = { min: 14, max: 17 } as const;
  * Placement threshold. Footprint placement/reposition and every create-mode
  * placement interaction are live only at/above this zoom; below it the map is
  * browse-only (pan, zoom, tap cluster → expand, tap patio → select). Equals the
- * top of the morph band so the geo squares (placement) and the morphing browse
- * markers never co-render. Shared by `SquaresOverlay`, the map click handler,
- * and `usePlacementEnabled` so the gate never drifts.
+ * top of the morph band; the two representations cross-fade across `CROSSFADE_BAND`
+ * just below it and each layer's mount/unmount lands at zero opacity, so the swap
+ * is never visible. Shared by the map click handler and `usePlacementEnabled` so
+ * the interaction gate never drifts.
  */
 export const PLACEMENT_MIN_ZOOM = MORPH_BAND.max;
+
+/**
+ * Cross-fade band for the browse ⇆ placement handoff. Across this narrow zoom
+ * range straddling `PLACEMENT_MIN_ZOOM` the morphing DOM markers (browse) and the
+ * geo SVG squares (placement) co-render and cross-fade their opacity in lockstep,
+ * so neither layer ever pops in/out at full opacity. The band top equals
+ * `PLACEMENT_MIN_ZOOM`, so above it only the squares remain (opacity 1) and the
+ * markers have already faded to 0 — the React mount/unmount then happens while the
+ * outgoing layer is invisible, hiding the swap entirely. Stays inside `MORPH_BAND`
+ * so the markers are still near-square where they cross-fade with the squares.
+ */
+export const CROSSFADE_BAND = { min: MORPH_BAND.max - 0.75, max: MORPH_BAND.max } as const;
+
+/**
+ * Extra zoom added past a cluster's supercluster expansion zoom on tap, so the
+ * camera lands a bit closer than the exact break-apart point.
+ */
+export const CLUSTER_EXPAND_ZOOM_PADDING = 1.5;
+
+/**
+ * Zoom a lone patio flies to when its badge is tapped — above the placement
+ * threshold so its 100×100m square is rendered close enough to read.
+ */
+export const SINGLE_PATIO_VIEW_ZOOM = 18;
 
 /** Globe projection reaches the full planet at this zoom. */
 export const GLOBE_MIN_ZOOM = 0;

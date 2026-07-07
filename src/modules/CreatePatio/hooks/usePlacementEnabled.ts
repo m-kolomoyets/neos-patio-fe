@@ -1,14 +1,14 @@
 import { PLACEMENT_MIN_ZOOM } from '../constants';
-import { useMapCamera } from './useMapCamera';
+import { useZoomAtLeast } from './useZoomAtLeast';
 
 /**
- * Live placement gate derived from the camera zoom: `true` only at/above
- * `PLACEMENT_MIN_ZOOM`, where the footprint can be placed/repositioned. Below it
- * the map is browse-only. One source of truth so the squares overlay and the map
- * click handler can gate off the same value. `false` until the camera reports.
+ * Live placement gate: `true` only at/above `PLACEMENT_MIN_ZOOM`, where the
+ * footprint can be placed/repositioned. Below it the map is browse-only. A thin
+ * wrapper over `useZoomAtLeast` so the interaction gate re-renders a consumer only
+ * when the threshold is actually crossed, never per frame. Shared by
+ * `ClusterMarkers` so the browse markers unmount exactly at the threshold (having
+ * already cross-faded to 0 across `CROSSFADE_BAND`). `false` until the camera reports.
  */
 export const usePlacementEnabled = (): boolean => {
-    const camera = useMapCamera();
-
-    return camera !== null && camera.zoom >= PLACEMENT_MIN_ZOOM;
+    return useZoomAtLeast(PLACEMENT_MIN_ZOOM);
 };

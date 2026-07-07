@@ -1,4 +1,9 @@
-import type { Feature, FeatureCollection, Point as GeoPoint } from 'geojson';
+/**
+ * Base-map appearance. `satellite` — pure aerial imagery, no roads/labels (the
+ * satellite raster overlay at full opacity). `aerial` — the light vector street
+ * map underneath (raster hidden).
+ */
+export type MapView = 'satellite' | 'aerial';
 
 /** A point in screen-pixel space. */
 export type Point = {
@@ -12,17 +17,3 @@ export type SquareRect = {
     size: number;
     azimuthDeg: number;
 };
-
-/**
- * Per-patio footprint properties. Stored on Point features (not Polygons) so a
- * future slice can flip on native Mapbox clustering without reshaping the data.
- */
-export type PatioProperties = {
-    /** Side length of the patio footprint, in meters. */
-    sizeMeters: number;
-    /** Azimuth in degrees, clockwise from north. */
-    azimuthDeg: number;
-};
-
-export type PatioFeature = Feature<GeoPoint, PatioProperties>;
-export type PatioCollection = FeatureCollection<GeoPoint, PatioProperties>;

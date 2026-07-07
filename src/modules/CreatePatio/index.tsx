@@ -16,7 +16,9 @@ import { CreatePatioProvider } from './context/CreatePatioContext';
 import { useAzimuth } from './hooks/useAzimuth';
 import { ClusterMarkers } from './components/ClusterMarkers';
 import { Header } from './components/Header';
+import { MapViewTabs } from './components/MapViewTabs';
 import { PatioClusterSource } from './components/PatioClusterSource';
+import { SatelliteLayer } from './components/SatelliteLayer';
 import { SquaresOverlay } from './components/SquaresOverlay';
 
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -76,11 +78,13 @@ export const CreatePatio: React.FC = () => {
                                         });
                                     }}
                                 >
+                                    <SatelliteLayer />
                                     <PatioClusterSource />
                                     <ClusterMarkers />
                                     <SquaresOverlay bearing={bearing} />
                                 </Map>
                             </div>
+                            <MapViewTabs />
                         </div>
                     </main>
                     <ActionBar />

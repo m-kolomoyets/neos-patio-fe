@@ -5,17 +5,24 @@ import clsx from 'clsx';
 import { Marker, useMap } from 'react-map-gl/mapbox';
 import {
     BADGE_SIZE_SM,
+    CLUSTER_EXPAND_ZOOM_PADDING,
     CREATE_PATIO_MAP_ID,
     DEFAULT_ZOOM,
-    MORPH_BAND,
     PATIO_CLUSTER_SOURCE_ID,
+    SINGLE_PATIO_VIEW_ZOOM,
     START_COORDINATE,
 } from '../../constants';
+import { derivePatioMapGeometry } from '../../utils/derivePatioMapGeometry';
+import { getCrossfadeOpacity } from '../../utils/getCrossfadeOpacity';
+import { getProjectedNorthDeg } from '../../utils/getProjectedNorthDeg';
 import { prefersReducedMotion } from '../../utils/prefersReducedMotion';
 import { getBadgeSize } from './utils/getBadgeSize';
 import { getMorphStyle } from './utils/getMorphStyle';
 import { useCreatePatioMode } from '../../context/CreatePatioContext';
+import { useCrossfadeDriver } from '../../hooks/useCrossfadeDriver';
+import { usePlacementEnabled } from '../../hooks/usePlacementEnabled';
 import { useMorphDriver } from './hooks/useMorphDriver';
+import { usePresence } from './hooks/usePresence';
 import s from './styles.module.css';
 
 type BaseMarker = {
@@ -39,16 +46,44 @@ type PatioMarker = ClusterMarker | SingletonMarker;
 type MorphVars = CSSProperties & {
     '--morph-size': string;
     '--morph-radius': string;
+    '--morph-text-opacity': string;
+    '--morph-rotate': string;
+    '--crossfade-opacity': string;
 };
 
 /** Key for the always-on-top orange create-patio marker (never in the source). */
 const CREATE_MARKER_KEY = 'create-patio-marker';
 
-/** Turns resolved morph geometry into the CSS custom properties the badge reads. */
-const toMorphVars = (zoom: number, latitude: number, circleSize: number): MorphVars => {
-    const { size, radius } = getMorphStyle(zoom, latitude, circleSize);
+/** Stable key accessor for `usePresence` (must not change identity per render). */
+const markerKey = (marker: PatioMarker) => {
+    return marker.key;
+};
 
-    return { '--morph-size': `${size}px`, '--morph-radius': `${radius}%` };
+/** How long an outgoing marker lingers to cross-fade out; matches `badge-fade-in`. */
+const BADGE_FADE_MS = 220;
+
+/** Fly (or, with reduced motion, jump) the camera to a center + zoom. */
+const flyToView = (map: mapboxgl.Map, center: [number, number], zoom: number) => {
+    if (prefersReducedMotion()) {
+        map.jumpTo({ center, zoom });
+        return;
+    }
+    map.flyTo({ center, zoom });
+};
+
+/** Turns resolved morph geometry into the CSS custom properties the badge reads. */
+const toMorphVars = (zoom: number, latitude: number, circleSize: number, rotateDeg: number): MorphVars => {
+    const { size, radius, progress } = getMorphStyle(zoom, latitude, circleSize);
+
+    return {
+        '--morph-size': `${size}px`,
+        '--morph-radius': `${radius}px`,
+        '--morph-text-opacity': `${progress}`,
+        '--morph-rotate': `${rotateDeg}deg`,
+        // Seed the browse side of the cross-fade so the first paint is already at the
+        // right opacity; the crossfade driver then updates it every frame.
+        '--crossfade-opacity': `${getCrossfadeOpacity(zoom, 'browse')}`,
+    };
 };
 
 /** Narrows one queried source feature into a renderable marker, or `null` to skip. */
@@ -95,15 +130,24 @@ export const ClusterMarkers: React.FC = () => {
     const maps = useMap();
     const { setMode, setSelectedPatioId } = useCreatePatioMode();
     const [markers, setMarkers] = useState<PatioMarker[]>([]);
-    // Snapshot zoom (updated on `moveend`) seeds each marker's initial morph vars
-    // and gates the browse overlay off above the placement threshold.
+    // Snapshot zoom (updated on `moveend`) seeds each marker's initial morph size;
+    // the driver then updates size and rotation per frame.
     const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+    // Live map handle for seeding each marker's initial world-pinned rotation.
+    const seedMap = (maps.current ?? maps[CREATE_PATIO_MAP_ID])?.getMap();
     const registerMorph = useMorphDriver();
+    // Browse side of the browse ⇆ placement cross-fade; the same driver feeds the
+    // SVG squares (placement side) so both layers fade in the same frame.
+    const registerCrossfade = useCrossfadeDriver();
+    // Live threshold gate (flips only when crossing `PLACEMENT_MIN_ZOOM`), shared
+    // with `SquaresOverlay` so the create marker and the center square swap in the
+    // same frame — no gap.
+    const placementEnabled = usePlacementEnabled();
 
     /**
      * Tapping a cluster reads its supercluster expansion zoom, then flies the
-     * camera to it centered on the cluster so the bubble breaks apart. Reduced
-     * motion turns the flight into an instant jump.
+     * camera a bit past it (so the bubble breaks apart with room to spare),
+     * centered on the cluster. Reduced motion turns the flight into an instant jump.
      */
     const expandCluster = (marker: ClusterMarker) => {
         const map = (maps.current ?? maps[CREATE_PATIO_MAP_ID])?.getMap();
@@ -113,19 +157,21 @@ export const ClusterMarkers: React.FC = () => {
         source.getClusterExpansionZoom(marker.clusterId, (error, expansionZoom) => {
             if (error || expansionZoom === null || expansionZoom === undefined) return;
 
-            const center: [number, number] = [marker.longitude, marker.latitude];
-            if (prefersReducedMotion()) {
-                map.jumpTo({ center, zoom: expansionZoom });
-                return;
-            }
-            map.flyTo({ center, zoom: expansionZoom });
+            flyToView(map, [marker.longitude, marker.latitude], expansionZoom + CLUSTER_EXPAND_ZOOM_PADDING);
         });
     };
 
-    /** Tapping a lone patio selects it via the shared selection state (view mode). */
+    /**
+     * Tapping a lone patio selects it and flies in close enough to read its
+     * 100×100m square (above the placement threshold), so a "cluster of one"
+     * resolves straight to its footprint rather than staying a distant bubble.
+     */
     const selectSingleton = (marker: SingletonMarker) => {
         setSelectedPatioId(marker.patioId);
         setMode('view');
+
+        const map = (maps.current ?? maps[CREATE_PATIO_MAP_ID])?.getMap();
+        if (map) flyToView(map, [marker.longitude, marker.latitude], SINGLE_PATIO_VIEW_ZOOM);
     };
 
     useEffect(() => {
@@ -137,13 +183,6 @@ export const ClusterMarkers: React.FC = () => {
             setZoom(map.getZoom());
 
             if (!map.getSource(PATIO_CLUSTER_SOURCE_ID) || !map.isSourceLoaded(PATIO_CLUSTER_SOURCE_ID)) {
-                return;
-            }
-
-            // At/above the placement threshold each patio is a geo-accurate square
-            // (SquaresOverlay); drop the browse badges so the two never co-render.
-            if (map.getZoom() >= MORPH_BAND.max) {
-                setMarkers([]);
                 return;
             }
 
@@ -174,14 +213,53 @@ export const ClusterMarkers: React.FC = () => {
 
     // Below the placement threshold the orange create-patio marker morphs too, as
     // its own always-on-top overlay — never sourced from (or merged into) clusters.
-    const showCreateMarker = zoom < MORPH_BAND.max;
+    const showCreateMarker = !placementEnabled;
+
+    // Keep outgoing markers mounted through a fade-out so the cluster ⇆ patio swap
+    // cross-fades symmetrically. Reduced motion purges instantly (leaveMs 0).
+    const leaveMs = prefersReducedMotion() ? 0 : BADGE_FADE_MS;
+    const present = usePresence(markers, markerKey, leaveMs);
 
     return (
         <>
-            {markers.map((marker) => {
-                const size = getBadgeSize(marker.count);
+            {/* At/above the placement threshold each patio is a geo-accurate square
+                (SquaresOverlay); hide the browse badges — same live gate as the center
+                square so the two swap in one frame, never co-rendering and never gapping. */}
+            {!placementEnabled &&
+                present.map(({ item: marker, leaving }) => {
+                    const size = getBadgeSize(marker.count);
 
-                if (marker.cluster) {
+                    if (marker.cluster) {
+                        return (
+                            <Marker
+                                key={marker.key}
+                                longitude={marker.longitude}
+                                latitude={marker.latitude}
+                                anchor="center"
+                            >
+                                <button
+                                    type="button"
+                                    className={s.badge}
+                                    data-leaving={leaving || undefined}
+                                    style={{ width: size, height: size }}
+                                    aria-label={`Zoom into cluster of ${marker.count} patios`}
+                                    onClick={() => {
+                                        return expandCluster(marker);
+                                    }}
+                                >
+                                    {marker.count}
+                                </button>
+                            </Marker>
+                        );
+                    }
+
+                    // World azimuth of this patio's footprint, so its square end matches
+                    // the geo square in SquaresOverlay. Seed the world-pinned screen
+                    // rotation from the projection; the driver refreshes it per frame.
+                    const azimuthDeg = derivePatioMapGeometry(marker.patioId, START_COORDINATE).azimuthDeg;
+                    const seedRotate =
+                        azimuthDeg + (seedMap ? getProjectedNorthDeg(seedMap, marker.longitude, marker.latitude) : 0);
+
                     return (
                         <Marker
                             key={marker.key}
@@ -191,62 +269,60 @@ export const ClusterMarkers: React.FC = () => {
                         >
                             <button
                                 type="button"
-                                className={s.badge}
-                                data-unpublished={marker.hasUnpublished || undefined}
-                                style={{ width: size, height: size }}
-                                aria-label={`Zoom into cluster of ${marker.count} patios`}
+                                className={clsx(s.badge, s.morph)}
+                                data-leaving={leaving || undefined}
+                                style={toMorphVars(zoom, marker.latitude, size, seedRotate)}
+                                ref={(el) => {
+                                    registerMorph(
+                                        marker.key,
+                                        el
+                                            ? {
+                                                  el,
+                                                  longitude: marker.longitude,
+                                                  latitude: marker.latitude,
+                                                  circleSize: size,
+                                                  azimuthDeg,
+                                              }
+                                            : null
+                                    );
+                                    registerCrossfade(marker.key, el ? { el, layer: 'browse' } : null);
+                                }}
+                                aria-label="Select patio"
                                 onClick={() => {
-                                    return expandCluster(marker);
+                                    return selectSingleton(marker);
                                 }}
                             >
-                                {marker.count}
+                                {/* Count fades in as the square morphs to a circle (hidden as a square). */}
+                                <span className={s.count}>{marker.count}</span>
                             </button>
                         </Marker>
                     );
-                }
+                })}
 
-                return (
-                    <Marker key={marker.key} longitude={marker.longitude} latitude={marker.latitude} anchor="center">
-                        <button
-                            type="button"
-                            className={clsx(s.badge, s.morph)}
-                            data-unpublished={marker.hasUnpublished || undefined}
-                            style={toMorphVars(zoom, marker.latitude, size)}
-                            ref={(el) => {
-                                registerMorph(
-                                    marker.key,
-                                    el ? { el, latitude: marker.latitude, circleSize: size } : null
-                                );
-                            }}
-                            aria-label="Select patio"
-                            onClick={() => {
-                                return selectSingleton(marker);
-                            }}
-                        />
-                    </Marker>
-                );
-            })}
-
+            {/* Create marker: screen-centered overlay (not geo-anchored), so it stays
+                dead-center at every zoom below the placement band. */}
             {showCreateMarker && (
-                <Marker
-                    longitude={START_COORDINATE.longitude}
-                    latitude={START_COORDINATE.latitude}
-                    anchor="center"
-                    style={{ zIndex: 1 }}
-                >
+                <div className={s['create-overlay']} aria-hidden="true">
                     <span
-                        aria-hidden="true"
                         className={clsx(s.badge, s.morph)}
                         data-variant="create"
-                        style={toMorphVars(zoom, START_COORDINATE.latitude, BADGE_SIZE_SM)}
+                        style={toMorphVars(zoom, START_COORDINATE.latitude, BADGE_SIZE_SM, 0)}
                         ref={(el) => {
                             registerMorph(
                                 CREATE_MARKER_KEY,
-                                el ? { el, latitude: START_COORDINATE.latitude, circleSize: BADGE_SIZE_SM } : null
+                                el
+                                    ? {
+                                          el,
+                                          longitude: START_COORDINATE.longitude,
+                                          latitude: START_COORDINATE.latitude,
+                                          circleSize: BADGE_SIZE_SM,
+                                      }
+                                    : null
                             );
+                            registerCrossfade(CREATE_MARKER_KEY, el ? { el, layer: 'browse' } : null);
                         }}
                     />
-                </Marker>
+                </div>
             )}
         </>
     );

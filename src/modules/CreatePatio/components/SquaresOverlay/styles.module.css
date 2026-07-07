@@ -1,5 +1,9 @@
 .overlay {
     position: absolute;
     inset: 0;
+
+    /* Placement side of the browse ⇆ placement cross-fade; driven per frame by
+       `useCrossfadeDriver` across `CROSSFADE_BAND` (1 above the placement threshold). */
+    opacity: var(--crossfade-opacity, 1);
     pointer-events: none;
 }

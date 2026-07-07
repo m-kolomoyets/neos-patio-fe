@@ -1,9 +1,10 @@
 import type { SquareRect } from '../types';
 import { useEffect, useMemo } from 'react';
 import { useMap } from 'react-map-gl/mapbox';
-import { CREATE_PATIO_MAP_ID, PATIO_SEED, PLACEMENT_MIN_ZOOM, START_COORDINATE } from '../constants';
+import { usePatioPoints } from '@/services/patios/queries';
+import { CREATE_PATIO_MAP_ID, PATIO_SIZE_M, PLACEMENT_MIN_ZOOM, START_COORDINATE } from '../constants';
+import { derivePatioMapGeometry } from '../utils/derivePatioMapGeometry';
 import { metersToPixels } from '../utils/metersToPixels';
-import { generatePatios } from '../utils/seededPatios';
 import { isPointInSquare } from '../utils/squareGeometry';
 import { useCreatePatioMode } from '../context/CreatePatioContext';
 
@@ -18,9 +19,14 @@ import { useCreatePatioMode } from '../context/CreatePatioContext';
 export const useSelectPatioOnClick = (): void => {
     const maps = useMap();
     const { setMode, setSelectedPatioId } = useCreatePatioMode();
+    const { data: points } = usePatioPoints();
+    // Same relocated fixture set the squares render, so a geo hit-test selects a
+    // real patio id (the DOM singleton path uses the same ids).
     const patios = useMemo(() => {
-        return generatePatios(PATIO_SEED, START_COORDINATE);
-    }, []);
+        return (points?.features ?? []).map((feature) => {
+            return { id: feature.properties.id, ...derivePatioMapGeometry(feature.properties.id, START_COORDINATE) };
+        });
+    }, [points]);
 
     useEffect(() => {
         const mapRef = maps.current ?? maps[CREATE_PATIO_MAP_ID];
@@ -36,21 +42,20 @@ export const useSelectPatioOnClick = (): void => {
             // so this geo hit-test stays out to avoid a second selection path.
             if (zoom < PLACEMENT_MIN_ZOOM) return;
 
-            const hitIndex = patios.features.findIndex((feature) => {
-                const [longitude, latitude] = feature.geometry.coordinates;
-                const point = map.project([longitude, latitude]);
+            const hit = patios.find((patio) => {
+                const point = map.project([patio.longitude, patio.latitude]);
                 const rect: SquareRect = {
                     center: { x: point.x, y: point.y },
-                    size: metersToPixels(feature.properties.sizeMeters, latitude, zoom),
-                    azimuthDeg: feature.properties.azimuthDeg - bearing,
+                    size: metersToPixels(PATIO_SIZE_M, patio.latitude, zoom),
+                    azimuthDeg: patio.azimuthDeg - bearing,
                 };
 
                 return isPointInSquare({ x: event.point.x, y: event.point.y }, rect);
             });
 
-            if (hitIndex === -1) return;
+            if (!hit) return;
 
-            setSelectedPatioId(String(hitIndex));
+            setSelectedPatioId(hit.id);
             setMode('view');
         };
 

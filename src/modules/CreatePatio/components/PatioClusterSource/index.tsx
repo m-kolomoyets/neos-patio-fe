@@ -1,8 +1,10 @@
 import type { CircleLayerSpecification } from 'mapbox-gl';
 import type { PatioPointCollection } from '@/services/patios/types';
+import { useMemo } from 'react';
 import { Layer, Source } from 'react-map-gl/mapbox';
 import { usePatioPoints } from '@/services/patios/queries';
-import { CLUSTER_MAX_ZOOM, CLUSTER_RADIUS, PATIO_CLUSTER_SOURCE_ID } from '../../constants';
+import { CLUSTER_MAX_ZOOM, CLUSTER_RADIUS, PATIO_CLUSTER_SOURCE_ID, START_COORDINATE } from '../../constants';
+import { derivePatioMapGeometry } from '../../utils/derivePatioMapGeometry';
 
 const EMPTY_COLLECTION: PatioPointCollection = { type: 'FeatureCollection', features: [] };
 
@@ -29,11 +31,26 @@ const probeLayer: CircleLayerSpecification = {
 export const PatioClusterSource: React.FC = () => {
     const { data } = usePatioPoints();
 
+    // Relocate each patio near the start via the shared derivation (properties —
+    // id/isPublished/type — untouched) so clustering matches the placement squares.
+    const relocated = useMemo<PatioPointCollection>(() => {
+        if (!data) return EMPTY_COLLECTION;
+
+        return {
+            ...data,
+            features: data.features.map((feature) => {
+                const { longitude, latitude } = derivePatioMapGeometry(feature.properties.id, START_COORDINATE);
+
+                return { ...feature, geometry: { type: 'Point', coordinates: [longitude, latitude] } };
+            }),
+        };
+    }, [data]);
+
     return (
         <Source
             id={PATIO_CLUSTER_SOURCE_ID}
             type="geojson"
-            data={data ?? EMPTY_COLLECTION}
+            data={relocated}
             cluster
             clusterRadius={CLUSTER_RADIUS}
             clusterMaxZoom={CLUSTER_MAX_ZOOM}

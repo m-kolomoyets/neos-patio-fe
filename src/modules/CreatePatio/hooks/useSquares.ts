@@ -2,9 +2,11 @@ import type { SquareRect } from '../types';
 import type { MapCamera } from './useMapCamera';
 import { useMemo } from 'react';
 import { useMap } from 'react-map-gl/mapbox';
-import { PATIO_SEED, PATIO_SIZE_M, START_COORDINATE } from '../constants';
+import { usePatioPoints } from '@/services/patios/queries';
+import { PATIO_SIZE_M, START_COORDINATE } from '../constants';
+import { derivePatioMapGeometry } from '../utils/derivePatioMapGeometry';
+import { getProjectedNorthDeg } from '../utils/getProjectedNorthDeg';
 import { metersToPixels } from '../utils/metersToPixels';
-import { generatePatios } from '../utils/seededPatios';
 import { useMapCamera } from './useMapCamera';
 
 export type PatioSquare = {
@@ -25,16 +27,33 @@ export type Squares = {
  * shared computation keeps the base squares and the clipped intersection aligned
  * pixel-for-pixel. Returns null until the map is ready.
  *
- * `bearing` is the live map azimuth: the center square is drawn screen-upright
- * (screen azimuth 0) while each patio's screen azimuth is `worldAzimuth − bearing`,
- * so patios stay pinned to the world and visually rotate as the map rotates.
+ * The center square is drawn screen-upright (screen azimuth 0). Each patio's
+ * screen azimuth is `worldAzimuth + getProjectedNorthDeg(...)` — the footprint's
+ * real-world orientation plus the projected screen angle of north at its location
+ * — so patios stay pinned to the world at any bearing and rotate rigidly with the
+ * map. The morph markers in `ClusterMarkers` use the same helper to stay in sync.
+ * The `_bearing` arg is unused now (projection drives orientation) but re-renders
+ * still flow through `useMapCamera`.
  */
-export const useSquares = (bearing: number): Squares | null => {
-    const patios = useMemo(() => {
-        return generatePatios(PATIO_SEED, START_COORDINATE);
-    }, []);
+export const useSquares = (_bearing: number): Squares | null => {
+    // `map.project` reads Mapbox's live (mutable) transform, which changes on every
+    // rotate/pan/zoom without any React-tracked dep changing. The React Compiler
+    // sees only a stable `map` ref + literal coords and would memoize the projected
+    // pixels once — freezing the patio squares in place on rotation. Recompute each
+    // frame instead; re-renders are driven by `useMapCamera`'s `render` sync.
+    'use no memo';
+
+    const { data: points } = usePatioPoints();
     const camera = useMapCamera();
     const { current: mapRef } = useMap();
+
+    // Real patio ids relocated near the start via the shared derivation, so these
+    // squares are exactly the points the browse view clusters on zoom-out.
+    const patios = useMemo(() => {
+        return (points?.features ?? []).map((feature) => {
+            return { id: feature.properties.id, ...derivePatioMapGeometry(feature.properties.id, START_COORDINATE) };
+        });
+    }, [points]);
 
     if (!camera || !mapRef) return null;
 
@@ -47,17 +66,18 @@ export const useSquares = (bearing: number): Squares | null => {
         azimuthDeg: 0,
     };
 
-    const patioSquares: PatioSquare[] = patios.features.map((feature, index) => {
-        const [longitude, latitude] = feature.geometry.coordinates;
-        const point = map.project([longitude, latitude]);
+    const patioSquares: PatioSquare[] = patios.map((patio) => {
+        const point = map.project([patio.longitude, patio.latitude]);
 
         return {
-            id: String(index),
+            id: patio.id,
             rect: {
                 center: { x: point.x, y: point.y },
-                size: metersToPixels(feature.properties.sizeMeters, latitude, camera.zoom),
-                // Geo-anchored: counter-rotate by bearing so it stays pinned to the world.
-                azimuthDeg: feature.properties.azimuthDeg - bearing,
+                size: metersToPixels(PATIO_SIZE_M, patio.latitude, camera.zoom),
+                // Geo-anchored: orient by the world azimuth plus the projected screen
+                // angle of north at this point, so the footprint stays pinned to the
+                // world at any bearing. `ClusterMarkers` uses the same helper to sync.
+                azimuthDeg: patio.azimuthDeg + getProjectedNorthDeg(map, patio.longitude, patio.latitude),
             },
         };
     });
