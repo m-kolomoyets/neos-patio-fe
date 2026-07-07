@@ -1,0 +1,76 @@
+.scale {
+    display: inline-flex;
+    align-items: stretch;
+    gap: 1px;
+    border-radius: var(--radius-md);
+}
+
+/* Yellow accent wraps the whole joined control while editing. */
+.scale:focus-within {
+    outline: 1px solid var(--color-brand-yellow-600);
+    outline-offset: 0;
+}
+
+/* Left half: percent input. Square off the joined (right) edge and drop the
+   input's own focus ring — the group owns the focus accent. */
+.input.input {
+    --input-font-size: 12px;
+    --input-min-height: 30px;
+
+    width: 64px;
+    padding: calc(var(--gap-1) + var(--gap-0-5));
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.input.input:focus-within {
+    box-shadow: var(--shadow);
+}
+
+.input :global(.input-left-addon) {
+    color: hsl(var(--color-hsl-white) / 0.5);
+}
+
+.input :global(.input-left-addon) > svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Right half: preset dropdown trigger. Mirrors the input surface, squared on
+   the joined (left) edge. */
+.trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--gap-2) calc(var(--gap-1) + var(--gap-0-5));
+    border: none;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background: var(--surface-thick);
+    background-blend-mode: normal, luminosity;
+    box-shadow:
+        1px 1.5px 4px hsl(var(--color-hsl-black) / 0.1) inset,
+        1px 1.5px 4px hsl(var(--color-hsl-black) / 0.08) inset,
+        0 -0.5px 1px hsl(var(--color-hsl-white) / 0.25) inset,
+        0 -0.5px 1px hsl(var(--color-hsl-white) / 0.3) inset;
+    color: var(--color-base-white);
+    cursor: pointer;
+}
+
+.trigger:hover {
+    background: var(--gradient-bottom-shine-secondary);
+    background-blend-mode: color-dodge, normal, luminosity;
+}
+
+.trigger > svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.popup.popup {
+    min-width: 4.25rem;
+    background: var(--surface-thick);
+}
+
+.item {
+    font-size: 12px;
+    line-height: var(--line-height-text-sm, 18px);
+}

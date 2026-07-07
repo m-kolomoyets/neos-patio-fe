@@ -326,7 +326,7 @@ export const UploadModelProvider: React.FC<{ children: React.ReactNode }> = ({ c
         abortRef.current = null;
         dispatch({ type: 'reset' });
 
-        toast.success({ title: 'Asset saved', description: `${name} was added to your assets.` });
+        toast.success('Asset added to library');
 
         // Mock thumbnail persistence — non-blocking; a failure only toasts.
         if (thumbnailBlob) {

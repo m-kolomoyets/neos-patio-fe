@@ -11,7 +11,7 @@ import { HOME_SCROLL_ROOT_SELECTOR } from '../../../constants';
 // plus the parallax overshoot (.image height is 140%).
 const BOX_WIDTH = 221;
 const BOX_HEIGHT = 132;
-const PARALLAX_OVERSHOOT = 1.4;
+const PARALLAX_OVERSHOOT = 1;
 const MAX_DPR = 2;
 
 // Cap concurrent full-resolution decodes. Each decoded source is ~6MB RGBA in

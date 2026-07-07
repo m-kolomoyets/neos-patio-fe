@@ -2,6 +2,8 @@ import type { EmblaCarouselType, EmblaOptionsType } from 'embla-carousel';
 import { useCallback, useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { computeActiveSet } from '../utils/computeActiveSet';
+import { isWeakDevice } from '../utils/detectDeviceSeed';
+import { useVideoPerfGuard } from './useVideoPerfGuard';
 
 type Params = {
     dataKey: unknown;
@@ -40,26 +42,43 @@ const prefersReducedMotion = (): boolean => {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 };
 
+// Left gutter (red-line visual point) = var(--gap-5) - var(--gap-0-5) = 1.25rem - 0.125rem.
+const SLIDE_GUTTER_REM = 1.125;
+
+// Embla clamps the first/last snap to the scroll bounds (ScrollContain.measureBounded), so this
+// offset is ignored for the edge slides — their gutter comes from the .slide:first/last-child
+// padding — and applied only to the middle slides, aligning their content to the same gutter.
+const alignToGutter = (): number => {
+    if (typeof window === 'undefined') {
+        return 0;
+    }
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    return SLIDE_GUTTER_REM * rootFontSize;
+};
+
 const buildOptions = (reducedMotion: boolean): EmblaOptionsType => {
     if (reducedMotion) {
         return {
             loop: false,
-            align: 'start',
+            align: alignToGutter,
             dragFree: false,
             containScroll: 'trimSnaps',
             duration: 0,
             skipSnaps: true,
         };
     }
-    return { loop: false, align: 'start', dragFree: false, containScroll: 'trimSnaps' };
+    return { loop: false, align: alignToGutter, dragFree: false, containScroll: 'trimSnaps' };
 };
 
 export const useFeaturedCarousel = ({ dataKey }: Params): Result => {
     const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotion);
     const [staticCapable] = useState<boolean>(() => {
-        return supportsHover() && !isSlowConnection();
+        return supportsHover() && !isSlowConnection() && !isWeakDevice();
     });
-    const videoCapable = staticCapable && !reducedMotion;
+    // Runtime FPS is the source of truth; the static seed above only culls obviously weak hardware.
+    // Sample only while videos would actually be mounted/scrubbing.
+    const { degraded } = useVideoPerfGuard({ enabled: staticCapable && !reducedMotion });
+    const videoCapable = staticCapable && !reducedMotion && !degraded;
 
     const [emblaRef, emblaApi] = useEmblaCarousel(buildOptions(reducedMotion));
     const [selectedIndex, setSelectedIndex] = useState(0);

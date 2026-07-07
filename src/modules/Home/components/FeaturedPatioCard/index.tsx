@@ -5,6 +5,7 @@ import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
 import { usePatioTransitionNavigate } from '@/hooks/usePatioTransitionNavigate';
 import { useSpotlight } from '@/hooks/useSpotlight';
+import { useSquircleClipPath } from '@/hooks/useSquircleClipPath';
 import { Tag } from '@/components/ui/Tag';
 import { Typography } from '@/components/ui/Typography';
 import { CONTINENT_LABELS } from '../../constants';
@@ -35,12 +36,18 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
 
     const { seed } = usePatioTransitionNavigate();
     const spotlightRef = useSpotlight<HTMLElement>();
+
+    // Squircle corners matching Figma's 60% iOS smoothing.
+    const [wrapSquircleRef, wrapSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: 24 });
+    const [mediaSquircleRef, mediaSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius: 16 });
+
     const setRootRef = useCallback(
         (el: HTMLElement | null) => {
             rootRef(el);
             spotlightRef(el);
+            wrapSquircleRef.current = el;
         },
-        [rootRef, spotlightRef]
+        [rootRef, spotlightRef, wrapSquircleRef]
     );
 
     const showVideoLayer = metadataReady && phase !== 'broken';
@@ -50,6 +57,7 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
             to="/patios/$id"
             params={{ id: patio.id }}
             ref={setRootRef}
+            style={wrapSquircleStyle}
             onClick={() => {
                 return seed(patio);
             }}
@@ -59,7 +67,7 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
             data-card-id={patio.id}
             data-phase={phase}
         >
-            <div className={s.media}>
+            <div ref={mediaSquircleRef} className={s.media} style={mediaSquircleStyle}>
                 <div className={clsx(s.decor, s.top)} aria-hidden />
                 <div className={clsx(s.decor, s.bottom)} aria-hidden />
                 <div ref={stackRef} className={s.stack} data-stack>

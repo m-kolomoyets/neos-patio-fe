@@ -5,36 +5,31 @@ import MapPin24Icon from '@/icons/map-pin_24.svg?react';
 import clsx from 'clsx';
 import { usePatioTransitionNavigate } from '@/hooks/usePatioTransitionNavigate';
 import { useSpotlight } from '@/hooks/useSpotlight';
+import { useSquircleClipPath } from '@/hooks/useSquircleClipPath';
 import { Typography } from '@/components/ui/Typography';
 import { CONTINENT_LABELS } from '../../constants';
 import { useDownscaledImage } from './hooks/useDownscaledImage';
-import { useParallax } from './hooks/useParallax';
 import s from './styles.module.css';
 
 export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => {
     const { navigateToPatio: navigate } = usePatioTransitionNavigate();
     const spotlightRef = useSpotlight<HTMLElement>();
-    const { cardRef, imgRef } = useParallax();
     const { canvasRef } = useDownscaledImage({
         url: patio.previewHighUrl,
         lowUrl: patio.previewLowUrl,
         alt: patio.name,
     });
 
-    const setArticleRef = useCallback(
+    // Squircle corners matching Figma's 60% iOS smoothing.
+    const [wrapSquircleRef, wrapSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: 16 });
+    const [mediaSquircleRef, mediaSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius: 8 });
+
+    const setWrapRef = useCallback(
         (el: HTMLElement | null) => {
             spotlightRef(el);
-            cardRef(el);
+            wrapSquircleRef.current = el;
         },
-        [spotlightRef, cardRef]
-    );
-
-    const setImageRef = useCallback(
-        (el: HTMLCanvasElement | null) => {
-            imgRef(el);
-            canvasRef(el);
-        },
-        [imgRef, canvasRef]
+        [spotlightRef, wrapSquircleRef]
     );
 
     const navigateToPatio = () => {
@@ -49,7 +44,8 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
 
     return (
         <article
-            ref={setArticleRef}
+            ref={setWrapRef}
+            style={wrapSquircleStyle}
             className={clsx(s.wrap, 'focus-primary')}
             data-card-id={patio.id}
             role="button"
@@ -57,10 +53,10 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
             onClick={navigateToPatio}
             onKeyDown={handleKeyDown}
         >
-            <div className={s.media}>
+            <div ref={mediaSquircleRef} className={s.media} style={mediaSquircleStyle}>
                 <div className={clsx(s.decor, s.top)} aria-hidden />
                 <div className={clsx(s.decor, s.bottom)} aria-hidden />
-                <canvas ref={setImageRef} className={s.image} />
+                <canvas ref={canvasRef} className={s.image} />
             </div>
             <div className={s.body}>
                 <header className={s.top}>

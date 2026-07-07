@@ -26,7 +26,7 @@
     padding: var(--gap-2) calc(var(--gap-1) + var(--gap-0-5));
     border: none;
     background-color: transparent;
-    color: var(--color-base-white);
+    color: hsl(var(--color-hsl-white) / 0.9);
     font-size: 0.875rem;
     line-height: 1.25rem;
     opacity: 0.5;

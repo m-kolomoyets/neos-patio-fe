@@ -22,6 +22,7 @@
     flex-direction: column;
     border: 1px solid hsl(var(--color-hsl-white) / 0.24);
     gap: var(--gap-12);
+    backdrop-filter: blur(50px);
 }
 
 .main::after {
@@ -35,7 +36,6 @@
     background: var(--surface-regular);
     background-blend-mode: normal, luminosity;
     pointer-events: none;
-    backdrop-filter: blur(20px);
 }
 
 .scroll {
@@ -45,8 +45,8 @@
 .main,
 .scroll .scroll-viewport,
 .main::after {
+    /* Fallback rounding before JS measures the squircle clip-path (useSquircleClipPath). */
     border-radius: 2.5rem;
-    corner-shape: superellipse(0.9);
 }
 
 .scroll .scroll-viewport {

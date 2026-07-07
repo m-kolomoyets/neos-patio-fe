@@ -52,6 +52,12 @@
     transform: translateX(10px);
 }
 
+.scroll-area :global(.scroll-area-thumb) {
+    opacity: 1;
+    background: hsl(var(--color-hsl-white) / 0.5);
+    background-blend-mode: lighten;
+}
+
 .scroll-area-viewport {
     --row-count: 4;
     --row-height: 56px;
