@@ -1,10 +1,12 @@
 import type { AutosaveStatus } from '../../hooks/useAutosavePatio';
+import CheckIcon from '@/icons/checkmark_24.svg?react';
 import RedoIcon from '@/icons/redo_24.svg?react';
 import TrashIcon from '@/icons/trash_24.svg?react';
 import UndoIcon from '@/icons/undo_24.svg?react';
 import clsx from 'clsx';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { Button } from '@/components/ui/Button';
+import { Typography } from '@/components/ui/Typography';
 import { useEditorDispatch, useEditorHistoryFlags, useEditorState } from '../../context/EditorContext';
 import s from './styles.module.css';
 
@@ -25,9 +27,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({ saveStatus }) => {
 
     return (
         <div className={clsx(s.bar, 'surface-regular')}>
-            <span className={s.status} data-status={saveStatus}>
+            <Typography variant="text-sm" className={s.status} data-status={saveStatus} render={<span />}>
+                {saveStatus === 'saved' || saveStatus === 'idle' ? <CheckIcon className={s.check} /> : null}
                 {STATUS_LABEL[saveStatus]}
-            </span>
+            </Typography>
             <div className={s['button-group']}>
                 <Button
                     disabled={!canUndo}
