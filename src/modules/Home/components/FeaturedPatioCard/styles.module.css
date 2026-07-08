@@ -7,7 +7,6 @@
     height: var(--card-height);
     margin: 2px;
     padding: var(--gap-3);
-    /* border-radius: var(--radius-4xl); */
     border-radius: 28px;
     user-select: none;
     transition:
