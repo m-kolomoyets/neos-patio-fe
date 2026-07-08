@@ -38,12 +38,12 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
     const spotlightRef = useSpotlight<HTMLElement>();
 
     const [wrapSquircleRef, wrapSquircleStyle] = useSquircleClipPath<HTMLElement>({
-        cornerRadius: 24,
+        cornerRadius: 28,
         cornerSmoothing: 0.5,
         preserveSmoothing: false,
     });
     const [mediaSquircleRef, mediaSquircleStyle] = useSquircleClipPath<HTMLDivElement>({
-        cornerRadius: 16,
+        cornerRadius: 20,
         cornerSmoothing: 0.5,
         preserveSmoothing: false,
         as: 'mask',

@@ -21,8 +21,8 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
     });
 
     // Squircle corners matching Figma's 60% iOS smoothing.
-    const [wrapSquircleRef, wrapSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: 16 });
-    const [mediaSquircleRef, mediaSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius: 8 });
+    const [wrapSquircleRef, wrapSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: 16, as: 'mask' });
+    const [mediaSquircleRef, mediaSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius: 8, as: 'mask' });
 
     const setWrapRef = useCallback(
         (el: HTMLElement | null) => {
