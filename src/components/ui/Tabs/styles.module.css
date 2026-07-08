@@ -41,6 +41,7 @@
 
 .tab[data-active] {
     color: hsl(var(--color-hsl-white) / 0.9);
+    opacity: 1;
 }
 
 .tab:disabled {
@@ -58,10 +59,6 @@
 
 .tab[data-selected] {
     background-color: hsl(0deg 0% 100% / 0.16);
-    opacity: 1;
-}
-
-.tab[data-active] {
     opacity: 1;
 }
 
