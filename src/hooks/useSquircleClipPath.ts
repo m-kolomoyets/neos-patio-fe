@@ -12,6 +12,12 @@ type UseSquircleClipPathOptions = {
     /** Keep smoothing on small elements where the budget would clamp it. */
     preserveSmoothing?: boolean;
     enabled?: boolean;
+    /**
+     * Output mode. `'clip'` emits a `clip-path` (aliased edges in Blink);
+     * `'mask'` emits an alpha `mask-image` of the same outline, which the GPU
+     * anti-aliases for smooth corners. Defaults to `'clip'`.
+     */
+    as?: 'clip' | 'mask';
 };
 
 /**
@@ -26,6 +32,7 @@ export function useSquircleClipPath<T extends Element>({
     cornerSmoothing = 0.6,
     preserveSmoothing = true,
     enabled = true,
+    as = 'clip',
 }: UseSquircleClipPathOptions): [React.MutableRefObject<T | null>, React.CSSProperties] {
     const [measures, ref] = useMeasure<T>(enabled, borderBoxMeasurer);
 
@@ -42,8 +49,19 @@ export function useSquircleClipPath<T extends Element>({
             preserveSmoothing,
         });
 
+        if (as === 'mask') {
+            const svg =
+                `<svg xmlns='http://www.w3.org/2000/svg' ` +
+                `width='${measures.width}' height='${measures.height}' ` +
+                `viewBox='0 0 ${measures.width} ${measures.height}'>` +
+                `<path d='${path}' fill='white'/></svg>`;
+            const value = `url("data:image/svg+xml,${encodeURIComponent(svg)}") 0 0 / 100% 100% no-repeat`;
+
+            return { WebkitMask: value, mask: value };
+        }
+
         return { clipPath: `path("${path}")` };
-    }, [measures?.width, measures?.height, cornerRadius, cornerSmoothing, preserveSmoothing]);
+    }, [measures?.width, measures?.height, cornerRadius, cornerSmoothing, preserveSmoothing, as]);
 
     return [ref, style];
 }

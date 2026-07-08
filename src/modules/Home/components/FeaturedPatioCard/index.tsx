@@ -46,6 +46,7 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
         cornerRadius: 16,
         cornerSmoothing: 0.5,
         preserveSmoothing: false,
+        as: 'mask',
     });
 
     const setRootRef = useCallback(
