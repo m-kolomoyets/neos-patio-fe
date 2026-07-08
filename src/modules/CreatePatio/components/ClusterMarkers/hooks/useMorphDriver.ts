@@ -18,6 +18,14 @@ export type MorphTarget = {
      * screen-upright.
      */
     azimuthDeg?: number;
+    /**
+     * Screen-centered overlay (the create marker): its footprint is sized from the
+     * live map-center latitude each frame, not the fixed `latitude` above. Mercator
+     * px-per-meter grows with latitude, so a fixed-latitude size would drift ever
+     * larger from the center geo square (which uses `map.getCenter().lat`) as the
+     * camera pans north. Patios keep their own fixed latitude.
+     */
+    centered?: boolean;
 };
 
 /** Registers a marker element by key; a `null` target unregisters it. */
@@ -49,8 +57,11 @@ export const useMorphDriver = (): RegisterMorphTarget => {
 
         const apply = () => {
             const zoom = map.getZoom();
-            for (const { el, longitude, latitude, circleSize, azimuthDeg } of targetsRef.current.values()) {
-                const { size, radius, progress } = getMorphStyle(zoom, latitude, circleSize);
+            for (const { el, longitude, latitude, circleSize, azimuthDeg, centered } of targetsRef.current.values()) {
+                // Screen-centered overlay tracks the live center latitude so its geo
+                // footprint stays matched to the center square as the camera pans north.
+                const lat = centered ? map.getCenter().lat : latitude;
+                const { size, radius, progress } = getMorphStyle(zoom, lat, circleSize);
                 el.style.setProperty('--morph-size', `${size}px`);
                 el.style.setProperty('--morph-radius', `${radius}px`);
                 el.style.setProperty('--morph-text-opacity', `${progress}`);

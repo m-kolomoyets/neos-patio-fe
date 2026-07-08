@@ -10,6 +10,7 @@ import clsx from 'clsx';
 import { useMap } from 'react-map-gl/mapbox';
 import { useGeocodingSearch } from '@/services/geocoding/queries';
 import { Input } from '@/components/ui/Input';
+import { OptionItem } from '@/components/ui/OptionItem';
 import { PopupWrapper } from '@/components/ui/PopupWrapper';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Typography } from '@/components/ui/Typography';
@@ -114,33 +115,21 @@ export const GeocoderSearch: React.FC = () => {
                                             <BaseAutocomplete.Item
                                                 key={option.id}
                                                 className={s.row}
-                                                value={option.id}
+                                                value=""
                                                 index={index}
+                                                render={
+                                                    <OptionItem
+                                                        variant="surface"
+                                                        leftAddon={<LocationIcon aria-hidden />}
+                                                    />
+                                                }
                                                 onClick={() => {
                                                     flyTo(option);
                                                     setQuery('');
                                                     setOpen(false);
                                                 }}
                                             >
-                                                <span className={s.addon}>
-                                                    <LocationIcon aria-hidden />
-                                                </span>
-                                                <span className={s.text}>
-                                                    <Typography
-                                                        variant="text-sm"
-                                                        render={<span />}
-                                                        className={clsx(s.label, 'truncate')}
-                                                    >
-                                                        {option.name}
-                                                    </Typography>
-                                                    <Typography
-                                                        variant="text-xs"
-                                                        render={<span />}
-                                                        className={clsx(s.description, 'truncate')}
-                                                    >
-                                                        {option.placeName}
-                                                    </Typography>
-                                                </span>
+                                                {option.name}
                                             </BaseAutocomplete.Item>
                                         );
                                     })}
