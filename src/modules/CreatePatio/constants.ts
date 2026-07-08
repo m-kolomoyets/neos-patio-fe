@@ -77,6 +77,23 @@ export const CENTER_SQUARE = {
     insetShadow: 'rgba(161, 94, 5, 0.44)',
 } as const;
 
+/**
+ * Reference grid behind the center square (Figma "Group 29"). A lattice of 100×100 m
+ * cells — each the same on-screen size as the center square, so its cell pitch is the
+ * live `metersToPixels(PATIO_SIZE_M, …)` written per frame by `useGridDriver` — aligned
+ * so the cell over the viewport center coincides with the center square. White lines,
+ * radially faded toward the edges. `fadeStart`/`fadeEnd` are the radial-gradient stop
+ * offsets (fraction of the ellipse radius reaching the mid-edges): fully opaque out to
+ * `fadeStart`, gone by `fadeEnd`.
+ */
+export const GRID = {
+    lineColor: '#fff',
+    lineWidth: 2,
+    opacity: 0.4,
+    fadeStart: 0.7,
+    fadeEnd: 1,
+} as const;
+
 /** Existing-patio palette (blue), lifted from Figma node 9555:14606. */
 export const PATIO_SQUARE = {
     border: '#258dff',

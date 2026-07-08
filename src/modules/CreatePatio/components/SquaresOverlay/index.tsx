@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import {
     CENTER_SQUARE,
     CROSSFADE_BAND,
+    GRID,
     INTERSECTION,
     PATIO_SQUARE,
     SQUARE_BORDER_WIDTH,
@@ -13,6 +14,8 @@ import { usePatioGeometries } from '../../hooks/usePatioGeometries';
 import { useSelectPatioOnClick } from '../../hooks/useSelectPatioOnClick';
 import { patioGeoId, useSquaresDriver } from '../../hooks/useSquaresDriver';
 import { useZoomAtLeast } from '../../hooks/useZoomAtLeast';
+import { useGridDriver } from './hooks/useGridDriver';
+import { useViewportSize } from './hooks/useViewportSize';
 import s from './styles.module.css';
 
 /** Custom property the cross-fade driver writes onto the overlay each frame. */
@@ -48,6 +51,8 @@ export const SquaresOverlay: React.FC = () => {
     const registerCrossfade = useCrossfadeDriver();
     const patios = usePatioGeometries();
     const registerRect = useSquaresDriver(patios);
+    const registerGrid = useGridDriver();
+    const viewport = useViewportSize();
 
     // Mount from the bottom of the cross-fade band (below the placement threshold)
     // so the squares can fade in against the outgoing browse markers. Placement
@@ -89,6 +94,24 @@ export const SquaresOverlay: React.FC = () => {
                         stopOpacity={PATIO_SQUARE.gradientOpacity}
                     />
                 </radialGradient>
+                {/* Radial fade for the reference grid: opaque core centered on the
+                    viewport, transparent by `fadeEnd`. `userSpaceOnUse` + a scale to
+                    (½w, ½h) makes r=1 an ellipse reaching the mid-edges, so the fade
+                    stays proportional at any viewport size (matching Figma Group 29). */}
+                <radialGradient
+                    id="grid-fade-gradient"
+                    gradientUnits="userSpaceOnUse"
+                    cx={0}
+                    cy={0}
+                    r={1}
+                    gradientTransform={`translate(${viewport.width / 2} ${viewport.height / 2}) scale(${viewport.width / 2} ${viewport.height / 2})`}
+                >
+                    <stop offset={GRID.fadeStart} stopColor="#fff" stopOpacity={1} />
+                    <stop offset={GRID.fadeEnd} stopColor="#fff" stopOpacity={0} />
+                </radialGradient>
+                <mask id="grid-fade" maskUnits="userSpaceOnUse">
+                    <rect width={viewport.width} height={viewport.height} fill="url(#grid-fade-gradient)" />
+                </mask>
                 <filter id="center-square-inset">
                     <feComponentTransfer in="SourceAlpha">
                         <feFuncA type="table" tableValues="1 0" />
@@ -138,6 +161,18 @@ export const SquaresOverlay: React.FC = () => {
                     );
                 })}
             </defs>
+            {/* Reference grid of 100×100 m cells (center cell = the center square),
+                radially faded toward the viewport edges. Painted first so every square
+                sits on top of it; inherits the svg's `--crossfade-opacity`, so it fades
+                in/out with the squares. Its `d` is written per frame by `useGridDriver`. */}
+            <path
+                ref={registerGrid}
+                fill="none"
+                stroke={GRID.lineColor}
+                strokeWidth={GRID.lineWidth}
+                strokeOpacity={GRID.opacity}
+                mask="url(#grid-fade)"
+            />
             {/* Base blue patio squares (geo-anchored). */}
             {patios.map(({ id }) => {
                 return (

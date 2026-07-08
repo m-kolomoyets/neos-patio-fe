@@ -306,7 +306,12 @@ export const ClusterMarkers: React.FC = () => {
                     <span
                         className={clsx(s.badge, s.morph)}
                         data-variant="create"
-                        style={toMorphVars(zoom, START_COORDINATE.latitude, BADGE_SIZE_SM, 0)}
+                        style={toMorphVars(
+                            zoom,
+                            seedMap?.getCenter().lat ?? START_COORDINATE.latitude,
+                            BADGE_SIZE_SM,
+                            0
+                        )}
                         ref={(el) => {
                             registerMorph(
                                 CREATE_MARKER_KEY,
@@ -316,6 +321,7 @@ export const ClusterMarkers: React.FC = () => {
                                           longitude: START_COORDINATE.longitude,
                                           latitude: START_COORDINATE.latitude,
                                           circleSize: BADGE_SIZE_SM,
+                                          centered: true,
                                       }
                                     : null
                             );

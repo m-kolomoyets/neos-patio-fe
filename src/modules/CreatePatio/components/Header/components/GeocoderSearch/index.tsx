@@ -115,7 +115,7 @@ export const GeocoderSearch: React.FC = () => {
                                             <BaseAutocomplete.Item
                                                 key={option.id}
                                                 className={s.row}
-                                                value={option.id}
+                                                value=""
                                                 index={index}
                                                 render={
                                                     <OptionItem

@@ -26,3 +26,8 @@
     width: 2.75rem;
     height: 2.75rem;
 }
+
+.cta.create {
+    width: 187px;
+    flex-shrink: 0;
+}

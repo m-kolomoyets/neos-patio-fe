@@ -10,9 +10,9 @@ import s from './styles.module.css';
 export const LibraryToolbar: React.FC<WithClassName> = ({ className }) => {
     return (
         <div className={clsx(s.wrap, className)}>
-            <Button variant="surface" size="md" render={<Link to="/create-patio" />}>
+            <Button className={clsx(s.cta, s.create)} variant="brand" size="md" render={<Link to="/create-patio" />}>
                 <PlusIcon />
-                Create patio
+                Create New Patio
             </Button>
             <PatioFilters />
             <PatioSort />
