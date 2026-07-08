@@ -37,9 +37,16 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
     const { seed } = usePatioTransitionNavigate();
     const spotlightRef = useSpotlight<HTMLElement>();
 
-    // Squircle corners matching Figma's 60% iOS smoothing.
-    const [wrapSquircleRef, wrapSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: 24 });
-    const [mediaSquircleRef, mediaSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius: 16 });
+    const [wrapSquircleRef, wrapSquircleStyle] = useSquircleClipPath<HTMLElement>({
+        cornerRadius: 24,
+        cornerSmoothing: 0.5,
+        preserveSmoothing: false,
+    });
+    const [mediaSquircleRef, mediaSquircleStyle] = useSquircleClipPath<HTMLDivElement>({
+        cornerRadius: 16,
+        cornerSmoothing: 0.5,
+        preserveSmoothing: false,
+    });
 
     const setRootRef = useCallback(
         (el: HTMLElement | null) => {
