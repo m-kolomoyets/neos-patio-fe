@@ -1,6 +1,6 @@
 .wrap {
     font-family: "Inter", sans-serif;
-    color: inherit;
+    color: hsl(var(--color-hsl-white) / 0.9);
     letter-spacing: 0;
     transition:
         font-size 0.2s ease,

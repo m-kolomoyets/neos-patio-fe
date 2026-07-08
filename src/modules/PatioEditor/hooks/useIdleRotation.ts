@@ -31,8 +31,9 @@ const DRAG_MOVE_EVENT = 'pointermove' as const;
  * the camera currently looks at (screen-centre ground hit), falling back to the
  * bounds-centre target from {@link useOrbitTarget}. Orbiting around the live
  * look-at point (rather than a fixed centre) means the orbit resumes from the
- * exact current view with no recenter snap, even after the user panned away. The
- * per-frame `lookAt` reads the live pitch/range so tilt and zoom are preserved.
+ * exact current view with no recenter snap, even after the user panned away. Pitch
+ * and range are captured once at orbit start and held constant, so the camera flies
+ * around the pivot at a fixed elevation and distance — only the heading advances.
  * Any interaction stops the orbit immediately and restarts the idle countdown.
  *
  * The RAF loop only runs while orbiting and fires `scene.requestRender()` per
@@ -58,6 +59,13 @@ export const useIdleRotation = () => {
         // orbit resumes from the exact live view — even after the user panned the
         // map away from the patio centre. Falls back to the bounds-centre target.
         let pivot: Cartesian3 | null = null;
+        // Pitch and range captured ONCE at orbit start (in the pivot's ENU frame)
+        // and held constant for the whole orbit. Only heading advances per frame,
+        // so the camera flies around the pivot at a fixed elevation and distance —
+        // no pitch/height creep from re-sampling the live camera each tick.
+        let orbitHeading = 0;
+        let orbitPitch = 0;
+        let orbitRange = 0;
 
         const resolvePivot = () => {
             const { camera, scene, canvas } = viewer;
@@ -82,17 +90,11 @@ export const useIdleRotation = () => {
             if (lastTs !== null) {
                 const deltaSec = (ts - lastTs) / 1_000;
                 const { camera, scene } = viewer;
-                // Read heading/pitch/range in the TARGET's ENU frame, not the
-                // camera's own-position frame — otherwise the HPR we feed back to
-                // lookAt (which is target-frame) is mismatched and the first orbit
-                // frame snaps. Set the target frame, sample, then orbit within it.
-                camera.lookAtTransform(Transforms.eastNorthUpToFixedFrame(target));
-                const offset = new HeadingPitchRange(
-                    camera.heading + CesiumMath.toRadians(ROTATION_DEG_PER_SEC * deltaSec),
-                    camera.pitch,
-                    Cartesian3.magnitude(camera.position)
-                );
-                camera.lookAt(target, offset);
+                // Advance only the heading; pitch and range stay at the values
+                // captured in startOrbit so the camera flies around the pivot at a
+                // constant elevation and distance — no tilt/height drift.
+                orbitHeading += CesiumMath.toRadians(ROTATION_DEG_PER_SEC * deltaSec);
+                camera.lookAt(target, new HeadingPitchRange(orbitHeading, orbitPitch, orbitRange));
                 camera.lookAtTransform(Matrix4.IDENTITY);
                 scene.requestRender();
             }
@@ -112,6 +114,16 @@ export const useIdleRotation = () => {
             }
             lastTs = null;
             pivot = resolvePivot();
+            if (!pivot) return;
+            // Sample the live heading/pitch/range in the pivot's ENU frame once so
+            // the orbit resumes from the exact current view. From here only heading
+            // changes — pitch and range are frozen for the orbit's lifetime.
+            const { camera } = viewer;
+            camera.lookAtTransform(Transforms.eastNorthUpToFixedFrame(pivot));
+            orbitHeading = camera.heading;
+            orbitPitch = camera.pitch;
+            orbitRange = Cartesian3.magnitude(camera.position);
+            camera.lookAtTransform(Matrix4.IDENTITY);
             frame = requestAnimationFrame(tick);
         };
 
