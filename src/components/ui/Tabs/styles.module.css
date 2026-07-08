@@ -26,10 +26,9 @@
     padding: var(--gap-2) calc(var(--gap-1) + var(--gap-0-5));
     border: none;
     background-color: transparent;
-    color: hsl(var(--color-hsl-white) / 0.9);
+    color: hsl(var(--color-hsl-white) / 0.5);
     font-size: 0.875rem;
     line-height: 1.25rem;
-    opacity: 0.5;
     font-weight: 500;
     cursor: pointer;
     border-radius: var(--radius-full);
@@ -38,6 +37,10 @@
         color 0.2s ease-in-out,
         background 0.2s ease-in-out,
         opacity 0.2s ease-in-out;
+}
+
+.tab[data-active] {
+    color: hsl(var(--color-hsl-white) / 0.9);
 }
 
 .tab:disabled {

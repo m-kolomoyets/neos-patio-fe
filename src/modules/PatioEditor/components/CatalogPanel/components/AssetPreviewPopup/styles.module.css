@@ -1,7 +1,7 @@
 .popup {
     display: flex;
     flex-direction: column;
-    width: 280px;
+    width: 18rem;
     color: white;
     border: none;
 }
@@ -24,7 +24,7 @@
 .preview {
     position: relative;
     width: 100%;
-    aspect-ratio: 1;
+    min-height: 17rem;
 
     /* Dotted surface mirrors the upload preview block. */
     background-color: hsl(0deg 0% 31% / 0.5);
@@ -103,13 +103,12 @@
     border-bottom-left-radius: 0;
 }
 
-/* Camera-shutter flash: a white overlay that fades out over the preview. */
 .flash {
     position: absolute;
     inset: 0;
     z-index: 2;
     pointer-events: none;
-    background-color: hsl(var(--color-hsl-white));
+    background-color: hsl(var(--color-hsl-white) / 0.75);
     animation: thumbnail-flash 0.45s ease-out forwards;
 }
 
@@ -127,7 +126,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--gap-1);
-    padding: var(--gap-4);
+    padding: var(--gap-3);
 }
 
 .name {
