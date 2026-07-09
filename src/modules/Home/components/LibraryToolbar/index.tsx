@@ -15,6 +15,7 @@ export const LibraryToolbar: React.FC<WithClassName> = ({ className }) => {
                 <Button
                     className={clsx(s.cta, s.create)}
                     variant="brand"
+                    nativeButton={false}
                     size="md"
                     render={<Link to="/create-patio" />}
                 >
