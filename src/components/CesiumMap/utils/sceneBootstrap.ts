@@ -18,6 +18,13 @@ const ION_TOKEN = import.meta.env.VITE_CESIUM_ACCESS_TOKEN;
 const INITIAL_PITCH = CesiumMath.toRadians(-45);
 
 /**
+ * Initial zoom relative to the auto-fit framing distance. 2.2 = 220%: the camera
+ * sits 1/2.2 of the distance Cesium would pick to just fit the patio sphere, so
+ * the patio fills more of the viewport on load.
+ */
+const INITIAL_ZOOM = 2.2;
+
+/**
  * Set the ion token once at module load (= boot). Silences Cesium's demo-token
  * console warnings and keeps ion assets available later. It is NOT required to
  * render Google Photorealistic 3D Tiles, which authenticate via the Google key.
@@ -265,8 +272,15 @@ const frameBounds = (viewer: Viewer, bounds: PatioBounds) => {
     const [west, south, east, north] = bounds;
     const sphere = BoundingSphere.fromRectangle3D(Rectangle.fromDegrees(west, south, east, north));
 
+    // Distance at which the sphere just fills the frustum (what `range: 0` picks),
+    // then divided by INITIAL_ZOOM to open closer. Use the narrower of the vertical
+    // fov and its horizontal counterpart so the sphere always fits either dimension.
+    const frustum = viewer.camera.frustum;
+    const fovy = 'fovy' in frustum && frustum.fovy ? frustum.fovy : CesiumMath.toRadians(60);
+    const fitDistance = sphere.radius / Math.tan(fovy * 0.5);
+
     viewer.camera.flyToBoundingSphere(sphere, {
-        offset: new HeadingPitchRange(0, INITIAL_PITCH, 0),
+        offset: new HeadingPitchRange(0, INITIAL_PITCH, fitDistance / INITIAL_ZOOM),
         duration: 0,
     });
 
