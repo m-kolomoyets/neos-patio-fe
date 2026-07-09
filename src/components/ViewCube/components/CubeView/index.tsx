@@ -10,7 +10,7 @@ import s from '../../styles.module.css';
 
 /** Side + top faces rendered on the cube; `T` for top, cardinals for the sides. */
 const FACES: { face: FaceId; label: string; className: string }[] = [
-    { face: 'top', label: 'T', className: s['face-top'] },
+    { face: 'top', label: 'N', className: s['face-top'] },
     { face: 'north', label: 'N', className: s['face-north'] },
     { face: 'east', label: 'E', className: s['face-east'] },
     { face: 'south', label: 'S', className: s['face-south'] },

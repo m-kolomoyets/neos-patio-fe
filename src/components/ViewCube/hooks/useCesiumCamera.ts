@@ -122,17 +122,34 @@ export const useCesiumCamera = (bounds: PatioBounds) => {
         [viewer, targetRef]
     );
 
-    /** Fill a partial target from the live camera, clamping pitch. */
+    /**
+     * Clamp a range (m) to the screen-space camera controller's zoom limits —
+     * the same `minimumZoomDistance`/`maximumZoomDistance` set for the patio
+     * view mode in {@link applyInteractionMode}. Those limits only gate
+     * mouse-wheel zoom by default; without this, the ViewCube's +/− stepper and
+     * presets could fly the camera past them. A no-op in `'edit'` mode, where
+     * the controller keeps Cesium's default (unbounded) limits.
+     */
+    const clampRange = useCallback(
+        (range: number) => {
+            const controller = viewer?.scene.screenSpaceCameraController;
+            if (!controller) return range;
+            return CesiumMath.clamp(range, controller.minimumZoomDistance, controller.maximumZoomDistance);
+        },
+        [viewer]
+    );
+
+    /** Fill a partial target from the live camera, clamping pitch and zoom range. */
     const resolve = useCallback(
         (target: CameraTarget): Required<CameraTarget> => {
             const current = readOrientation();
             return {
                 bearing: normalizeBearing(target.bearing ?? current.bearing),
                 pitch: clampPitch(target.pitch ?? current.pitch),
-                range: target.range ?? current.range,
+                range: clampRange(target.range ?? current.range),
             };
         },
-        [readOrientation]
+        [readOrientation, clampRange]
     );
 
     /** Animated camera move (home, zoom presets). */
