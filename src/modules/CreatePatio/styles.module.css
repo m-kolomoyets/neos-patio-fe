@@ -26,6 +26,7 @@
     display: grid;
     grid-template-rows: auto 1fr;
     border: 1px solid hsl(var(--color-hsl-white) / 0.24);
+    background: var(--surface-regular);
     overflow: hidden;
     backdrop-filter: blur(50px);
     border-radius: 2.5rem;
