@@ -1,0 +1,43 @@
+.input.input {
+    width: 20rem;
+    max-width: 100%;
+}
+
+.positioner {
+    z-index: 50;
+    width: var(--anchor-width);
+    min-width: var(--anchor-width);
+}
+
+.popup {
+    padding: var(--gap-3);
+    width: 100%;
+    border-radius: var(--radius-4xl);
+    background: var(--surface-thick);
+    backdrop-filter: blur(64px);
+}
+
+.list {
+    outline: none;
+}
+
+.scroll-area {
+    --row-count: 6;
+    --row-height: 56px;
+
+    width: 100%;
+    max-height: calc(var(--row-count) * var(--row-height));
+}
+
+.state {
+    display: flex;
+    align-items: center;
+    padding: var(--gap-2) calc(var(--gap-2) + var(--gap-0-5));
+    color: var(--color-base-white);
+    opacity: 0.7;
+}
+
+.state.error {
+    color: var(--color-error-400, #f87171);
+    opacity: 1;
+}

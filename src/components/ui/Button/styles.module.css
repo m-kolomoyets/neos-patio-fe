@@ -1,0 +1,145 @@
+.wrap {
+    --button-icon-size: 1.25rem;
+
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--gap-1) + var(--gap-0-5));
+    cursor: pointer;
+    color: var(--color-base-white);
+    font-weight: 500;
+    border: none;
+    isolation: isolate;
+    border-radius: var(--radius-full);
+    text-decoration: none;
+    transition:
+        color 0.2s ease-in-out,
+        background 0.2s ease-in-out,
+        opacity 0.2s ease-in-out;
+}
+
+.wrap > * {
+    z-index: 5;
+}
+
+.wrap > svg {
+    width: var(--button-icon-size);
+    height: var(--button-icon-size);
+    flex-shrink: 0;
+}
+
+.wrap[data-button-is-loading="true"] > .spinner + svg {
+    display: none;
+}
+
+.wrap:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.wrap[data-button-size="xl"] {
+    padding: calc(var(--gap-3) + var(--gap-0-5));
+    min-height: 3rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
+}
+
+.wrap[data-button-size="lg"] {
+    padding: var(--gap-3);
+    min-height: 2.75rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
+}
+
+.wrap[data-button-size="md"] {
+    padding: calc(var(--gap-2) + var(--gap-0-5));
+    min-height: 2.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.wrap[data-button-size="sm"] {
+    padding: var(--gap-2);
+    min-height: 2.25rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.wrap[data-button-variant="brand"] {
+    background: none;
+}
+
+.wrap[data-button-variant="brand"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: var(--color-brand-600);
+    isolation: isolate;
+    z-index: -2;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.wrap[data-button-variant="brand"]:focus-visible {
+    --ring-offset-color: var(--color-base-white);
+    --ring-color: var(--color-brand-700);
+    --ring-offset-width: 1px;
+    --ring-width: 1px;
+    --ring-offset-shadow: var(--ring-inset) 0 0 0 calc(var(--ring-offset-width)) var(--ring-offset-color);
+    --ring-shadow: var(--ring-inset) 0 0 0 calc(var(--ring-width) + var(--ring-offset-width)) var(--ring-color);
+}
+
+.wrap[data-button-variant="brand"]:not(:disabled):is(:active, [data-popup-open], [data-state="open"]) {
+    background-color: var(--color-brand-700);
+}
+
+.wrap[data-button-variant="brand"]:not(:disabled):is(:active, [data-popup-open], [data-state="open"])::after {
+    background: none;
+}
+
+.wrap[data-button-variant="brand"]:not(:disabled):hover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    isolation: isolate;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--gradient-bottom-shine-brand);
+    background-blend-mode: normal, normal, luminosity;
+    overflow: hidden;
+    backdrop-filter: blur(24px);
+}
+
+.wrap[data-button-variant="surface"]:not(:disabled):hover {
+    background: var(--gradient-bottom-shine-primary);
+    background-blend-mode: normal, normal, luminosity;
+    overflow: hidden;
+    backdrop-filter: blur(24px);
+}
+
+.wrap[data-button-variant="surface"]:not(:disabled):is(:active, [data-popup-open], [data-state="open"]) {
+    background: var(--surface-regular);
+    backdrop-filter: blur(40px);
+}
+
+.wrap[data-button-variant="link"] {
+    background-color: transparent;
+    color: hsl(var(--color-hsl-white) / 0.9);
+}
+
+.wrap[data-button-variant="link"]:not(:disabled):is(:hover, [data-popup-open], [data-state="open"]) {
+    text-decoration: underline;
+}
+
+.wrap[data-button-is-loading="true"] > .spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

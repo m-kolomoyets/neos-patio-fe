@@ -1,0 +1,32 @@
+.wrap {
+    position: relative;
+    background: var(--surface-thin);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    backdrop-filter: blur(32px);
+    transform-origin: var(--transform-origin);
+    border: 1px solid hsl(var(--color-hsl-white) / 0.1);
+    transition:
+        transform 150ms,
+        opacity 150ms;
+}
+
+/* .wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--stroke-surface-thin);
+    mask:
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+} */
+
+.wrap[data-starting-style],
+.wrap[data-ending-style] {
+    opacity: 0;
+    transform: scale(0.9);
+}

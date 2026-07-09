@@ -1,0 +1,8 @@
+.wrap {
+    --container-max-width: 87rem;
+    --container-x-padding: 3.5rem;
+
+    width: min(100%, var(--container-max-width));
+    margin-inline: auto;
+    padding-inline: var(--container-x-padding);
+}

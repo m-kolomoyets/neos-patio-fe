@@ -1,0 +1,58 @@
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: hsl(var(--color-hsl-black) / 0);
+    transition: opacity 200ms ease-in-out;
+}
+
+.backdrop[data-starting-style],
+.backdrop[data-ending-style] {
+    opacity: 0;
+}
+
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 101;
+    width: min(480px, calc(100vw - var(--gap-8)));
+    padding: var(--gap-8);
+    background: linear-gradient(hsl(0deg 0% 23% / 1) 0%, hsl(0deg 0% 6% / 1) 100%);
+    border-radius: var(--radius-4xl);
+    overflow: hidden;
+    transform: translate(-50%, -50%);
+    transform-origin: center;
+    box-shadow: 0 10px 23px 0 hsl(var(--color-hsl-black) / 0.1);
+    transition:
+        opacity 200ms ease-in-out,
+        transform 200ms ease-in-out;
+}
+
+.popup[data-dialog-variant="surface"] {
+    padding: 0;
+    background: none;
+    background-color: hsl(0deg 0% 46% / 0.5);
+    backdrop-filter: blur(100px);
+}
+
+.popup[data-dialog-variant="default"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--stroke-surface);
+    z-index: 3;
+    mask:
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.popup[data-starting-style],
+.popup[data-ending-style] {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.94);
+}

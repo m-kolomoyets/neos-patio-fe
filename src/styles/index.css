@@ -1,21 +1,190 @@
 @import url("./reset.css");
 
+@font-face {
+    font-family: "Inter";
+    src: url("/fonts/Inter.ttf") format("truetype-variations");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
+    /* Colors HSL partitions */
+    --color-hsl-white: 0deg 0% 100%;
+    --color-hsl-black: 0deg 0% 0%;
+
     /* Common Variables */
-    --color-white-100: hsl(0deg 0% 100%);
-    --color-primary: hsl(25deg 88% 52%);
-    --color-dark-900: hsl(180deg 4% 9%);
-    --color-dark-700: hsl(226.7deg 10.6% 16.7%);
-    --color-dark-600: hsl(225deg 15% 21%);
+    --color-base-white: hsl(var(--color-hsl-white));
+    --color-base-black: hsl(var(--color-hsl-black));
+    --color-base-transparent: hsl(var(--color-hsl-white) / 0);
+    --color-brand-25: hsl(20deg 100% 99%);
+    --color-brand-50: hsl(21deg 88% 97%);
+    --color-brand-100: hsl(22deg 82% 94%);
+    --color-brand-200: hsl(21deg 85% 87%);
+    --color-brand-300: hsl(21deg 83% 80%);
+    --color-brand-400: hsl(21deg 83% 70%);
+    --color-brand-500: hsl(21deg 83% 60%);
+    --color-brand-600: hsl(21deg 62% 53%);
+    --color-brand-650: hsl(21deg 57% 49%);
+    --color-brand-700: hsl(21deg 56% 45%);
+    --color-brand-800: hsl(21deg 56% 37%);
+    --color-brand-900: hsl(21deg 56% 27%);
+    --color-brand-yellow-500: hsl(43deg 93% 47%);
+    --color-brand-yellow-600: hsl(39deg 96% 40%);
+    --color-brand-yellow-700: hsl(36deg 92% 33%);
+    --color-gray-25: hsl(0deg 0% 99%);
+    --color-gray-50: hsl(0deg 0% 98%);
+    --color-gray-100: hsl(0deg 0% 96%);
+    --color-gray-200: hsl(220deg 5% 92%);
+    --color-gray-300: hsl(220deg 6% 85%);
+    --color-gray-400: hsl(220deg 6% 66%);
+    --color-gray-500: hsl(220deg 6% 47%);
+    --color-gray-600: hsl(220deg 8% 35%);
+    --color-gray-700: hsl(220deg 11% 29%);
+    --color-gray-800: hsl(220deg 20% 18%);
+    --color-gray-900: hsl(220deg 24% 12%);
+    --color-error-25: hsl(4deg 88% 99%);
+    --color-error-50: hsl(4deg 88% 97%);
+    --color-error-100: hsl(4deg 95% 94%);
+    --color-error-200: hsl(4deg 98% 89%);
+    --color-error-300: hsl(4deg 96% 80%);
+    --color-error-400: hsl(4deg 93% 69%);
+    --color-error-500: hsl(4deg 86% 58%);
+    --color-error-600: hsl(4deg 74% 49%);
+    --color-error-700: hsl(4deg 76% 40%);
+    --color-error-800: hsl(4deg 72% 33%);
+    --color-error-900: hsl(8deg 65% 29%);
+    --color-warning-25: hsl(44deg 100% 98%);
+    --color-warning-50: hsl(44deg 100% 96%);
+    --color-warning-100: hsl(44deg 98% 89%);
+    --color-warning-200: hsl(44deg 99% 77%);
+    --color-warning-300: hsl(42deg 99% 65%);
+    --color-warning-400: hsl(39deg 98% 56%);
+    --color-warning-500: hsl(34deg 94% 50%);
+    --color-warning-600: hsl(28deg 97% 44%);
+    --color-warning-700: hsl(22deg 92% 37%);
+    --color-warning-800: hsl(19deg 84% 31%);
+    --color-warning-900: hsl(18deg 80% 26%);
+    --color-success-25: hsl(144deg 78% 98%);
+    --color-success-50: hsl(144deg 78% 96%);
+    --color-success-100: hsl(141deg 74% 92%);
+    --color-success-200: hsl(144deg 69% 80%);
+    --color-success-300: hsl(148deg 63% 67%);
+    --color-success-400: hsl(150deg 57% 54%);
+    --color-success-500: hsl(152deg 77% 39%);
+    --color-success-600: hsl(153deg 91% 30%);
+    --color-success-700: hsl(155deg 91% 24%);
+    --color-success-800: hsl(155deg 85% 20%);
+    --color-success-900: hsl(156deg 83% 16%);
+
+    /* Glass surface */
+    --surface-thin:
+        linear-gradient(0deg, hsl(var(--color-hsl-white) / 0.2) 0%, hsl(var(--color-hsl-white) / 0.2) 100%),
+        hsl(var(--color-hsl-black) / 0.04);
+    --surface-regular:
+        linear-gradient(0deg, hsl(var(--color-hsl-white) / 0.04) 0%, hsl(var(--color-hsl-white) / 0.04) 100%),
+        hsl(var(--color-hsl-black) / 0.1);
+    --surface-thick:
+        linear-gradient(0deg, hsl(var(--color-hsl-white) / 0.08) 0%, hsl(var(--color-hsl-white) / 0.08) 100%),
+        hsl(var(--color-hsl-black) / 0.4);
+    --surface-thicker:
+        linear-gradient(0deg, hsl(var(--color-hsl-white) / 0.04) 0%, hsl(var(--color-hsl-white) / 0.04) 100%),
+        hsl(var(--color-hsl-black) / 0.5);
+
+    /* Glass stroke */
+    --stroke-surface: linear-gradient(
+        135deg,
+        hsl(var(--color-hsl-white) / 0.2) 0%,
+        var(--color-base-transparent) 41%,
+        var(--color-base-transparent) 57%,
+        hsl(var(--color-hsl-white) / 0.05) 100%
+    );
+    --stroke-surface-thin:
+        linear-gradient(0deg, hsl(var(--color-hsl-white) / 0.05) 0%, hsl(var(--color-hsl-white) / 0.05) 100%),
+        linear-gradient(
+            133.79deg,
+            hsl(var(--color-hsl-white) / 0.9) -7.85%,
+            hsl(var(--color-hsl-white) / 0.36) 9.73%,
+            var(--color-base-transparent) 84.96%,
+            hsl(var(--color-hsl-white) / 0.9) 100.63%
+        );
+
+    /* Gradients */
+    --gradient-bottom-shine-primary:
+        radial-gradient(
+            ellipse 59.72% 55.84% at 50% 88.89%,
+            hsl(var(--color-hsl-white) / 0.2) 0%,
+            hsl(var(--color-hsl-white) / 0) 100%
+        ),
+        linear-gradient(hsl(var(--color-hsl-white) / 0.2), hsl(var(--color-hsl-white) / 0.2)),
+        linear-gradient(hsl(var(--color-hsl-black) / 0.04), hsl(var(--color-hsl-black) / 0.04));
+    --gradient-bottom-shine-secondary:
+        radial-gradient(ellipse 56.05% 54.1% at 50% 100%, hsl(0deg 0% 71.6% / 0.65) 0%, hsl(0deg 0% 36.9% / 0) 100%),
+        linear-gradient(hsl(var(--color-hsl-white) / 0.08), hsl(var(--color-hsl-white) / 0.08)),
+        linear-gradient(hsl(var(--color-hsl-black) / 0.4), hsl(var(--color-hsl-black) / 0.4));
+    --gradient-bottom-shine-brand:
+        radial-gradient(
+            ellipse 59.72% 55.84% at 50% 88.89%,
+            hsl(var(--color-hsl-white) / 0.2) 0%,
+            hsl(var(--color-hsl-white) / 0) 100%
+        ),
+        linear-gradient(var(--color-brand-600), var(--color-brand-600)),
+        linear-gradient(hsl(var(--color-hsl-black) / 0.04), hsl(var(--color-hsl-black) / 0.04));
+
+    /* Gaps */
+    --gap-px: 1px;
+    --gap-0-5: 0.125rem;
+    --gap-1: 0.25rem;
+    --gap-2: 0.5rem;
+    --gap-3: 0.75rem;
+    --gap-4: 1rem;
+    --gap-5: 1.25rem;
+    --gap-6: 1.5rem;
+    --gap-8: 2rem;
+    --gap-10: 2.5rem;
+    --gap-12: 3rem;
+    --gap-16: 4rem;
+    --gap-20: 5rem;
+    --gap-24: 6rem;
+    --gap-32: 8rem;
+    --gap-40: 10rem;
+    --gap-48: 12rem;
+    --gap-56: 14rem;
+    --gap-64: 16rem;
+    --gap-80: 20rem;
+    --gap-96: 24rem;
+    --gap-120: 30rem;
+    --gap-140: 35rem;
+    --gap-160: 40rem;
+    --gap-180: 45rem;
+    --gap-192: 48rem;
+    --gap-256: 64rem;
+    --gap-320: 80rem;
+    --gap-360: 90rem;
+    --gap-400: 100rem;
+    --gap-480: 120rem;
+
+    /* Border radiuses */
+    --radius-none: 0;
+    --radius-xxs: 0.125rem;
+    --radius-xs: 0.25rem;
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.625rem;
+    --radius-xl: 0.75rem;
+    --radius-2xl: 1rem;
+    --radius-3xl: 1.25rem;
+    --radius-4xl: 1.5rem;
+    --radius-full: 9999px;
 
     /* Focus Ring */
-    --ring-offset-color: var(--color-gray-0);
-    --ring-color: var(--color-primary);
+    --ring-offset-color: var(--color-base-white);
+    --ring-color: var(--color-base-white);
     --ring-inset: ;
 
     /* stylelint-disable-next-line length-zero-no-unit */
-    --ring-offset-width: 2px;
-    --ring-width: 2px;
+    --ring-offset-width: 0px;
+    --ring-width: 1px;
     --ring-offset-shadow: var(--ring-inset) 0 0 0 calc(var(--ring-offset-width)) var(--ring-offset-color);
     --ring-shadow: var(--ring-inset) 0 0 0 calc(var(--ring-width) + var(--ring-offset-width)) var(--ring-color);
 
@@ -24,21 +193,45 @@
     --scrollbar-track-color: hsl(0deg 0% 87.5%);
     --scrollbar-thumb-color: hsl(0deg 0% 68.6%);
     --scrollbar-thumb-color-hover: hsl(210deg 11.2% 51%);
-
-    /* Companies colors */
-    --color-react: hsl(192.5deg 95.1% 68.2%);
-    --color-typescript: hsl(211.4deg 60.3% 48.4%);
-    --gradient-vite: linear-gradient(-45deg, hsl(280.7deg 99% 60%) 0%, hsl(197.3deg 100% 63.9%) 100%);
-    --gradient-tanstack-router: linear-gradient(-45deg, hsl(83.7deg 80.5% 44.3%) 0%, hsl(160.1deg 84.1% 39.4%) 100%);
 }
 
 body {
     position: relative;
-    font-family: "Syne", sans-serif;
+    font-family: "Inter", sans-serif;
+}
+
+body,
+html {
+    /* TODO: Maybe change to some other value */
+    background-color: skyblue;
 }
 
 #root {
     isolation: isolate;
+}
+
+.surface-thin,
+.surface-regular,
+.surface-thick,
+.surface-thicker {
+    background-blend-mode: normal, luminosity;
+    backdrop-filter: blur(20px);
+}
+
+.surface-thin {
+    background: var(--surface-thin);
+}
+
+.surface-regular {
+    background: var(--surface-regular);
+}
+
+.surface-thick {
+    background: var(--surface-thick);
+}
+
+.surface-thicker {
+    background: var(--surface-thicker);
 }
 
 .sr-only {
@@ -83,6 +276,17 @@ body {
 .focus-primary-child {
     outline: none;
     box-shadow: var(--ring-offset-shadow), var(--ring-shadow), var(--shadow, 0 0 #00000000);
+}
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+::selection {
+    background-color: var(--color-brand-500);
+    color: var(--color-base-white);
 }
 
 @media (hover: hover) and (pointer: fine) {

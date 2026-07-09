@@ -1,0 +1,7 @@
+.wrap {
+    display: inline-block;
+    background:
+        linear-gradient(90deg, hsl(var(--color-hsl-white) / 0.3) 0%, hsl(0deg 0% 50% / 0) 100%), hsl(0deg 0% 75% / 0.15);
+    overflow: hidden;
+    border-radius: var(--radius-2xl);
+}

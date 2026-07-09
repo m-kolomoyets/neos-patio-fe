@@ -1,5 +1,7 @@
 import React from 'react';
+import { PageTransitionProvider } from '@/contexts/PageTransitionContext';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
+import { PageTransitionOverlay } from '@/components/PageTransitionOverlay';
 
 const TanStackDevtools = import.meta.env.DEV
     ? React.lazy(async () => {
@@ -40,12 +42,13 @@ const ReactQueryDevtoolsPanel = import.meta.env.DEV
 export const Route = createRootRoute({
     component() {
         return (
-            <>
+            <PageTransitionProvider>
                 <Outlet />
+                <PageTransitionOverlay />
                 <React.Suspense>
                     <TanStackDevtools
                         config={{
-                            position: 'bottom-right',
+                            position: 'bottom-left',
                         }}
                         plugins={[
                             {
@@ -61,7 +64,7 @@ export const Route = createRootRoute({
                         ]}
                     />
                 </React.Suspense>
-            </>
+            </PageTransitionProvider>
         );
     },
 });

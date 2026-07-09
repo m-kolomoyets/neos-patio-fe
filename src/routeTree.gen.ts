@@ -11,51 +11,134 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as PatiosIdIndexRouteImport } from './routes/patios.$id.index'
+import { Route as PatiosIdEditRouteImport } from './routes/patios.$id.edit'
 
-const IndexLazyRouteImport = createFileRoute('/')()
+const UiKitLazyRouteImport = createFileRoute('/ui-kit')()
+const CreatePatioLazyRouteImport = createFileRoute('/create-patio')()
 
-const IndexLazyRoute = IndexLazyRouteImport.update({
+const UiKitLazyRoute = UiKitLazyRouteImport.update({
+  id: '/ui-kit',
+  path: '/ui-kit',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/ui-kit.lazy').then((d) => d.Route))
+const CreatePatioLazyRoute = CreatePatioLazyRouteImport.update({
+  id: '/create-patio',
+  path: '/create-patio',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/create-patio.lazy').then((d) => d.Route))
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
+const PatiosIdIndexRoute = PatiosIdIndexRouteImport.update({
+  id: '/patios/$id/',
+  path: '/patios/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PatiosIdEditRoute = PatiosIdEditRouteImport.update({
+  id: '/patios/$id/edit',
+  path: '/patios/$id/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexLazyRoute
+  '/': typeof IndexRoute
+  '/create-patio': typeof CreatePatioLazyRoute
+  '/ui-kit': typeof UiKitLazyRoute
+  '/patios/$id/edit': typeof PatiosIdEditRoute
+  '/patios/$id/': typeof PatiosIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexLazyRoute
+  '/': typeof IndexRoute
+  '/create-patio': typeof CreatePatioLazyRoute
+  '/ui-kit': typeof UiKitLazyRoute
+  '/patios/$id/edit': typeof PatiosIdEditRoute
+  '/patios/$id': typeof PatiosIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexLazyRoute
+  '/': typeof IndexRoute
+  '/create-patio': typeof CreatePatioLazyRoute
+  '/ui-kit': typeof UiKitLazyRoute
+  '/patios/$id/edit': typeof PatiosIdEditRoute
+  '/patios/$id/': typeof PatiosIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/create-patio'
+    | '/ui-kit'
+    | '/patios/$id/edit'
+    | '/patios/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/create-patio' | '/ui-kit' | '/patios/$id/edit' | '/patios/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/create-patio'
+    | '/ui-kit'
+    | '/patios/$id/edit'
+    | '/patios/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexLazyRoute: typeof IndexLazyRoute
+  IndexRoute: typeof IndexRoute
+  CreatePatioLazyRoute: typeof CreatePatioLazyRoute
+  UiKitLazyRoute: typeof UiKitLazyRoute
+  PatiosIdEditRoute: typeof PatiosIdEditRoute
+  PatiosIdIndexRoute: typeof PatiosIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/ui-kit': {
+      id: '/ui-kit'
+      path: '/ui-kit'
+      fullPath: '/ui-kit'
+      preLoaderRoute: typeof UiKitLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/create-patio': {
+      id: '/create-patio'
+      path: '/create-patio'
+      fullPath: '/create-patio'
+      preLoaderRoute: typeof CreatePatioLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexLazyRouteImport
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patios/$id/': {
+      id: '/patios/$id/'
+      path: '/patios/$id'
+      fullPath: '/patios/$id/'
+      preLoaderRoute: typeof PatiosIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patios/$id/edit': {
+      id: '/patios/$id/edit'
+      path: '/patios/$id/edit'
+      fullPath: '/patios/$id/edit'
+      preLoaderRoute: typeof PatiosIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexLazyRoute: IndexLazyRoute,
+  IndexRoute: IndexRoute,
+  CreatePatioLazyRoute: CreatePatioLazyRoute,
+  UiKitLazyRoute: UiKitLazyRoute,
+  PatiosIdEditRoute: PatiosIdEditRoute,
+  PatiosIdIndexRoute: PatiosIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

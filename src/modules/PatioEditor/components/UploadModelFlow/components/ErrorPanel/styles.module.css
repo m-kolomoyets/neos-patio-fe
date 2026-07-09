@@ -1,0 +1,44 @@
+.panel {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    animation: panel-slide 240ms ease-out;
+}
+
+.separator {
+    height: 1px;
+    width: 100%;
+    background: hsl(var(--color-hsl-white) / 0.2);
+}
+
+.body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-4);
+    padding: var(--gap-4);
+}
+
+.message {
+    color: var(--color-error-300);
+    text-align: center;
+}
+
+.cta {
+    min-width: 6rem;
+}
+
+@keyframes panel-slide {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

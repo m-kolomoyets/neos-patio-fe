@@ -1,0 +1,69 @@
+.wrap {
+    --option-item-icon-size: 1.5rem;
+
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr var(--option-item-icon-size);
+    align-items: center;
+    gap: var(--gap-4);
+    width: 100%;
+    padding: var(--gap-2) var(--gap-3);
+    border-radius: var(--radius-xl);
+    color: var(--color-base-white);
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+    transition:
+        background-color 0.15s ease-in-out,
+        color 0.15s ease-in-out,
+        opacity 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out;
+}
+
+.addon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--option-item-icon-size);
+    height: var(--option-item-icon-size);
+    flex-shrink: 0;
+}
+
+.addon > svg {
+    width: 100%;
+    height: 100%;
+    color: var(--color-base-white);
+}
+
+.left {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-0-5);
+}
+
+.label {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2);
+    flex: 1;
+    font-weight: 600;
+    min-width: 0;
+}
+
+.description.description {
+    color: hsl(var(--color-hsl-white) / 0.6);
+    font-weight: 400;
+}
+
+.wrap[data-disabled] {
+    cursor: not-allowed;
+    opacity: 0.5;
+    color: var(--color-gray-500);
+}
+
+.wrap:is([data-highlighted], :focus-visible, :hover) {
+    background: hsl(var(--color-hsl-black) / 0.2);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 3px 2px hsl(var(--color-hsl-black) / 0.05) inset;
+}

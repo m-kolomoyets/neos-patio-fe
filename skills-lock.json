@@ -6,6 +6,22 @@
             "sourceType": "github",
             "computedHash": "05f6d3c1bc447070d2e244f92f38eeb35653eb72ab4b9d67551bacae7bbcac41"
         },
+        "caveman": {
+            "source": "JuliusBrussee/caveman",
+            "sourceType": "github",
+            "computedHash": "a818cdc41dcfaa50dd891c5cb5e5705968338de02e7e37949ca56e8c30ad4176"
+        },
+        "caveman-commit": {
+            "source": "JuliusBrussee/caveman",
+            "sourceType": "github",
+            "computedHash": "76994afc39b68f4dbe098df76262b68d9928a23ee0f6aaebb11ba0e0f55bfa13"
+        },
+        "do-work": {
+            "source": "Phenomenon-Studio/phenomenon-skills",
+            "sourceType": "github",
+            "skillPath": "common/do-work/SKILL.md",
+            "computedHash": "4c3c9d9b7daad9a3a315317dc303aefb4ab518a5262f5dd1f07e91d9df3490e0"
+        },
         "grill-me": {
             "source": "mattpocock/skills",
             "sourceType": "github",
@@ -20,6 +36,12 @@
             "source": "Phenomenon-Studio/phenomenon-skills",
             "sourceType": "github",
             "computedHash": "692cfa4ef2f1c1761ac2cdddc50de0d387f465a8571e0acb19768820e1796f5c"
+        },
+        "swagger-to-md": {
+            "source": "Phenomenon-Studio/phenomenon-skills",
+            "sourceType": "github",
+            "skillPath": "be/swagger-to-md/SKILL.md",
+            "computedHash": "a5518e5614954b5de56c14fb5077b299f69104afe0423a9414c52d841380e901"
         },
         "tanstack-form": {
             "source": "Phenomenon-Studio/phenomenon-skills",
@@ -39,17 +61,25 @@
         "to-issue": {
             "source": "Phenomenon-Studio/phenomenon-skills",
             "sourceType": "github",
+            "skillPath": "common/to-issue/SKILL.md",
             "computedHash": "21e30c8b1b1ce336db8f9026ea96043c8af6b3a5d9aa25ee21c5b0f2569551a2"
         },
         "to-prd": {
             "source": "Phenomenon-Studio/phenomenon-skills",
             "sourceType": "github",
+            "skillPath": "common/to-prd/SKILL.md",
             "computedHash": "ab67e83d37d413a0af3dff2bfaf36e84ac46340ec5a1d6338d8e7feac55113e1"
         },
         "typescript": {
             "source": "Phenomenon-Studio/phenomenon-skills",
             "sourceType": "github",
             "computedHash": "dc42d94968ccf0630017a8828f9cea1487fb20edfdaa5d934a6a2737bfbad777"
+        },
+        "web-security": {
+            "source": "Phenomenon-Studio/phenomenon-skills",
+            "sourceType": "github",
+            "skillPath": "fe/web-security/SKILL.md",
+            "computedHash": "29d093b9c1372deb192dedbcc2beb5163b2f2b7360e4faf4da11bdeb8ebd4fef"
         },
         "write-a-skill": {
             "source": "mattpocock/skills",

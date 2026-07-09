@@ -1,30 +1,43 @@
-import type { HomeExampleProps } from './types';
-import PhenomenonMarkIcon from '@/icons/phenomenon-mark.svg?react';
 import clsx from 'clsx';
-import Counter from './components/Counter';
-import s from './style.module.css';
+import { selectAppBackground } from '@/lib/appBackground';
+import { useSquircleClipPath } from '@/hooks/useSquircleClipPath';
+import { ActionBar } from '@/components/ActionBar';
+import { AppBackground } from '@/components/AppBackground';
+import { ScrollArea } from '@/components/ui/ScrollArea';
+import { HOME_SCROLL_ROOT_CLASS } from './constants';
+import { AlphabetIndex } from './components/AlphabetIndex';
+import { FeaturedPatios } from './components/FeaturedPatios';
+import { PatioLibrary } from './components/PatioLibrary';
+import s from './styles.module.css';
 
-const Home: React.FC<HomeExampleProps> = () => {
+// Picked once per page load; a full reload re-rolls. Persisted so other screens
+// (Create Patio) inherit the same image.
+const homeBackgroundSrc = selectAppBackground();
+
+const Home: React.FC = () => {
+    // Squircle corners matching Figma's 60% iOS smoothing (border-radius: 2.5rem = 40px).
+    const [mainRef, mainSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: 40 });
+    const [viewportRef, viewportSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius: 40 });
+
     return (
-        <main className={clsx(s.wrap, 'full-height')}>
-            <div className={s.inner}>
-                <header className={s.header}>
-                    <PhenomenonMarkIcon className={s.icon} />
-                    <h1 className={s.title}>
-                        <strong className={s.company}>Phenomenon</strong> <br /> <span className={s.vite}>Vite</span> +{' '}
-                        <span className={s.react}>React</span> +<span className={s.typescript}>Typescript</span> +{' '}
-                        <span className={s['tanstack-router']}>Tanstack Router</span>
-                    </h1>
-                </header>
-                <section className={s.content}>
-                    <Counter />
-                    <p className={s.description}>
-                        Start editing <code>src/modules/Home/Home.tsx</code> to start a project
-                    </p>
-                </section>
+        <div className={s.wrap}>
+            <AppBackground src={homeBackgroundSrc} />
+            <div>
+                <main ref={mainRef} className={s.main} style={mainSquircleStyle}>
+                    <ScrollArea
+                        className={s.scroll}
+                        viewportClassName={clsx(s['scroll-viewport'], HOME_SCROLL_ROOT_CLASS)}
+                        viewportRef={viewportRef}
+                        viewportStyle={viewportSquircleStyle}
+                    >
+                        <FeaturedPatios />
+                        <PatioLibrary />
+                    </ScrollArea>
+                    <AlphabetIndex />
+                </main>
+                <ActionBar />
             </div>
-            <footer className={s.footer}>&copy;&nbsp;{new Date().getFullYear()}, Phenomenon.studio</footer>
-        </main>
+        </div>
     );
 };
 

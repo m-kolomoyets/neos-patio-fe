@@ -1,0 +1,133 @@
+/**
+ * Cluster count bubble — blue, lifted from Figma node 9546:6320: a 168° linear
+ * gradient with a 4px solid ring. Clusters do NOT morph into squares (they break
+ * apart into individual patios), so they keep their own bubble treatment distinct
+ * from the radial patio fill below.
+ */
+.badge {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background-image: linear-gradient(168deg, rgb(0 122 255 / 0.6) 26%, rgb(9 177 255 / 0.6) 94%);
+    box-shadow: inset 0 0 0 4px #006ff6;
+    color: var(--color-base-white);
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    appearance: none;
+}
+
+/**
+ * Fade every badge in on mount so the cluster ⇆ individual-patio swap (as the
+ * supercluster regroups at `CLUSTER_MAX_ZOOM`) reads as a soft cross-fade rather
+ * than a hard pop. Opacity-only so it never fights the morph `transform`.
+ */
+@media (prefers-reduced-motion: no-preference) {
+    .badge {
+        animation: badge-fade-in 220ms ease-out;
+    }
+
+    /* Outgoing marker: fade out in place (and stop taking clicks) before it unmounts. */
+    .badge[data-leaving] {
+        animation: badge-fade-out 220ms ease-out forwards;
+        pointer-events: none;
+    }
+}
+
+@keyframes badge-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes badge-fade-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.badge:focus-visible {
+    outline: 2px solid var(--color-base-white);
+    outline-offset: 2px;
+}
+
+/**
+ * Morphing patio marker — overrides the bubble fill to match the SVG patio square
+ * (SquaresOverlay / Figma node 9478:19647): radial #007aff @ 0.6, 4px #258dff
+ * border, soft inner glow. So a lone patio badge swaps into its geo square with no
+ * visible seam. Size / corner radius / rotation are driven per frame via the
+ * `--morph-*` custom properties (square at z17 → circle at z14).
+ */
+.badge.morph {
+    width: var(--morph-size, 42px);
+    height: var(--morph-size, 42px);
+    border-radius: var(--morph-radius, 50%);
+
+    /* Browse side of the browse ⇆ placement cross-fade; driven per frame by
+       `useCrossfadeDriver` (1 below the band, 0 at the placement threshold) so the
+       marker fades out exactly as the SVG square fades in. */
+    opacity: var(--crossfade-opacity, 1);
+    transform: rotate(var(--morph-rotate, 0deg));
+    background-image: radial-gradient(circle closest-side at 50% 50%, rgb(0 122 255 / 0) 0%, rgb(0 122 255 / 0.6) 100%);
+    box-shadow:
+        inset 0 0 0 4px #258dff,
+        inset 0 0 20px 4px rgb(0 122 255 / 0.7);
+}
+
+/* Keep the count upright while its square badge counter-rotates with the world. */
+.badge.morph .count {
+    transform: rotate(calc(-1 * var(--morph-rotate, 0deg)));
+}
+
+/**
+ * Lone-patio count. Only meaningful in the circle state; tracks morph progress so
+ * it fades out as the badge tweens into a geo-accurate square (progress 0 at z17).
+ */
+.count {
+    opacity: var(--morph-text-opacity, 1);
+}
+
+/**
+ * Screen-centered create-patio marker. Absolutely fills the map container and
+ * centers its child, so the badge sits at the viewport center at every zoom below
+ * the placement band — handing off to the SquaresOverlay center square at z17.
+ */
+.create-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+}
+
+/**
+ * Orange create marker — matches CENTER_SQUARE (border #ff6a00, gradientEdge
+ * #ff7100 @ 0.55, soft inset shadow) so it swaps into the SVG center square
+ * seamlessly.
+ */
+.badge.morph[data-variant="create"] {
+    background-image: radial-gradient(
+        circle closest-side at 50% 50%,
+        rgb(255 113 0 / 0) 0%,
+        rgb(255 113 0 / 0.55) 100%
+    );
+    box-shadow:
+        inset 0 0 0 4px #ff6a00,
+        inset 0 0 20px 4px rgb(161 94 5 / 0.44);
+}

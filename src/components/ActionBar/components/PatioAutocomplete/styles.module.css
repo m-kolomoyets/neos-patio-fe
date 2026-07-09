@@ -1,0 +1,94 @@
+.positioner {
+    z-index: 50;
+    width: var(--anchor-width);
+    min-width: var(--anchor-width);
+    max-width: var(--anchor-width);
+}
+
+.popup {
+    padding: var(--gap-3);
+    width: 100%;
+    border-radius: var(--radius-4xl);
+    background: var(--surface-thick);
+    backdrop-filter: blur(64px);
+}
+
+.input.input {
+    --icon-size: 24px;
+    --input-inner-height: 24px;
+    --search-cancel-size: 24px;
+    --input-min-height: 64px;
+    --input-padding-y: 20px;
+    --input-padding-x: 20px;
+    --input-font-size: 1rem;
+    --input-line-height: 1.5rem;
+    --input-font-weight: 500;
+
+    box-shadow: none;
+    z-index: 10;
+    isolation: isolate;
+    background: none;
+}
+
+.input::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--stroke-surface);
+    mask:
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.scroll-area {
+    width: 100%;
+}
+
+.scroll-area :global(.scroll-area-scrollbar-vertical) {
+    transform: translateX(10px);
+}
+
+.scroll-area :global(.scroll-area-thumb) {
+    opacity: 1;
+    background: hsl(var(--color-hsl-white) / 0.5);
+    background-blend-mode: lighten;
+}
+
+.scroll-area-viewport {
+    --row-count: 4;
+    --row-height: 56px;
+    --row-gap: 2px;
+
+    max-height: calc((var(--row-count) * var(--row-height)) + ((var(--row-count) - 1) * var(--row-gap)));
+}
+
+.list {
+    outline: none;
+}
+
+.state {
+    display: flex;
+    align-items: center;
+    padding: var(--gap-2) calc(var(--gap-2) + var(--gap-0-5));
+    color: var(--color-base-white);
+    opacity: 0.7;
+}
+
+.state.error {
+    color: var(--color-error-400, #f87171);
+    opacity: 1;
+}
+
+.option-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--color-gray-900);
+}
+
+.row {
+    box-sizing: border-box;
+}

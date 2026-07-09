@@ -1,0 +1,52 @@
+.wrap {
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    background-image: url("/images/bg-default.webp");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-radius: 1rem;
+}
+
+.section-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.row-label {
+    min-width: 7.5rem;
+    opacity: 0.6;
+}
+
+.option-list {
+    width: 16rem;
+    height: 12rem;
+}
+
+.option-list-inner {
+    display: flex;
+    flex-direction: column;
+}
+
+.autocomplete {
+    width: 240px;
+}

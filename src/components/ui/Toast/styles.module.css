@@ -1,0 +1,52 @@
+.viewport {
+    position: fixed;
+    bottom: var(--gap-6);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gap-2);
+    max-width: calc(100vw - var(--gap-4) * 2);
+    outline: none;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2);
+    padding: var(--gap-3) var(--gap-4);
+    border-radius: var(--radius-4xl);
+    color: var(--color-base-white);
+    background: rgb(117 117 117 / 0.5);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(50px);
+    transition:
+        transform 0.3s ease,
+        opacity 0.3s ease;
+}
+
+.toast[data-starting-style],
+.toast[data-ending-style] {
+    opacity: 0;
+    transform: translateY(1rem);
+}
+
+.icon {
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    color: var(--color-base-white);
+}
+
+.title {
+    margin: 0;
+    overflow: hidden;
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.125rem;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

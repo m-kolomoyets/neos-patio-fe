@@ -1,0 +1,14 @@
+.wrap {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: conic-gradient(from 90deg, transparent 0deg, white 360deg);
+    mask: radial-gradient(circle, transparent 20px, black 20px);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

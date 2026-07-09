@@ -1,0 +1,29 @@
+.loading,
+.fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Subtle shimmer over the dotted surface while the model downloads. */
+.loading {
+    background: linear-gradient(100deg, transparent 30%, hsl(var(--color-hsl-white) / 0.06) 50%, transparent 70%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.fallback-text {
+    opacity: 0.6;
+}
+
+@keyframes shimmer {
+    from {
+        background-position: 200% 0;
+    }
+
+    to {
+        background-position: -200% 0;
+    }
+}

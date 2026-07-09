@@ -1,0 +1,9 @@
+.wrap {
+    position: absolute;
+    top: var(--gap-4);
+    left: 50%;
+    transform: translateX(-50%);
+
+    /* Above the map canvas / DOM markers, below the header. */
+    z-index: 2;
+}

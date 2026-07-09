@@ -1,0 +1,27 @@
+.wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 100svh;
+    gap: 1.5rem;
+}
+
+.map {
+    width: 100vw;
+    height: 100vh;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.surface {
+    position: relative;
+    flex: 1;
+    min-height: 70svh;
+    display: flex;
+    overflow: hidden;
+}

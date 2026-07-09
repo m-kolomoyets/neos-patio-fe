@@ -1,0 +1,58 @@
+.shell {
+    position: absolute;
+    bottom: calc(var(--home-content-bottom-offset) + var(--home-content-offset-y) - 2rem);
+    left: calc(50% - 12.5rem);
+    width: 400px;
+    min-height: 64px;
+    z-index: 10;
+    isolation: isolate;
+    border-radius: var(--radius-full);
+}
+
+.default-state {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-4);
+    width: 100%;
+    min-height: 64px;
+    padding: var(--gap-2);
+    border-radius: var(--radius-full);
+}
+
+.default-state::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--stroke-surface);
+    mask:
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.search-state {
+    display: flex;
+    width: 100%;
+}
+
+.autocomplete-input {
+    flex: 1;
+    width: 100%;
+}
+
+.logo {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+}
+
+.actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-2);
+}
