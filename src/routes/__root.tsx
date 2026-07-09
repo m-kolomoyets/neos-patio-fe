@@ -1,6 +1,7 @@
 import React from 'react';
 import { PageTransitionProvider } from '@/contexts/PageTransitionContext';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
+import { NotFound } from '@/modules/NotFound';
 import { PageTransitionOverlay } from '@/components/PageTransitionOverlay';
 
 const TanStackDevtools = import.meta.env.DEV
@@ -40,6 +41,7 @@ const ReactQueryDevtoolsPanel = import.meta.env.DEV
       };
 
 export const Route = createRootRoute({
+    notFoundComponent: NotFound,
     component() {
         return (
             <PageTransitionProvider>
