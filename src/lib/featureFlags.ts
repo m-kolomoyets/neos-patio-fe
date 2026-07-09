@@ -10,7 +10,7 @@
 const IS_DEV = import.meta.env.VITE_IS_DEV === 'true';
 
 export const FEATURE_FLAGS = {
-    createPatio: false,
+    createPatio: IS_DEV,
     patioEdit: IS_DEV,
     uiKit: IS_DEV,
 } as const;
