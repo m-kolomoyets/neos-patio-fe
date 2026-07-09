@@ -4,6 +4,8 @@ import { useRouter } from '@tanstack/react-router';
 /** Background image + label payload that populates the loading overlay. */
 export type PageTransitionPayload = {
     backgroundUrl?: string;
+    /** Low-res placeholder shown instantly while `backgroundUrl` loads. */
+    backgroundLowUrl?: string;
     name?: string;
 };
 
@@ -12,6 +14,8 @@ type PageTransitionContextValue = {
     active: boolean;
     /** Full-bleed background image, if known. */
     backgroundUrl?: string;
+    /** Low-res placeholder shown until the full background loads. */
+    backgroundLowUrl?: string;
     /** Patio name shown as `Loading {name}`, if known. */
     name?: string;
     /** Show the overlay. Payload is optional so deep-links can start bare. */
@@ -27,8 +31,11 @@ const PageTransitionContext = createContext<PageTransitionContextValue | null>(n
 /** Minimum time the overlay stays visible so a fast resolve never flickers. */
 const MIN_DISPLAY_MS = 600;
 
-/** Matches `/patios/$id` (the only route that gets the loading transition). */
-const PATIO_PATH_RE = /^\/patios\/[^/]+\/?$/;
+/**
+ * Matches the patio routes that get the loading transition: the read-only view
+ * index `/patios/$id/` and the editor `/patios/$id/edit`.
+ */
+const PATIO_PATH_RE = /^\/patios\/[^/]+(?:\/edit)?\/?$/;
 
 /**
  * Single source of truth for the patio loading overlay. Lives at the root route
@@ -47,6 +54,7 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
         return PATIO_PATH_RE.test(router.state.location.pathname);
     });
     const [backgroundUrl, setBackgroundUrl] = useState<string | undefined>(undefined);
+    const [backgroundLowUrl, setBackgroundLowUrl] = useState<string | undefined>(undefined);
     const [name, setName] = useState<string | undefined>(undefined);
 
     // Seeded by start(); 0 means "no min-display floor" — fine for the deep-link
@@ -66,6 +74,7 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
             clearMinDisplayTimer();
             startedAtRef.current = Date.now();
             setBackgroundUrl(payload?.backgroundUrl);
+            setBackgroundLowUrl(payload?.backgroundLowUrl);
             setName(payload?.name);
             setActive(true);
         },
@@ -75,6 +84,9 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
     const update = useCallback((payload: PageTransitionPayload) => {
         if (payload.backgroundUrl !== undefined) {
             setBackgroundUrl(payload.backgroundUrl);
+        }
+        if (payload.backgroundLowUrl !== undefined) {
+            setBackgroundLowUrl(payload.backgroundLowUrl);
         }
         if (payload.name !== undefined) {
             setName(payload.name);
@@ -113,8 +125,8 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
     }, [router, clearMinDisplayTimer]);
 
     const value = useMemo<PageTransitionContextValue>(() => {
-        return { active, backgroundUrl, name, start, update, finish };
-    }, [active, backgroundUrl, name, start, update, finish]);
+        return { active, backgroundUrl, backgroundLowUrl, name, start, update, finish };
+    }, [active, backgroundUrl, backgroundLowUrl, name, start, update, finish]);
 
     return <PageTransitionContext value={value}>{children}</PageTransitionContext>;
 };

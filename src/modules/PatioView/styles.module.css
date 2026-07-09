@@ -1,0 +1,62 @@
+.wrap {
+    --patio-view-offset-y: 3.5rem;
+    --patio-view-offset-x: 3.5rem;
+    --patio-view-bottom-offset: 2.0625rem;
+
+    /* Feed the shared ActionBar the same offsets Home exposes so it floats identically. */
+    --home-content-offset-y: var(--patio-view-offset-y);
+    --home-content-offset-x: var(--patio-view-offset-x);
+    --home-content-bottom-offset: var(--patio-view-bottom-offset);
+
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+    padding-block: var(--patio-view-offset-y);
+    padding-bottom: calc(var(--patio-view-offset-y) + var(--patio-view-bottom-offset));
+}
+
+.surface {
+    position: relative;
+    flex: 1;
+    width: calc(100vw - var(--patio-view-offset-x) * 2);
+    height: calc(100vh - (var(--patio-view-offset-y) * 2) - var(--patio-view-bottom-offset));
+    margin: 0 auto;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    border: 1px solid hsl(var(--color-hsl-white) / 0.24);
+    overflow: hidden;
+    backdrop-filter: blur(50px);
+    border-radius: 2.5rem;
+}
+
+.map {
+    position: relative;
+    min-height: 0;
+    padding: var(--gap-6);
+    padding-top: 0;
+}
+
+.map-clip {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 22px;
+}
+
+@media screen and (max-width: 1439px) {
+    .wrap {
+        --patio-view-offset-y: 2.5rem;
+        --patio-view-offset-x: 2.5rem;
+        --patio-view-bottom-offset: 32px;
+    }
+}
+
+@media screen and (min-width: 1920px) {
+    .wrap {
+        --patio-view-offset-x: 9.5rem;
+    }
+}

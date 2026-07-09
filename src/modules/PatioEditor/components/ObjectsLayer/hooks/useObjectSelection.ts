@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
+import { useCesiumViewer } from '@/contexts/CesiumViewerContext';
 import { ScreenSpaceEventHandler, ScreenSpaceEventType } from 'cesium';
-import { useCesiumViewer } from '../../../context/CesiumViewerContext';
 import { useEditorDispatch } from '../../../context/EditorContext';
 import { EDITOR_OBJECT_ID } from '../components/ObjectModel';
 import { isGizmoPickId } from '../gizmo/types';

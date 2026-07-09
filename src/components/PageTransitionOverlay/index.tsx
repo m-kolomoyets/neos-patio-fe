@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { usePageTransition } from '@/contexts/PageTransitionContext';
+import { useUpdateEffect } from '@react-hookz/web';
 import { AnimatePresence, motion } from 'motion/react';
 import { LoadingSpinnerWithLogo } from '@/components/ui/LoadingSpinnerWithLogo';
 import { Typography } from '@/components/ui/Typography';
@@ -16,7 +18,15 @@ const BG_FADE_IN = { duration: 0.4, ease: 'easeOut' } as const;
  * map can never peek through a fading-in layer; only the fade-out is animated.
  */
 export const PageTransitionOverlay: React.FC = () => {
-    const { active, backgroundUrl, name } = usePageTransition();
+    const { active, backgroundUrl, backgroundLowUrl, name } = usePageTransition();
+
+    // The full-res background fades in on top of the low-res placeholder once it
+    // finishes decoding. Reset whenever the target background changes.
+    const [fullLoaded, setFullLoaded] = useState(false);
+
+    useUpdateEffect(() => {
+        setFullLoaded(false);
+    }, [backgroundUrl]);
 
     return (
         <AnimatePresence>
@@ -29,6 +39,9 @@ export const PageTransitionOverlay: React.FC = () => {
                     role="status"
                     aria-live="polite"
                 >
+                    {backgroundLowUrl ? (
+                        <img key={backgroundLowUrl} className={s.bg} src={backgroundLowUrl} alt="" aria-hidden />
+                    ) : null}
                     {backgroundUrl ? (
                         <motion.img
                             key={backgroundUrl}
@@ -37,7 +50,10 @@ export const PageTransitionOverlay: React.FC = () => {
                             alt=""
                             aria-hidden
                             initial={{ opacity: 0 }}
-                            animate={{ opacity: 1, transition: BG_FADE_IN }}
+                            animate={{ opacity: fullLoaded ? 1 : 0, transition: BG_FADE_IN }}
+                            onLoad={() => {
+                                return setFullLoaded(true);
+                            }}
                         />
                     ) : null}
                     <div className={s.scrim} aria-hidden />

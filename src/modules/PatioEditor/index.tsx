@@ -1,21 +1,21 @@
 import { useEffect } from 'react';
+import { CesiumViewerProvider } from '@/contexts/CesiumViewerContext';
 import { usePageTransition } from '@/contexts/PageTransitionContext';
 import { useSuspenseQuery } from '@tanstack/react-query';
+import { useIdleRotation } from '@/hooks/useIdleRotation';
 import { getPatioQueryOptions } from '@/services/patios/queries';
+import { CesiumMap } from '@/components/CesiumMap';
 import { Typography } from '@/components/ui/Typography';
-import { CesiumViewerProvider } from './context/CesiumViewerContext';
+import { ViewCube } from '@/components/ViewCube';
 import { EditorProvider } from './context/EditorContext';
 import { UploadModelProvider } from './context/UploadModelContext';
 import { useAutosavePatio } from './hooks/useAutosavePatio';
 import { useDeleteSelectedShortcut } from './hooks/useDeleteSelectedShortcut';
-import { useIdleRotation } from './hooks/useIdleRotation';
 import { usePatioEditorParams } from './hooks/usePatioEditorRouteApi';
-import { MapCanvas } from './components/MapCanvas';
 import { ObjectsLayer } from './components/ObjectsLayer';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { Sidebar } from './components/Sidebar';
 import { Toolbar } from './components/Toolbar';
-import { ViewCube } from './components/ViewCube';
 import s from './styles.module.css';
 
 type EditorShellProps = {
@@ -24,8 +24,8 @@ type EditorShellProps = {
 };
 
 /** Drives the ambient idle-orbit; renders nothing. Must live inside CesiumViewerProvider. */
-const IdleOrbit: React.FC = () => {
-    useIdleRotation();
+const IdleOrbit: React.FC<{ bounds: EditorShellProps['bounds'] }> = ({ bounds }) => {
+    useIdleRotation(bounds);
     return null;
 };
 
@@ -36,15 +36,15 @@ const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds }) => {
 
     return (
         <CesiumViewerProvider>
-            <MapCanvas bounds={bounds} />
+            <CesiumMap className={s.map} bounds={bounds} interaction="edit" />
             <ObjectsLayer />
             <UploadModelProvider>
                 <Sidebar />
             </UploadModelProvider>
             <Toolbar saveStatus={status} />
             <PropertiesPanel />
-            <ViewCube />
-            <IdleOrbit />
+            <ViewCube bounds={bounds} storageId={patioId} />
+            <IdleOrbit bounds={bounds} />
         </CesiumViewerProvider>
     );
 };
@@ -59,7 +59,11 @@ const PatioEditor: React.FC = () => {
     // deep-link they replace the bare dark fallback.
     useEffect(() => {
         if (patio) {
-            update({ backgroundUrl: patio.previewBackgroundUrl, name: patio.name });
+            update({
+                backgroundUrl: patio.previewBackgroundUrl,
+                backgroundLowUrl: patio.previewBackgroundLowUrl,
+                name: patio.name,
+            });
         }
     }, [patio, update]);
 
