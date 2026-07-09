@@ -26,12 +26,10 @@ export const NotFound: React.FC = () => {
                 <Typography className={s.title} variant="text-lg">
                     Oops! The page you&apos;re looking for doesn&apos;t exist.
                 </Typography>
-                <Link to="/">
-                    <Button variant="brand" size="xl">
-                        <HomeIcon />
-                        Back to home
-                    </Button>
-                </Link>
+                <Button variant="brand" size="xl" nativeButton={false} render={<Link to="/" />}>
+                    <HomeIcon />
+                    Back to home
+                </Button>
             </div>
         </div>
     );
