@@ -56,6 +56,7 @@ export type Patio = {
     previewLowUrl?: string;
     previewHighUrl: string;
     previewBackgroundUrl: string;
+    previewBackgroundLowUrl?: string;
 };
 
 /**

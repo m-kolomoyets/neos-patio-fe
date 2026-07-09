@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useCesiumViewer } from '@/contexts/CesiumViewerContext';
 import CubeIcon from '@/icons/cube_24.svg?react';
 import DotsIcon from '@/icons/dots-horizontal_24.svg?react';
 import Grid2Square4Icon from '@/icons/grid-square_24.svg?react';
@@ -9,7 +10,6 @@ import { OptionItem } from '@/components/ui/OptionItem';
 import { PopupWrapper } from '@/components/ui/PopupWrapper';
 import { Typography } from '@/components/ui/Typography';
 import { flyToObject } from '../../utils/flyToObject';
-import { useCesiumViewer } from '../../context/CesiumViewerContext';
 import { useEditorDispatch, useEditorState } from '../../context/EditorContext';
 import s from './styles.module.css';
 

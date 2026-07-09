@@ -1,5 +1,6 @@
 import type { Model3D } from '@/services/models/types';
 import { useCallback, useState } from 'react';
+import { useCesiumViewer } from '@/contexts/CesiumViewerContext';
 import ChevronRightIcon from '@/icons/chevrone-right_24.svg?react';
 import Cube24Icon from '@/icons/cube_24.svg?react';
 import { Cartesian2 } from 'cesium';
@@ -9,7 +10,6 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Typography } from '@/components/ui/Typography';
 import { CATALOG_PANEL_INSET_PX } from './constants';
 import { pickGroundPoint } from '../../utils/geoPlacement';
-import { useCesiumViewer } from '../../context/CesiumViewerContext';
 import { useEditorDispatch } from '../../context/EditorContext';
 import { useUploadModel } from '../../context/UploadModelContext';
 import { AssetPreviewPopup } from './components/AssetPreviewPopup';

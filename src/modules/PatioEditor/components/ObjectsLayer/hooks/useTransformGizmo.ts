@@ -4,9 +4,9 @@ import type { EditorMode } from '../../../types';
 import type { ObjectModelHandle } from '../components/ObjectModel';
 import type { GizmoAxis } from '../gizmo/types';
 import { useEffect, useState } from 'react';
+import { useCesiumViewer } from '@/contexts/CesiumViewerContext';
 import { Cartesian3 as Cartesian3Ctor, Matrix4 } from 'cesium';
 import { clampToBounds, modelMatrixToGeoPose } from '../../../utils/geoPlacement';
-import { useCesiumViewer } from '../../../context/CesiumViewerContext';
 import { useEditorDispatch, useEditorState } from '../../../context/EditorContext';
 // `sampleSurfaceHeight` re-added when release regrounding is re-enabled below.
 import { formatDistance } from '../gizmo/dragMath';

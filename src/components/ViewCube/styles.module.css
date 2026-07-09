@@ -1,0 +1,232 @@
+.wrap {
+    position: absolute;
+    right: var(--gap-2);
+    bottom: var(--gap-2);
+    border-radius: var(--radius-2xl);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    width: 118px;
+    align-items: flex-end;
+    padding: var(--gap-2);
+}
+
+.wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--stroke-surface);
+    mask:
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.top {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    height: 1rem;
+}
+
+.top .home {
+    padding: 0;
+    height: 1rem !important;
+    width: 1rem;
+}
+
+/* Home button + zoom stepper row beneath the cube. */
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.scene-container {
+    height: 80px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Perspective container — the only place a 3D viewing frustum is defined. */
+.scene {
+    width: 40px;
+    height: 40px;
+    perspective: 160px;
+    touch-action: none;
+}
+
+/* Show the 360 orbit cursor only while drag-orbiting (set by useCubeInteraction),
+   not on hover. */
+.scene[data-dragging] {
+    cursor:
+        url("/images/cursor-360.svg") 12 12,
+        grabbing;
+}
+
+/* Spins/tilts as a rigid body via the inline transform from cubeTransform(). */
+.cube {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+}
+
+.face {
+    position: absolute;
+    inset: 0;
+    background-color: hsl(56deg 19% 84%);
+    color: var(--color-base-black);
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    backface-visibility: hidden;
+    user-select: none;
+}
+
+/* Cube edge frame drawn ON TOP of the hit grid (not as a border, which would
+   shrink the padding box and push the 3×3 grid off the true face corners).
+   Painted last so the black edges stay visible over zone highlights. */
+.face::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 0 3px var(--color-base-black);
+    backface-visibility: hidden;
+    pointer-events: none;
+}
+
+/* 3×3 hit grid filling the FULL face so corner/edge cells reach the real
+   corners; cells carry the clickable target identity. */
+.grid {
+    position: absolute;
+    inset: 0;
+    display: grid;
+
+    /* Thin edge/corner rim, fat face center (Autodesk-style proportions).
+       minmax(0, …) stops the label's min-content from growing the center track
+       past its share and overflowing the fixed-height grid at the bottom. */
+    grid-template-columns: 25% minmax(0, 1fr) 25%;
+    grid-template-rows: 25% minmax(0, 1fr) 25%;
+    backface-visibility: hidden;
+}
+
+.cell {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    align-items: center;
+    justify-content: center;
+    backface-visibility: hidden;
+    transition: background-color 0.12s ease;
+}
+
+.label {
+    pointer-events: none;
+}
+
+/* Per-zone highlight: every cell sharing the hovered target lights together,
+   so a corner reads as a wedge across the faces that meet there (#01). */
+.cell[data-active] {
+    background: var(--color-brand-700);
+    color: var(--color-base-black);
+}
+
+/* translateZ(36px) === half the 72px cube; rotations place each face's normal. */
+.face-top {
+    transform: translateZ(20px);
+    z-index: 99;
+}
+
+.face-bottom {
+    transform: rotateY(180deg) translateZ(72px);
+    background: rgb(210 215 223 / 0.94);
+    opacity: 0;
+}
+
+.face-north {
+    transform: rotateX(90deg) translateZ(20px);
+    color: red;
+}
+
+.face-south {
+    transform: rotateX(-90deg) translateZ(20px);
+}
+
+.face-east {
+    transform: rotateY(90deg) rotateZ(-90deg) translateZ(20px);
+}
+
+.face-west {
+    transform: rotateY(-90deg) rotateZ(90deg) translateZ(20px);
+}
+
+/* Flattened "selected face" state (#04): flat square + step arrows, no 3D. */
+.flattened {
+    margin-top: -1.25rem;
+    margin-left: -1.75rem;
+    position: relative;
+    display: grid;
+    gap: var(--gap-2);
+    width: 100%;
+    height: 100%;
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: 1fr auto 1fr;
+    place-items: center;
+}
+
+.flat-face {
+    display: flex;
+    grid-area: 2 / 2;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--color-base-black);
+    background-color: hsl(56deg 19% 84%);
+    color: var(--color-base-black);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--color-base-white);
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+    border-radius: var(--radius-sm);
+}
+
+.arrow:hover {
+    background-color: hsl(var(--color-hsl-white) / 0.1);
+}
+
+.arrow svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.arrow-up {
+    grid-area: 1 / 2;
+}
+
+.arrow-left {
+    grid-area: 2 / 1;
+}
+
+.arrow-right {
+    grid-area: 2 / 3;
+}

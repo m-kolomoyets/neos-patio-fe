@@ -1,7 +1,7 @@
 import type { ObjectModelHandle } from './components/ObjectModel';
 import { useEffect, useRef, useState } from 'react';
+import { useCesiumViewer } from '@/contexts/CesiumViewerContext';
 import { useModelsQuery } from '@/services/models/queries';
-import { useCesiumViewer } from '../../context/CesiumViewerContext';
 import { useEditorState } from '../../context/EditorContext';
 import { useObjectSelection } from './hooks/useObjectSelection';
 import { useTransformGizmo } from './hooks/useTransformGizmo';

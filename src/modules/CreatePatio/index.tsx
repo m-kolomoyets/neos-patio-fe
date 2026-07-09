@@ -20,10 +20,9 @@ import { MapViewTabs } from './components/MapViewTabs';
 import { PatioClusterSource } from './components/PatioClusterSource';
 import { SatelliteLayer } from './components/SatelliteLayer';
 import { SquaresOverlay } from './components/SquaresOverlay';
+import s from './styles.module.css';
 
 import 'mapbox-gl/dist/mapbox-gl.css';
-
-import s from './styles.module.css';
 
 // Inherits the background Home picked (persisted). No own re-roll.
 const createPatioBackgroundSrc = getAppBackground();
