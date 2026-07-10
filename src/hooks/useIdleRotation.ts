@@ -1,6 +1,6 @@
 import type { PatioBounds } from '@/services/patios/types';
 import { useEffect } from 'react';
-import { useCesiumViewer } from '@/contexts/CesiumViewerContext';
+import { useCesiumMapReady, useCesiumViewer } from '@/contexts/CesiumViewerContext';
 import { Cartesian2, Cartesian3, Math as CesiumMath, HeadingPitchRange, Matrix4, Transforms } from 'cesium';
 import { useOrbitTarget } from './useOrbitTarget';
 
@@ -47,10 +47,15 @@ const DRAG_MOVE_EVENT = 'pointermove' as const;
  */
 export const useIdleRotation = (bounds: PatioBounds) => {
     const viewer = useCesiumViewer();
+    const ready = useCesiumMapReady();
     const targetRef = useOrbitTarget(viewer, bounds);
 
     useEffect(() => {
-        if (!viewer) return undefined;
+        // Wait until the scene has framed the patio and painted. Arming the idle
+        // countdown before then (on a slow/first/sequential load, where framing
+        // trails the async tile fetch) would let the orbit capture the un-framed
+        // default whole-earth view and fly the camera off to a faraway pivot.
+        if (!viewer || !ready) return undefined;
 
         let idleTimer: ReturnType<typeof setTimeout> | null = null;
         let frame: number | null = null;
@@ -165,5 +170,5 @@ export const useIdleRotation = (bounds: PatioBounds) => {
             if (idleTimer !== null) clearTimeout(idleTimer);
             stopOrbit();
         };
-    }, [viewer, targetRef]);
+    }, [viewer, ready, targetRef]);
 };
