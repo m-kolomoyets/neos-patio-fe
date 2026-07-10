@@ -1,11 +1,20 @@
 import type { Viewer } from 'cesium';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 
 type CesiumViewerContextValue = {
     /** The single map `Viewer`, or `null` until the canvas has mounted it. */
     viewer: Viewer | null;
     /** Called by the canvas to register/unregister the imperatively-created Viewer. */
     registerViewer: (_viewer: Viewer | null) => void;
+    /**
+     * True once the scene has framed the patio and painted its first tiles (or
+     * the bootstrap safety timeout elapsed). Camera-driving widgets (idle orbit)
+     * gate on this so they never start while the camera is still at Cesium's
+     * default whole-earth position during the async tile load.
+     */
+    ready: boolean;
+    /** Called by the canvas to flag the scene ready / reset on teardown. */
+    setReady: (_ready: boolean) => void;
 };
 
 const CesiumViewerContext = createContext<CesiumViewerContextValue | null>(null);
@@ -20,13 +29,34 @@ const CesiumViewerContext = createContext<CesiumViewerContextValue | null>(null)
  */
 export const CesiumViewerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [viewer, setViewer] = useState<Viewer | null>(null);
+    const [ready, setReady] = useState(false);
 
-    return <CesiumViewerContext value={{ viewer, registerViewer: setViewer }}>{children}</CesiumViewerContext>;
+    const value = useMemo<CesiumViewerContextValue>(() => {
+        return { viewer, registerViewer: setViewer, ready, setReady };
+    }, [viewer, ready]);
+
+    return <CesiumViewerContext value={value}>{children}</CesiumViewerContext>;
 };
 
 /** Accessor mirroring `useMap()`: the map Viewer, or `null` until mounted. */
 export const useCesiumViewer = (): Viewer | null => {
     return useContext(CesiumViewerContext)?.viewer ?? null;
+};
+
+/** True once the scene has framed the patio and painted — see {@link CesiumViewerContextValue.ready}. */
+export const useCesiumMapReady = (): boolean => {
+    return useContext(CesiumViewerContext)?.ready ?? false;
+};
+
+/** Internal: lets the canvas flag the scene ready / reset it on teardown. */
+export const useSetCesiumMapReady = () => {
+    const ctx = useContext(CesiumViewerContext);
+
+    if (!ctx) {
+        throw new Error('useSetCesiumMapReady must be used within a CesiumViewerProvider');
+    }
+
+    return ctx.setReady;
 };
 
 /** Internal: lets the canvas register/unregister the Viewer it owns. */

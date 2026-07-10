@@ -220,6 +220,15 @@ export const bootstrapScene = (
     // Safety net: report ready even if the tileset never finishes settling.
     const readyTimer = setTimeout(signalReady, READY_TIMEOUT_MS);
 
+    // Frame the camera on the patio SYNCHRONOUSLY, before the tileset load is even
+    // awaited — the framing needs only the bounds (ellipsoid-height sphere), not
+    // the tiles. This puts the camera on the patio from frame 0 so tiles stream in
+    // over the correct view, instead of leaving it parked at Cesium's default
+    // whole-earth position during the async load (a window in which the idle orbit
+    // could capture a faraway pivot, or the ready-timeout could lift the overlay
+    // on an un-framed scene).
+    frameBounds(viewer, bounds);
+
     void (async () => {
         try {
             // Google Photorealistic 3D Tiles asset ID
@@ -233,6 +242,10 @@ export const bootstrapScene = (
             tileset.showCreditsOnScreen = true;
             viewer.scene.primitives.add(tileset);
 
+            // Authoritative re-frame now the canvas is certainly laid out (the
+            // synchronous frame above can no-op if the container was still 0-sized
+            // when the effect ran, which yields a degenerate frustum aspect). Cheap
+            // (duration 0) and idempotent when the sync frame already succeeded.
             frameBounds(viewer, bounds);
 
             // Fires once when all tiles requested for the framed view have loaded
@@ -269,6 +282,12 @@ export const bootstrapScene = (
  * adapter uses for every other move.
  */
 const frameBounds = (viewer: Viewer, bounds: PatioBounds) => {
+    // A 0-sized canvas (effect ran before layout settled) gives the frustum a
+    // NaN aspect ratio, which `flyToBoundingSphere` turns into a NaN camera
+    // position — the camera ends up nowhere. Skip; the post-tileset re-frame
+    // runs once the canvas is laid out.
+    if (viewer.canvas.clientHeight === 0 || viewer.canvas.clientWidth === 0) return;
+
     const [west, south, east, north] = bounds;
     const sphere = BoundingSphere.fromRectangle3D(Rectangle.fromDegrees(west, south, east, north));
 

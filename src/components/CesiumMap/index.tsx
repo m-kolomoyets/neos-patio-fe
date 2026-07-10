@@ -2,7 +2,7 @@ import type { WithClassName } from '@/lib/types';
 import type { PatioBounds } from '@/services/patios/types';
 import type { MapInteraction } from './utils/sceneBootstrap';
 import { useEffect, useRef } from 'react';
-import { useRegisterCesiumViewer } from '@/contexts/CesiumViewerContext';
+import { useRegisterCesiumViewer, useSetCesiumMapReady } from '@/contexts/CesiumViewerContext';
 import { usePageTransition } from '@/contexts/PageTransitionContext';
 import { applyInteractionMode, bootstrapScene, configureViewer } from './utils/sceneBootstrap';
 import s from './styles.module.css';
@@ -31,6 +31,7 @@ type CesiumMapProps = WithClassName<{
 export const CesiumMap: React.FC<CesiumMapProps> = ({ className, bounds, interaction = 'edit' }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const registerViewer = useRegisterCesiumViewer();
+    const setReady = useSetCesiumMapReady();
     const { finish } = usePageTransition();
 
     useEffect(() => {
@@ -41,19 +42,27 @@ export const CesiumMap: React.FC<CesiumMapProps> = ({ className, bounds, interac
         const teardownInteraction = applyInteractionMode(viewer, interaction, bounds);
         registerViewer(viewer);
 
-        // Clear the loading overlay once the place is framed and its first LOD
-        // has settled (or after the bootstrap safety timeout).
-        const teardownScene = bootstrapScene(viewer, bounds, { onReady: finish });
+        // Clear the loading overlay AND flag the scene ready once the place is
+        // framed and its first LOD has settled (or after the bootstrap safety
+        // timeout). Camera-driving widgets (idle orbit) gate on `ready` so they
+        // never start while the camera is still at the default whole-earth view.
+        const teardownScene = bootstrapScene(viewer, bounds, {
+            onReady: () => {
+                finish();
+                setReady(true);
+            },
+        });
 
         return () => {
             teardownInteraction();
             teardownScene();
+            setReady(false);
             registerViewer(null);
             if (!viewer.isDestroyed()) {
                 viewer.destroy();
             }
         };
-    }, [bounds, interaction, registerViewer, finish]);
+    }, [bounds, interaction, registerViewer, setReady, finish]);
 
     return (
         <div className={clsx(s.wrap, className)}>
