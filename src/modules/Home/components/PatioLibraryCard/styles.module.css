@@ -170,7 +170,6 @@
     gap: var(--gap-1);
     font-weight: var(--fw-medium);
     color: hsl(var(--color-hsl-white) / 0.5);
-    font-weight: var(--fw-medium);
 }
 
 .id > span {
