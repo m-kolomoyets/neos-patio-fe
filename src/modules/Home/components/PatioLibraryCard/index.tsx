@@ -1,6 +1,5 @@
 import type { PatioLibraryCardProps } from './types';
 import { useCallback } from 'react';
-import Id24Icon from '@/icons/id_24.svg?react';
 import MapPin24Icon from '@/icons/map-pin_24.svg?react';
 import clsx from 'clsx';
 import { usePatioTransitionNavigate } from '@/hooks/usePatioTransitionNavigate';
@@ -67,7 +66,7 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
                     </div>
 
                     <Typography className={s.id} variant="text-sm" render={<p />}>
-                        <Id24Icon className={s.icon} aria-label="ID" /> {patio.id}
+                        ID <span>{patio.id}</span>
                     </Typography>
                 </header>
                 <footer className={s.footer}>

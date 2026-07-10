@@ -168,15 +168,12 @@
     display: inline-flex;
     align-items: center;
     gap: var(--gap-1);
-    color: hsl(var(--color-hsl-white) / 0.9);
+    color: hsl(var(--color-hsl-white) / 0.5);
     font-weight: 500;
 }
 
-.body .icon {
-    color: hsl(var(--color-hsl-white) / 0.6);
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
+.id > span {
+    color: hsl(var(--color-hsl-white) / 0.9);
 }
 
 .country {
