@@ -65,7 +65,7 @@
 
 .title {
     color: var(--color-base-white);
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     margin-top: var(--gap-0-5);
 }
 

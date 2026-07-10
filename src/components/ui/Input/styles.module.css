@@ -10,7 +10,7 @@
     --input-padding-x: var(--gap-4);
     --input-font-size: 1rem;
     --input-line-height: 1.5rem;
-    --input-font-weight: 500;
+    --input-font-weight: var(--fw-medium);
 
     position: relative;
     display: inline-flex;
@@ -41,7 +41,7 @@
     --input-padding-x: 12px;
     --input-font-size: 0.875rem;
     --input-line-height: 1.25rem;
-    --input-font-weight: 400;
+    --input-font-weight: var(--fw-regular);
 }
 
 .wrap[data-size="md"] {
@@ -53,7 +53,7 @@
     --input-padding-x: 10px;
     --input-font-size: 1rem;
     --input-line-height: 1.5rem;
-    --input-font-weight: 500;
+    --input-font-weight: var(--fw-medium);
 }
 
 .wrap[data-size="xl"] {
@@ -65,7 +65,7 @@
     --input-padding-x: 12px;
     --input-font-size: 1rem;
     --input-line-height: 1.5rem;
-    --input-font-weight: 500;
+    --input-font-weight: var(--fw-medium);
 }
 
 .wrap[data-rounded="true"] {
