@@ -13,6 +13,12 @@
     --color-hsl-white: 0deg 0% 100%;
     --color-hsl-black: 0deg 0% 0%;
 
+    /* Font weights (variable-font weight axis) */
+    --fw-regular: 400;
+    --fw-medium: 500;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+
     /* Common Variables */
     --color-base-white: hsl(var(--color-hsl-white));
     --color-base-black: hsl(var(--color-hsl-black));
@@ -193,6 +199,18 @@
     --scrollbar-track-color: hsl(0deg 0% 87.5%);
     --scrollbar-thumb-color: hsl(0deg 0% 68.6%);
     --scrollbar-thumb-color-hover: hsl(210deg 11.2% 51%);
+}
+
+/*
+ * Windows renders Inter ~10% bolder than macOS via ClearType/DirectWrite grid-fitting.
+ * No CSS can disable ClearType, so nudge the variable-font weight down on Windows only.
+ * Flagged by JS in src/main.tsx. Tune the four values below to taste; delete to revert.
+ */
+:root[data-os="windows"] {
+    --fw-regular: 330;
+    --fw-medium: 400;
+    --fw-semibold: 460;
+    --fw-bold: 600;
 }
 
 body {

@@ -40,7 +40,7 @@
     background: none;
     color: inherit;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     font-variant-numeric: tabular-nums;
     text-align: center;
     cursor: pointer;

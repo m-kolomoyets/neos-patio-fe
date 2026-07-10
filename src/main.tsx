@@ -39,6 +39,15 @@ declare module '@tanstack/react-router' {
 }
 
 checkEnv(envSchema);
+
+// Windows renders Inter noticeably bolder via ClearType/DirectWrite. Flag the OS so
+// CSS can nudge the variable-font weight down on Windows only (see src/styles/index.css).
+const uaPlatform = (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform;
+const platform = uaPlatform ?? navigator.platform ?? '';
+if (/win/i.test(platform)) {
+    document.documentElement.dataset.os = 'windows';
+}
+
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
         <WagmiProvider config={wagmiConfig}>

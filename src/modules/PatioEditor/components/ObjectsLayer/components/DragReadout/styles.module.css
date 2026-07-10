@@ -8,7 +8,7 @@
     border-radius: var(--radius-md);
     background-color: var(--color-base-black);
     color: var(--color-base-white);
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
     pointer-events: none;

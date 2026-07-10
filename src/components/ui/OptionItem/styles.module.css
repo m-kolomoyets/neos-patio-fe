@@ -39,7 +39,7 @@
     align-items: center;
     gap: var(--gap-2);
     flex: 1;
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     min-width: 0;
     color: hsl(var(--color-hsl-white) / 0.9);
 }

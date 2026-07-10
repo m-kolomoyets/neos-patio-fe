@@ -185,13 +185,14 @@
 }
 
 .title {
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     margin-bottom: var(--gap-1);
 }
 
 .id {
     margin-bottom: var(--gap-6);
     color: hsl(var(--color-hsl-white) / 0.6);
+    font-weight: var(--fw-regular);
 }
 
 .open-button {

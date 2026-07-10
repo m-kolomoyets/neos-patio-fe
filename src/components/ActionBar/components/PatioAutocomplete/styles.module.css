@@ -22,7 +22,7 @@
     --input-padding-x: 20px;
     --input-font-size: 1rem;
     --input-line-height: 1.5rem;
-    --input-font-weight: 500;
+    --input-font-weight: var(--fw-medium);
 
     box-shadow: none;
     z-index: 10;
