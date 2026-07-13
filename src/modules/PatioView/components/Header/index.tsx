@@ -21,7 +21,7 @@ export const Header: React.FC<HeaderProps> = ({ name }) => {
             <div className={s.left}>
                 <Button
                     variant="surface"
-                    size="md"
+                    size="lg"
                     isIcon
                     aria-label="Back to home"
                     onClick={() => {
@@ -31,9 +31,15 @@ export const Header: React.FC<HeaderProps> = ({ name }) => {
                     <ArrowLeftIcon />
                 </Button>
             </div>
-            <Typography className={s.title} variant="display-xs" render={<h1 />}>
-                {name}
-            </Typography>
+            <div className={s['titles-wrap']}>
+                <Typography className={s.title} variant="display-xs" render={<h1 />}>
+                    {name}
+                </Typography>
+                {/* TODO: retrieve quote from the API */}
+                <Typography className={s.description} variant="text-sm">
+                    Every good tree bears good fruit
+                </Typography>
+            </div>
             <div />
         </header>
     );

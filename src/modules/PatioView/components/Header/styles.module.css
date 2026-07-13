@@ -11,8 +11,19 @@
     justify-content: flex-start;
 }
 
+.titles-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gap-1);
+}
+
 .title {
     text-align: center;
     white-space: nowrap;
     font-weight: var(--fw-semibold);
+}
+
+.description {
+    color: hsl(var(--color-hsl-white) / 0.6);
 }
