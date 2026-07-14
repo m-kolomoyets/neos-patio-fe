@@ -14,7 +14,6 @@
     padding: 0;
     border: none;
     border-radius: var(--radius-md);
-    color: inherit;
     cursor: pointer;
     transition: background-color 0.12s ease;
     backdrop-filter: blur(4px);
@@ -48,7 +47,6 @@
     padding: 0 var(--gap-1);
     border: none;
     border-radius: 0;
-    color: inherit;
     font-size: 0.75rem;
     color: hsl(var(--color-hsl-white) / 0.9);
     font-weight: var(--fw-semibold);
