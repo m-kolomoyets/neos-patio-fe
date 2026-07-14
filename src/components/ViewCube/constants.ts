@@ -16,6 +16,9 @@ export const ZOOM_STEP_FACTOR = 2;
 /** Zoom-popover preset percentages; each is a ×2 range factor from the reference. */
 export const ZOOM_PRESETS = [50, 100, 200] as const;
 
+/** Bearing change (deg) per rotate-button press — a quarter-turn matching the N/E/S/W faces. */
+export const ROTATE_STEP_DEG = 90;
+
 /** localStorage key prefix for the per-patio Home view (`${prefix}${patioId}`). */
 export const HOME_STORAGE_PREFIX = 'patio-editor:home:';
 

@@ -5,7 +5,7 @@ import { useCallback } from 'react';
 import { ZOOM_STEP_FACTOR } from '../../constants';
 import { percentToRange, rangeToPercent } from '../../utils/cameraMath';
 import { useCameraState } from '../../hooks/useCameraState';
-import { ZoomControl } from '../ZoomControl';
+import { ZoomControl } from './components/ZoomControl';
 
 type LiveZoomControlProps = {
     viewer: Viewer;

@@ -1,0 +1,30 @@
+.wrap {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--gap-1);
+    width: 100%;
+}
+
+.cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-lg);
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+.cta:hover {
+    background-color: hsl(var(--color-hsl-white) / 0.1);
+}
+
+.cta > svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
