@@ -1,6 +1,5 @@
 import type { Viewer } from 'cesium';
-import type { PatioBounds } from '@/services/patios/types';
-import type { CameraState, CameraTarget } from '../../types';
+import type { CameraState } from '../../types';
 import { useCallback } from 'react';
 import { ZOOM_STEP_FACTOR } from '../../constants';
 import { percentToRange, rangeToPercent } from '../../utils/cameraMath';
@@ -10,12 +9,12 @@ import { ZoomControl } from './components/ZoomControl';
 type LiveZoomControlProps = {
     viewer: Viewer;
     readOrientation: () => CameraState;
-    /** Patio footprint `[west, south, east, north]` framed by zoom-to-fit. */
-    bounds: PatioBounds;
     /** Camera range (m) that reads as 100% — the patio diagonal. */
     referenceRange: number;
-    easeTo: (_target: CameraTarget) => void;
-    fitBounds: (_bounds: PatioBounds) => void;
+    /** Change only the range, preserving the live camera pose (stepper + presets). */
+    zoomTo: (_range: number) => void;
+    /** Frame the whole patio at the default orientation (zoom-to-fit). */
+    fitBounds: () => void;
     onSetHome: () => void;
     onResetHome: () => void;
 };
@@ -29,9 +28,8 @@ type LiveZoomControlProps = {
 export const LiveZoomControl: React.FC<LiveZoomControlProps> = ({
     viewer,
     readOrientation,
-    bounds,
     referenceRange,
-    easeTo,
+    zoomTo,
     fitBounds,
     onSetHome,
     onResetHome,
@@ -43,21 +41,21 @@ export const LiveZoomControl: React.FC<LiveZoomControlProps> = ({
         (delta: 1 | -1) => {
             // +1 zooms in → closer → smaller range; -1 zooms out → larger range.
             const range = readOrientation().range / ZOOM_STEP_FACTOR ** delta;
-            easeTo({ range });
+            zoomTo(range);
         },
-        [readOrientation, easeTo]
+        [readOrientation, zoomTo]
     );
 
     const onZoomToPercent = useCallback(
         (pct: number) => {
-            easeTo({ range: percentToRange(pct, referenceRange) });
+            zoomTo(percentToRange(pct, referenceRange));
         },
-        [easeTo, referenceRange]
+        [zoomTo, referenceRange]
     );
 
     const onZoomToFit = useCallback(() => {
-        fitBounds(bounds);
-    }, [fitBounds, bounds]);
+        fitBounds();
+    }, [fitBounds]);
 
     return (
         <ZoomControl

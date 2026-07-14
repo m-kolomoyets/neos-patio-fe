@@ -15,7 +15,7 @@
     border: none;
     border-radius: var(--radius-lg);
     background: none;
-    color: inherit;
+    color: hsl(var(--color-hsl-white) / 0.9);
     cursor: pointer;
     transition: background-color 0.12s ease;
 }

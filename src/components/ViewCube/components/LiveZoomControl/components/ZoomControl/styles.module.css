@@ -3,7 +3,6 @@
     display: flex;
     align-items: center;
     gap: var(--gap-0-5);
-    padding: var(--gap-0-5);
 }
 
 .step {
@@ -14,11 +13,11 @@
     height: 2rem;
     padding: 0;
     border: none;
-    border-radius: var(--radius-lg);
-    color: inherit;
+    border-radius: var(--radius-md);
     cursor: pointer;
     transition: background-color 0.12s ease;
     backdrop-filter: blur(4px);
+    color: hsl(var(--color-hsl-white) / 0.9);
 }
 
 .step:hover {
@@ -48,8 +47,8 @@
     padding: 0 var(--gap-1);
     border: none;
     border-radius: 0;
-    color: inherit;
     font-size: 0.75rem;
+    color: hsl(var(--color-hsl-white) / 0.9);
     font-weight: var(--fw-semibold);
     font-variant-numeric: tabular-nums;
     text-align: center;
