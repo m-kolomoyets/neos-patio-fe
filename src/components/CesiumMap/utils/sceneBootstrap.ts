@@ -106,50 +106,57 @@ const boundsCenter = (bounds: PatioBounds): Cartesian3 => {
 };
 
 /**
- * Hard-clamp the camera in `'view'` on every camera change so it can never (a)
- * drift horizontally more than {@link VIEW_MAX_PAN_METERS} off the patio centre,
- * nor (b) tilt past {@link VIEW_MAX_PITCH} (below which the orbit would swing the
- * camera underneath the map). Returns the listener remover.
+ * Hard-clamp the camera in `'view'` so it can never (a) drift horizontally more
+ * than {@link VIEW_MAX_PAN_METERS} off the patio centre, nor (b) tilt past
+ * {@link VIEW_MAX_PITCH} — below which any orbit (plain left-drag OR ctrl-drag,
+ * both tilt pitch in Cesium 3D) would swing the camera underneath the map.
+ * Returns a combined teardown for the two listeners it installs.
  *
- * The two clamps use deliberately different corrections:
+ * The two clamps run on deliberately different signals and corrections:
  *
- * - Pan: Cesium's orbit pivots around the point under the cursor, so repeated
- *   zoom+orbit slowly walks the focus off the patio. Snap the camera *position*
- *   back onto the {@link VIEW_MAX_PAN_METERS} disc around centre (in the centre's
- *   east-north-up frame) WITHOUT re-aiming — keeping direction/up so the view
- *   glides along the boundary instead of shaking.
+ * - Pitch → `scene.preRender` (EVERY rendered frame). The camera dips under the
+ *   map *during* an active drag, not just when it settles, so capping on
+ *   `camera.changed` (which fires only past `percentageChanged`) would let
+ *   individual frames slip below ground before correcting. preRender runs after
+ *   the controller applies each frame's input and before the frame paints, so no
+ *   frame is ever rendered with the camera under the map. When pitch is in range
+ *   this is a cheap comparison and a no-op — it only engages at the boundary.
+ *   The correction re-establishes a clean `lookAt` orbit at the capped pitch
+ *   (current heading + range preserved). Re-aiming — not just lifting the
+ *   position — is what avoids the "glitch on the way back up": a position-only
+ *   lift pins the camera below the live tilt gesture's stored pivot, desyncing
+ *   them until the gesture restarts (re-pressing the mouse/Ctrl). Rebuilding the
+ *   orbit frame stays consistent, and the cap disengages the instant pitch
+ *   returns in-range, so reversing the tilt is smooth.
  *
- * - Pitch: Ctrl-drag tilts toward the horizon; past it the camera dives below
- *   ground. Re-establish a clean `lookAt` orbit at the capped pitch (current
- *   heading + range preserved). Re-aiming here — not just nudging the position —
- *   is what avoids the "glitch on the way back up": a position-only lift pins the
- *   camera below the live tilt gesture's stored pivot, desyncing them until the
- *   gesture restarts (re-pressing Ctrl). Rebuilding the orbit frame each violating
- *   frame stays consistent, and the cap disengages the instant pitch returns
- *   in-range, so reversing the tilt is smooth.
+ * - Pan → `camera.changed`. Cesium's orbit pivots around the point under the
+ *   cursor, so repeated zoom+orbit slowly walks the focus off the patio. Snap the
+ *   camera *position* back onto the {@link VIEW_MAX_PAN_METERS} disc around centre
+ *   (in the centre's east-north-up frame) WITHOUT re-aiming — keeping direction/up
+ *   so the view glides along the boundary instead of shaking.
  */
 const installPanClamp = (viewer: Viewer, bounds: PatioBounds): (() => void) => {
+    const { camera, scene } = viewer;
     const center = boundsCenter(bounds);
     const toLocal = Matrix4.inverse(Transforms.eastNorthUpToFixedFrame(center), new Matrix4());
     const toWorld = Transforms.eastNorthUpToFixedFrame(center);
     const local = new Cartesian3();
     let clamping = false;
 
-    const clamp = () => {
+    // Pitch cap: enforced per frame so the camera never renders under the map.
+    const capPitch = () => {
+        if (clamping || camera.pitch <= VIEW_MAX_PITCH) return;
+        const range = Cartesian3.distance(camera.positionWC, center);
+        clamping = true;
+        camera.lookAt(center, new HeadingPitchRange(camera.heading, VIEW_MAX_PITCH, range));
+        // Release the lookAt reference frame so the default controls stay free.
+        camera.lookAtTransform(Matrix4.IDENTITY);
+        clamping = false;
+    };
+
+    // Pan clamp: snap horizontal drift back onto the boundary disc.
+    const clampPan = () => {
         if (clamping) return;
-        const { camera } = viewer;
-
-        // Pitch cap first: re-aiming resets the position, so a later pan clamp
-        // reads the corrected camera.
-        if (camera.pitch > VIEW_MAX_PITCH) {
-            const range = Cartesian3.distance(camera.positionWC, center);
-            clamping = true;
-            camera.lookAt(center, new HeadingPitchRange(camera.heading, VIEW_MAX_PITCH, range));
-            // Release the lookAt reference frame so the default controls stay free.
-            camera.lookAtTransform(Matrix4.IDENTITY);
-            clamping = false;
-        }
-
         Matrix4.multiplyByPoint(toLocal, camera.positionWC, local);
         // Distance in the horizontal (east/north) plane; `local.z` is up (ignored).
         const horizontal = Math.hypot(local.x, local.y);
@@ -170,9 +177,14 @@ const installPanClamp = (viewer: Viewer, bounds: PatioBounds): (() => void) => {
     };
 
     // `changed` fires once the camera settles past `percentageChanged`; lower it
-    // so small orbit/zoom drifts still trip the clamp.
-    viewer.camera.percentageChanged = 0.05;
-    return viewer.camera.changed.addEventListener(clamp);
+    // so small orbit/zoom drifts still trip the pan clamp.
+    camera.percentageChanged = 0.05;
+    const removePitch = scene.preRender.addEventListener(capPitch);
+    const removePan = camera.changed.addEventListener(clampPan);
+    return () => {
+        removePitch();
+        removePan();
+    };
 };
 
 /**
