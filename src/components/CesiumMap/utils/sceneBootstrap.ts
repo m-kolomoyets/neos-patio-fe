@@ -80,7 +80,10 @@ export type MapInteraction = 'edit' | 'view';
  * out to orbit — the one place always stays framed.
  */
 const VIEW_MIN_ZOOM_FACTOR = 0.6;
-const VIEW_MAX_ZOOM_FACTOR = 3;
+// Calibrated so the farthest zoom reads 50% on the ViewCube: the readout's 100%
+// (`referenceRange`, the patio diagonal) ≈ 2·radius, so a max range of 4·radius =
+// 2·referenceRange bottoms the readout out at exactly 50% — the "Zoom to 50%" preset.
+const VIEW_MAX_ZOOM_FACTOR = 4;
 
 /** Max horizontal drift (metres) of the camera off the patio centre in `'view'`. */
 const VIEW_MAX_PAN_METERS = 2_000;
