@@ -19,6 +19,7 @@
     cursor: pointer;
     transition: background-color 0.12s ease;
     backdrop-filter: blur(4px);
+    color: hsl(var(--color-hsl-white) / 0.9);
 }
 
 .step:hover {
@@ -50,6 +51,7 @@
     border-radius: 0;
     color: inherit;
     font-size: 0.75rem;
+    color: hsl(var(--color-hsl-white) / 0.9);
     font-weight: var(--fw-semibold);
     font-variant-numeric: tabular-nums;
     text-align: center;
