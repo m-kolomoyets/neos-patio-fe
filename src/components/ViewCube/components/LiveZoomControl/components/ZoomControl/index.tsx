@@ -7,7 +7,7 @@ import clsx from 'clsx';
 import { OptionItem } from '@/components/ui/OptionItem';
 import { PopupWrapper } from '@/components/ui/PopupWrapper';
 import { Separator } from '@/components/ui/Separator';
-import { ZOOM_PRESETS } from '../../constants';
+import { ZOOM_PRESETS } from '../../../../constants';
 import s from './styles.module.css';
 
 /**
@@ -35,7 +35,7 @@ export const ZoomControl = memo(function ZoomControl({
             <div className={s.stepper}>
                 <button
                     type="button"
-                    className={clsx(s.step, 'focus-primary')}
+                    className={clsx(s.step, s.minus, 'focus-primary', 'surface-regular')}
                     aria-label="Zoom out"
                     onClick={() => {
                         onStepZoom(-1);
@@ -43,12 +43,12 @@ export const ZoomControl = memo(function ZoomControl({
                 >
                     <MinusIcon />
                 </button>
-                <Menu.Trigger className={clsx(s.readout, 'focus-primary')} aria-label="Zoom options">
+                <Menu.Trigger className={clsx(s.readout, 'focus-primary', 'surface-regular')} aria-label="Zoom options">
                     {percent}%
                 </Menu.Trigger>
                 <button
                     type="button"
-                    className={clsx(s.step, 'focus-primary')}
+                    className={clsx(s.step, s.plus, 'focus-primary', 'surface-regular')}
                     aria-label="Zoom in"
                     onClick={() => {
                         onStepZoom(1);
@@ -58,26 +58,38 @@ export const ZoomControl = memo(function ZoomControl({
                 </button>
             </div>
             <Menu.Portal>
-                <Menu.Positioner side="left" align="start" sideOffset={48} alignOffset={-10}>
+                <Menu.Positioner side="left" align="start" sideOffset={48} alignOffset={0}>
                     <Menu.Popup render={<PopupWrapper className={s.popup} />}>
                         <Menu.Item
                             className={s.item}
                             onClick={() => {
                                 onStepZoom(1);
                             }}
-                            render={<OptionItem className={s.item}>Zoom in</OptionItem>}
+                            render={
+                                <OptionItem className={s.item} isWithChecked={false}>
+                                    Zoom in
+                                </OptionItem>
+                            }
                         />
                         <Menu.Item
                             className={s.item}
                             onClick={() => {
                                 onStepZoom(-1);
                             }}
-                            render={<OptionItem className={s.item}>Zoom out</OptionItem>}
+                            render={
+                                <OptionItem className={s.item} isWithChecked={false}>
+                                    Zoom out
+                                </OptionItem>
+                            }
                         />
                         <Menu.Item
                             className={s.item}
                             onClick={onZoomToFit}
-                            render={<OptionItem className={s.item}>Zoom to fit</OptionItem>}
+                            render={
+                                <OptionItem className={s.item} isWithChecked={false}>
+                                    Zoom to fit
+                                </OptionItem>
+                            }
                         />
                         {ZOOM_PRESETS.map((preset) => {
                             return (
@@ -87,7 +99,12 @@ export const ZoomControl = memo(function ZoomControl({
                                     onClick={() => {
                                         onZoomToPercent(preset);
                                     }}
-                                    render={<OptionItem className={s.item}>{`Zoom to ${preset}%`}</OptionItem>}
+                                    render={
+                                        <OptionItem
+                                            className={s.item}
+                                            isWithChecked={false}
+                                        >{`Zoom to ${preset}%`}</OptionItem>
+                                    }
                                 />
                             );
                         })}
@@ -95,12 +112,20 @@ export const ZoomControl = memo(function ZoomControl({
                         <Menu.Item
                             className={s.item}
                             onClick={onSetHome}
-                            render={<OptionItem className={s.item}>Set current view as Home</OptionItem>}
+                            render={
+                                <OptionItem className={s.item} isWithChecked={false}>
+                                    Set current view as Home
+                                </OptionItem>
+                            }
                         />
                         <Menu.Item
                             className={s.item}
                             onClick={onResetHome}
-                            render={<OptionItem className={s.item}>Reset Home</OptionItem>}
+                            render={
+                                <OptionItem className={s.item} isWithChecked={false}>
+                                    Reset Home
+                                </OptionItem>
+                            }
                         />
                     </Menu.Popup>
                 </Menu.Positioner>

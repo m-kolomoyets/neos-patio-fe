@@ -11,6 +11,7 @@ export const OptionItem: React.FC<OptionItemProps> = ({
     variant = 'default',
     leftAddon,
     checked = false,
+    isWithChecked = true,
     children,
     render,
     ...rest
@@ -29,9 +30,11 @@ export const OptionItem: React.FC<OptionItemProps> = ({
                             {leftAddon ? <span className={clsx(s.addon, s.left)}>{leftAddon}</span> : null}
                             {children}
                         </Typography>
-                        <span className={clsx(s.addon, s.right)}>
-                            <CheckmarkIcon className={s.checkmark} aria-hidden />
-                        </span>
+                        {isWithChecked ? (
+                            <span className={clsx(s.addon, s.right)}>
+                                <CheckmarkIcon className={s.checkmark} aria-hidden />
+                            </span>
+                        ) : null}
                     </>
                 ),
             }

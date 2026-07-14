@@ -20,4 +20,5 @@ export type OptionItemProps = useRender.ComponentProps<'div'> & {
      * `data-selected` / `data-checked` emitted by the Base UI render target.
      */
     checked?: boolean;
+    isWithChecked?: boolean;
 };
