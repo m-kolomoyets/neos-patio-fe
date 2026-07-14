@@ -13,6 +13,9 @@ const ROTATION_DEG_PER_SEC = 3;
 /** DOM events anywhere in the page that count as "the user is interacting". */
 const INTERACTION_EVENTS = ['pointerdown', 'wheel', 'touchstart', 'keydown'] as const;
 
+/** Pitch (rad) kept clear of the ±90° pole so the idle orbit doesn't gimbal-lock. */
+const POLE_EPSILON = CesiumMath.toRadians(0.5);
+
 /**
  * Pointer movement only counts as interaction while a button is held — a live
  * drag (view-cube orbit, gizmo, scene pan). A press fires `pointerdown` once, but
@@ -127,7 +130,12 @@ export const useIdleRotation = (bounds: PatioBounds) => {
             const { camera } = viewer;
             camera.lookAtTransform(Transforms.eastNorthUpToFixedFrame(pivot));
             orbitHeading = camera.heading;
-            orbitPitch = camera.pitch;
+            // HeadingPitchRange gimbal-locks at ±90° (top-down, e.g. after a top-face
+            // snap): cos(pitch)=0 kills the offset's horizontal components, so heading
+            // gains zero leverage on camera position and the orbit freezes in place.
+            // Nudge the captured pitch off the pole so heading advances the position
+            // again — the ~0.5° tilt is imperceptible.
+            orbitPitch = Math.max(camera.pitch, -CesiumMath.PI_OVER_TWO + POLE_EPSILON);
             orbitRange = Cartesian3.magnitude(camera.position);
             camera.lookAtTransform(Matrix4.IDENTITY);
             frame = requestAnimationFrame(tick);
