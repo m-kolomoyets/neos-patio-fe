@@ -88,6 +88,17 @@ const VIEW_MAX_ZOOM_FACTOR = 4;
 /** Max horizontal drift (metres) of the camera off the patio centre in `'view'`. */
 const VIEW_MAX_PAN_METERS = 2_000;
 
+/**
+ * Shallowest Cesium camera pitch (radians) allowed in `'view'`. Ctrl-drag tilts
+ * the camera toward the horizon; past it the orbit swings the camera below the
+ * ground plane ("underneath the map"). Capping the pitch a few degrees below the
+ * horizon (−5°, i.e. always looking at least slightly down) keeps the camera
+ * above ground for any bounded range — it can never dip under. Mirrors the
+ * display 0–85° band the ViewCube clamps every other camera move to
+ * (`displayPitchToCesium(85) = −5°`).
+ */
+const VIEW_MAX_PITCH = CesiumMath.toRadians(-5);
+
 /** Geographic centre of a patio's bounds as an ECEF point at ground height. */
 const boundsCenter = (bounds: PatioBounds): Cartesian3 => {
     const [west, south, east, north] = bounds;
@@ -95,12 +106,27 @@ const boundsCenter = (bounds: PatioBounds): Cartesian3 => {
 };
 
 /**
- * Hard-clamp the camera so its horizontal offset from the patio centre never
- * exceeds {@link VIEW_MAX_PAN_METERS}. Cesium's orbit pivots around the point
- * under the cursor, so repeated zoom+orbit slowly walks the focus off the patio;
- * this listener snaps the camera position back onto the 100 m disc around centre
- * (in the centre's east-north-up frame) after every camera change. Returns the
- * listener remover.
+ * Hard-clamp the camera in `'view'` on every camera change so it can never (a)
+ * drift horizontally more than {@link VIEW_MAX_PAN_METERS} off the patio centre,
+ * nor (b) tilt past {@link VIEW_MAX_PITCH} (below which the orbit would swing the
+ * camera underneath the map). Returns the listener remover.
+ *
+ * The two clamps use deliberately different corrections:
+ *
+ * - Pan: Cesium's orbit pivots around the point under the cursor, so repeated
+ *   zoom+orbit slowly walks the focus off the patio. Snap the camera *position*
+ *   back onto the {@link VIEW_MAX_PAN_METERS} disc around centre (in the centre's
+ *   east-north-up frame) WITHOUT re-aiming — keeping direction/up so the view
+ *   glides along the boundary instead of shaking.
+ *
+ * - Pitch: Ctrl-drag tilts toward the horizon; past it the camera dives below
+ *   ground. Re-establish a clean `lookAt` orbit at the capped pitch (current
+ *   heading + range preserved). Re-aiming here — not just nudging the position —
+ *   is what avoids the "glitch on the way back up": a position-only lift pins the
+ *   camera below the live tilt gesture's stored pivot, desyncing them until the
+ *   gesture restarts (re-pressing Ctrl). Rebuilding the orbit frame each violating
+ *   frame stays consistent, and the cap disengages the instant pitch returns
+ *   in-range, so reversing the tilt is smooth.
  */
 const installPanClamp = (viewer: Viewer, bounds: PatioBounds): (() => void) => {
     const center = boundsCenter(bounds);
@@ -112,6 +138,18 @@ const installPanClamp = (viewer: Viewer, bounds: PatioBounds): (() => void) => {
     const clamp = () => {
         if (clamping) return;
         const { camera } = viewer;
+
+        // Pitch cap first: re-aiming resets the position, so a later pan clamp
+        // reads the corrected camera.
+        if (camera.pitch > VIEW_MAX_PITCH) {
+            const range = Cartesian3.distance(camera.positionWC, center);
+            clamping = true;
+            camera.lookAt(center, new HeadingPitchRange(camera.heading, VIEW_MAX_PITCH, range));
+            // Release the lookAt reference frame so the default controls stay free.
+            camera.lookAtTransform(Matrix4.IDENTITY);
+            clamping = false;
+        }
+
         Matrix4.multiplyByPoint(toLocal, camera.positionWC, local);
         // Distance in the horizontal (east/north) plane; `local.z` is up (ignored).
         const horizontal = Math.hypot(local.x, local.y);
@@ -141,8 +179,9 @@ const installPanClamp = (viewer: Viewer, bounds: PatioBounds): (() => void) => {
  * Apply the camera-controller constraints for `interaction`. `'edit'` is a no-op
  * (default controller). `'view'` locks out pan/translate and free-look so the
  * camera can only orbit and zoom around the framed patio, clamps the zoom
- * distance to the patio's bounding sphere, and clamps horizontal drift to
- * {@link VIEW_MAX_PAN_METERS} — it can never fly away, zoom too far, or pan off.
+ * distance to the patio's bounding sphere, clamps horizontal drift to
+ * {@link VIEW_MAX_PAN_METERS}, and caps the tilt at {@link VIEW_MAX_PITCH} — it
+ * can never fly away, zoom too far, pan off, or dip under the map.
  * Returns a teardown for the pan-clamp listener (`'edit'` returns a no-op).
  */
 export const applyInteractionMode = (
