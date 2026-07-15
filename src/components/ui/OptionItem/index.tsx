@@ -1,5 +1,5 @@
 import type { OptionItemProps } from './types';
-import CheckmarkIcon from '@/icons/checkmark_24.svg?react';
+import CheckmarkIcon from '@/icons/checkmark-circle-filled_24.svg?react';
 import { mergeProps } from '@base-ui/react/merge-props';
 import { useRender } from '@base-ui/react/use-render';
 import clsx from 'clsx';

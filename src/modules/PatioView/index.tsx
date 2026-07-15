@@ -35,7 +35,7 @@ export const PatioView: React.FC = () => {
     const { update } = usePageTransition();
 
     // Squircle corners matching Home / create-patio (40px surface, 22px map).
-    const [surfaceRef, surfaceSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: 48 });
+    const [surfaceRef, surfaceSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: 46 });
     const [mapRef, mapSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius: 24 });
 
     // Fill the loading overlay with the real background + name once the patio

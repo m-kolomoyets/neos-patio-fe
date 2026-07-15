@@ -29,7 +29,7 @@
     background: var(--surface-regular);
     overflow: hidden;
     backdrop-filter: blur(50px);
-    border-radius: 3rem;
+    border-radius: 2.875rem;
 }
 
 .map {
