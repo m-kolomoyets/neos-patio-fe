@@ -19,6 +19,7 @@ import { Header } from './components/Header';
 import { MapViewTabs } from './components/MapViewTabs';
 import { PatioClusterSource } from './components/PatioClusterSource';
 import { SatelliteLayer } from './components/SatelliteLayer';
+import { ScaleBar } from './components/ScaleBar';
 import { SquaresOverlay } from './components/SquaresOverlay';
 import s from './styles.module.css';
 
@@ -81,6 +82,7 @@ export const CreatePatio: React.FC = () => {
                                     <ClusterMarkers />
                                     <SquaresOverlay />
                                 </Map>
+                                <ScaleBar />
                             </div>
                             <MapViewTabs />
                         </div>
