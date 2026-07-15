@@ -86,7 +86,7 @@
 
 .title {
     color: var(--color-base-white);
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     padding-top: var(--gap-6);
     padding-inline: var(--gap-6);
 }

@@ -31,7 +31,7 @@
     padding: var(--gap-2) calc(var(--gap-2) + var(--gap-0-5));
     border-radius: var(--radius-lg);
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     line-height: 1.25rem;
     color: var(--color-base-white);
     cursor: pointer;

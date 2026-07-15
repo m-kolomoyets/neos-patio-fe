@@ -59,7 +59,7 @@
 .title {
     max-width: 15rem;
     margin: 0 0 var(--gap-6);
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
 }
 
 .footer {

@@ -11,7 +11,6 @@ import {
     Ellipsoid,
     HeadingPitchRange,
     Matrix4,
-    Rectangle,
 } from 'cesium';
 import { useOrbitTarget } from '@/hooks/useOrbitTarget';
 import { CAMERA_EASE_MS, CAMERA_EASE_S, DEFAULT_BEARING, DEFAULT_PITCH } from '../constants';
@@ -152,12 +151,34 @@ export const useCesiumCamera = (bounds: PatioBounds) => {
         [readOrientation, clampRange]
     );
 
-    /** Animated camera move (home, zoom presets). */
+    /** Animated camera move (home, rotate presets). */
     const easeTo = useCallback(
         (target: CameraTarget) => {
             moveCamera(resolve(target), true);
         },
         [moveCamera, resolve]
+    );
+
+    /**
+     * Animated dolly (zoom in/out stepper + % presets) that changes **only the
+     * range**, preserving the live heading/pitch and pivoting on the ground point
+     * under the viewport centre — not the fixed bounds centre. So zooming keeps
+     * whatever the user is currently looking at, instead of snapping the frame
+     * back to the patio's initial coordinate (that's what "Zoom to fit" is for).
+     */
+    const zoomTo = useCallback(
+        (range: number) => {
+            if (!viewer) return;
+            const { camera, scene } = viewer;
+            const center = new Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2);
+            let pivot = scene.pickPositionSupported ? scene.pickPosition(center) : undefined;
+            pivot = pivot ?? camera.pickEllipsoid(center, Ellipsoid.WGS84) ?? targetRef.current ?? undefined;
+            if (!pivot) return;
+            const offset = new HeadingPitchRange(camera.heading, camera.pitch, clampRange(range));
+            camera.flyToBoundingSphere(new BoundingSphere(pivot, 0), { offset, duration: CAMERA_EASE_S });
+            pumpRenderDuringFlight(viewer, CAMERA_EASE_MS);
+        },
+        [viewer, targetRef, clampRange]
     );
 
     /**
@@ -230,24 +251,25 @@ export const useCesiumCamera = (bounds: PatioBounds) => {
         };
     }, [viewer, targetRef]);
 
-    /** Animated fit of a [west, south, east, north] bounds box (zoom-to-fit). */
-    const fitBounds = useCallback(
-        (box: PatioBounds) => {
-            if (!viewer) return;
-            const [w, s, e, n] = box;
-            viewer.camera.flyTo({
-                destination: Rectangle.fromDegrees(w, s, e, n),
-                orientation: {
-                    heading: bearingToHeading(DEFAULT_BEARING),
-                    pitch: CesiumMath.toRadians(-DEFAULT_PITCH),
-                    roll: 0,
-                },
-                duration: CAMERA_EASE_S,
-            });
-            pumpRenderDuringFlight(viewer, CAMERA_EASE_MS);
-        },
-        [viewer]
-    );
+    /**
+     * Animated zoom-to-fit: frame the whole patio at the default orientation.
+     *
+     * Orbits the same bounds-centre target (sampled to ground height) as every
+     * other cube move, so the camera stays focused on the patio's initial
+     * coordinate — unlike a `flyTo(Rectangle)`, which frames the globe rectangle
+     * at ellipsoid height and drifts off the sampled ground target. Range is the
+     * footprint-fill distance (`radius / tan(fovy / 2)`, radius = half the patio
+     * diagonal), matching {@link snapTo}'s framing.
+     */
+    const fitBounds = useCallback(() => {
+        const frustum = viewer?.camera.frustum;
+        const fovy = frustum && 'fovy' in frustum ? frustum.fovy : undefined;
+        const range =
+            typeof fovy === 'number' && Number.isFinite(fovy) && referenceRange > 0
+                ? referenceRange / 2 / Math.tan(fovy / 2)
+                : referenceRange || FALLBACK_RANGE;
+        easeTo({ bearing: DEFAULT_BEARING, pitch: DEFAULT_PITCH, range });
+    }, [viewer, referenceRange, easeTo]);
 
-    return { viewer, referenceRange, readOrientation, easeTo, snapTo, beginDragOrbit, fitBounds };
+    return { viewer, referenceRange, readOrientation, easeTo, zoomTo, snapTo, beginDragOrbit, fitBounds };
 };

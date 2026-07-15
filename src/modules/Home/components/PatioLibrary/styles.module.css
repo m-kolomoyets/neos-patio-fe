@@ -61,7 +61,7 @@
 
 .title {
     color: var(--color-base-white);
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     z-index: 1;
 }
 
@@ -105,7 +105,7 @@
 
 .group-title {
     color: var(--color-base-white);
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     padding-inline: var(--gap-8);
 }
 

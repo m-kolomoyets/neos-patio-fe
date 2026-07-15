@@ -146,7 +146,7 @@
 
 .name {
     color: hsl(var(--color-hsl-white) / 0.9);
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     min-width: 0;
     flex: 1 1 auto;
     display: -webkit-box;
@@ -168,26 +168,25 @@
     display: inline-flex;
     align-items: center;
     gap: var(--gap-1);
-    color: hsl(var(--color-hsl-white) / 0.9);
-    font-weight: 500;
+    font-weight: var(--fw-medium);
+    color: hsl(var(--color-hsl-white) / 0.5);
 }
 
-.body .icon {
-    color: hsl(var(--color-hsl-white) / 0.6);
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
+.id > span {
+    color: hsl(var(--color-hsl-white) / 0.9);
 }
 
 .country {
     display: inline-flex;
     align-items: center;
     color: hsl(var(--color-hsl-white) / 0.9);
-    gap: var(--gap-1);
+    gap: var(--gap-0-5);
+    font-weight: var(--fw-medium);
 }
 
 .country > svg {
     width: 16px;
     height: 16px;
     flex-shrink: 0;
+    color: hsl(var(--color-hsl-white) / 0.6);
 }

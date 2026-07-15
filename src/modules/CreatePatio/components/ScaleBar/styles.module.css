@@ -1,0 +1,113 @@
+.wrap {
+    position: absolute;
+    top: var(--gap-2);
+    left: var(--gap-2);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    pointer-events: none;
+    font-family: "Inter", system-ui, sans-serif;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+.labels {
+    position: relative;
+    margin: 0 6px;
+    width: var(--scale-bar-w, 0);
+    height: 18px;
+}
+
+.label {
+    position: absolute;
+    top: 0;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: color 350ms ease;
+
+    /* Centered over its tick. */
+    transform: translateX(-50%);
+}
+
+.unit {
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    margin-left: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 18px;
+    transition: color 350ms ease;
+}
+
+.bar {
+    position: relative;
+    width: calc(var(--scale-bar-w, 0) + var(--gap-3));
+    height: 0.875rem;
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    background-blend-mode: normal, luminosity;
+    backdrop-filter: blur(18px);
+}
+
+.bar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--stroke-surface);
+    mask:
+        linear-gradient(var(--color-base-black) 0 0) content-box,
+        linear-gradient(var(--color-base-black) 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.baseline {
+    position: absolute;
+    top: 50%;
+    left: 6px;
+    right: 6px;
+    height: 1px;
+    background: #ffffff;
+    transform: translateY(calc(-50% + var(--gap-px)));
+}
+
+.ticks {
+    position: absolute;
+    top: calc(25% + var(--gap-px));
+    left: 6px;
+    right: 6px;
+    height: 4px;
+}
+
+.tick {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 4px;
+    background: var(--color-base-white);
+}
+
+.wrap[data-variant="dark"] .label,
+.wrap[data-variant="dark"] .unit {
+    color: hsl(var(--color-hsl-black) / 0.8);
+}
+
+.wrap[data-variant="light"] .label,
+.wrap[data-variant="light"] .unit {
+    color: var(--color-base-white);
+}
+
+.wrap[data-variant="dark"] .bar {
+    background: var(--surface-thick);
+}
+
+.wrap[data-variant="light"] .bar {
+    background: var(--surface-regular);
+}

@@ -59,7 +59,7 @@
 }
 
 .code {
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     letter-spacing: 0.2em;
     text-align: center;
     font-variant-numeric: tabular-nums;

@@ -1,5 +1,5 @@
 import type { SortKey } from '@/services/patios/types';
-import CheckmarkIcon from '@/icons/checkmark_24.svg?react';
+import CheckmarkIcon from '@/icons/checkmark-circle-filled_24.svg?react';
 import HashtagIcon from '@/icons/hashtag_24.svg?react';
 import NewIcon from '@/icons/new_24.svg?react';
 import SortIcon from '@/icons/sort_24.svg?react';

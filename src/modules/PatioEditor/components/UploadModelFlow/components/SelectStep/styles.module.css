@@ -53,7 +53,7 @@
 
 .prompt {
     color: var(--color-base-white);
-    font-weight: 500;
+    font-weight: var(--fw-medium);
 }
 
 .hint {

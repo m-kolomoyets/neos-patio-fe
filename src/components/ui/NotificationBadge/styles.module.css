@@ -10,7 +10,7 @@
 }
 
 .label {
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     color: var(--color-base-white);
     line-height: 1;
 }

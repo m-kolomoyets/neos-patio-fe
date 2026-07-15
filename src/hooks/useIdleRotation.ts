@@ -1,6 +1,6 @@
 import type { PatioBounds } from '@/services/patios/types';
 import { useEffect } from 'react';
-import { useCesiumViewer } from '@/contexts/CesiumViewerContext';
+import { useCesiumMapReady, useCesiumViewer } from '@/contexts/CesiumViewerContext';
 import { Cartesian2, Cartesian3, Math as CesiumMath, HeadingPitchRange, Matrix4, Transforms } from 'cesium';
 import { useOrbitTarget } from './useOrbitTarget';
 
@@ -12,6 +12,9 @@ const ROTATION_DEG_PER_SEC = 3;
 
 /** DOM events anywhere in the page that count as "the user is interacting". */
 const INTERACTION_EVENTS = ['pointerdown', 'wheel', 'touchstart', 'keydown'] as const;
+
+/** Pitch (rad) kept clear of the ±90° pole so the idle orbit doesn't gimbal-lock. */
+const POLE_EPSILON = CesiumMath.toRadians(0.5);
 
 /**
  * Pointer movement only counts as interaction while a button is held — a live
@@ -47,10 +50,15 @@ const DRAG_MOVE_EVENT = 'pointermove' as const;
  */
 export const useIdleRotation = (bounds: PatioBounds) => {
     const viewer = useCesiumViewer();
+    const ready = useCesiumMapReady();
     const targetRef = useOrbitTarget(viewer, bounds);
 
     useEffect(() => {
-        if (!viewer) return undefined;
+        // Wait until the scene has framed the patio and painted. Arming the idle
+        // countdown before then (on a slow/first/sequential load, where framing
+        // trails the async tile fetch) would let the orbit capture the un-framed
+        // default whole-earth view and fly the camera off to a faraway pivot.
+        if (!viewer || !ready) return undefined;
 
         let idleTimer: ReturnType<typeof setTimeout> | null = null;
         let frame: number | null = null;
@@ -122,7 +130,12 @@ export const useIdleRotation = (bounds: PatioBounds) => {
             const { camera } = viewer;
             camera.lookAtTransform(Transforms.eastNorthUpToFixedFrame(pivot));
             orbitHeading = camera.heading;
-            orbitPitch = camera.pitch;
+            // HeadingPitchRange gimbal-locks at ±90° (top-down, e.g. after a top-face
+            // snap): cos(pitch)=0 kills the offset's horizontal components, so heading
+            // gains zero leverage on camera position and the orbit freezes in place.
+            // Nudge the captured pitch off the pole so heading advances the position
+            // again — the ~0.5° tilt is imperceptible.
+            orbitPitch = Math.max(camera.pitch, -CesiumMath.PI_OVER_TWO + POLE_EPSILON);
             orbitRange = Cartesian3.magnitude(camera.position);
             camera.lookAtTransform(Matrix4.IDENTITY);
             frame = requestAnimationFrame(tick);
@@ -165,5 +178,5 @@ export const useIdleRotation = (bounds: PatioBounds) => {
             if (idleTimer !== null) clearTimeout(idleTimer);
             stopOrbit();
         };
-    }, [viewer, targetRef]);
+    }, [viewer, ready, targetRef]);
 };
