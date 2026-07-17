@@ -92,7 +92,7 @@
 
 .title {
     color: hsl(var(--color-hsl-white) / 0.8);
-    font-weight: var(--fw-bold);
+    font-weight: var(--fw-medium);
 }
 
 .body {
