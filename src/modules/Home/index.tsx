@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { selectAppBackground } from '@/lib/appBackground';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { useSquircleClipPath } from '@/hooks/useSquircleClipPath';
 import { ActionBar } from '@/components/ActionBar';
 import { AppBackground } from '@/components/AppBackground';
@@ -15,9 +16,12 @@ import s from './styles.module.css';
 const homeBackgroundSrc = selectAppBackground();
 
 const Home: React.FC = () => {
+    const isMobile = useIsMobile();
+
     // Squircle corners matching Figma's 60% iOS smoothing (border-radius: 2.5rem = 40px).
-    const [mainRef, mainSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: 40 });
-    const [viewportRef, viewportSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius: 40 });
+    const cornerRadius = isMobile ? 24 : 40;
+    const [mainRef, mainSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius });
+    const [viewportRef, viewportSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius });
 
     return (
         <div className={s.wrap}>

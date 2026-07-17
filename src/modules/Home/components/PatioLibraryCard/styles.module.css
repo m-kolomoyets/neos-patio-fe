@@ -17,6 +17,12 @@
     transition: background 200ms ease-in-out;
 }
 
+@media (max-width: 767px) {
+    .wrap {
+        padding: 0;
+    }
+}
+
 .wrap::after {
     content: "";
     position: absolute;

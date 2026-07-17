@@ -15,8 +15,8 @@
 .main {
     position: relative;
     flex: 1;
-    width: calc(100vw - var(--home-content-offset-x) * 2);
-    height: calc(100vh - (var(--home-content-offset-y) * 2) - var(--home-content-bottom-offset));
+    width: calc(100svw - var(--home-content-offset-x) * 2);
+    height: calc(100svh - (var(--home-content-offset-y) * 2) - var(--home-content-bottom-offset));
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -91,9 +91,32 @@
     }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1023px) {
     .main {
         padding: var(--gap-6);
         gap: var(--gap-8);
+    }
+}
+
+@media (max-width: 767px) {
+    .wrap {
+        --home-content-offset-y: 1rem;
+        --home-content-offset-x: 1rem;
+        --home-content-bottom-offset: 3.3125rem;
+    }
+
+    .main,
+    .scroll .scroll-viewport,
+    .main::after {
+        /* Fallback rounding before JS measures the squircle clip-path (useSquircleClipPath). */
+        border-radius: 1.5rem;
+    }
+
+    .main {
+        padding: 0;
+    }
+
+    .scroll :global(.scroll-area-scrollbar-vertical) {
+        display: none;
     }
 }
