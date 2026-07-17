@@ -1,0 +1,16 @@
+.section {
+    display: flex;
+    flex-direction: column;
+}
+
+.section-label {
+    padding: var(--gap-2) 0;
+    color: hsl(var(--color-hsl-white) / 0.8);
+}
+
+.group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-2);
+    padding: var(--gap-1) 0;
+}

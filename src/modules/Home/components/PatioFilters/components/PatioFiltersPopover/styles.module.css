@@ -17,23 +17,6 @@
     padding-left: var(--gap-2);
 }
 
-.heading,
-.section-label {
+.heading {
     color: hsl(var(--color-hsl-white) / 0.8);
-}
-
-.section {
-    display: flex;
-    flex-direction: column;
-}
-
-.section-label {
-    padding: var(--gap-2);
-}
-
-.group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--gap-2);
-    padding: var(--gap-1) var(--gap-2);
 }
