@@ -108,7 +108,6 @@
         --slides-pre-view: 1;
 
         padding: calc(var(--gap-3) + var(--gap-0-5));
-        padding-top: calc(var(--gap-3) + var(--gap-0-5));
     }
 
     .slide,
