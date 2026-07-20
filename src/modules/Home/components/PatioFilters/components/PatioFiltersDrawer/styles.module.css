@@ -11,13 +11,15 @@
     margin: var(--gap-0-5) 0;
 }
 
-.footer {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: var(--gap-6);
-    padding-top: var(--gap-10);
-    padding-bottom: var(--gap-4);
+@media (max-width: 1023px) and (orientation: landscape) {
+    .footer {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: var(--gap-6);
+        padding-top: var(--gap-10);
+        padding-bottom: var(--gap-4);
+    }
 }
 
 .cta.apply,
