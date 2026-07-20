@@ -2,6 +2,7 @@ import type { EmblaCarouselType, EmblaOptionsType } from 'embla-carousel';
 import { useCallback, useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useIsMobileLandscape } from '@/hooks/useIsMobileLandscape';
 import { computeActiveSet } from '../utils/computeActiveSet';
 import { isWeakDevice } from '../utils/detectDeviceSeed';
 import { useVideoPerfGuard } from './useVideoPerfGuard';
@@ -76,7 +77,10 @@ const buildOptions = (reducedMotion: boolean, isMobile: boolean): EmblaOptionsTy
 };
 
 export const useFeaturedCarousel = ({ dataKey }: Params): Result => {
-    const isMobile = useIsMobile();
+    const isMobilePortrait = useIsMobile();
+    const isMobileLandscape = useIsMobileLandscape();
+
+    const isMobile = isMobileLandscape || isMobilePortrait;
 
     const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotion);
     const [staticCapable] = useState<boolean>(() => {
