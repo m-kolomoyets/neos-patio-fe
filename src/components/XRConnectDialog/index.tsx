@@ -40,7 +40,7 @@ export const XRConnectDialog: React.FC<XRConnectDialogProps> = ({ children }) =>
             <Dialog.Trigger render={children} />
             <Dialog.Portal>
                 <Dialog.Backdrop />
-                <Dialog.Popup>
+                <Dialog.Popup className={s.popup}>
                     <AnimatePresence>
                         <motion.div animate={{ height: measures?.height }}>
                             <div ref={ref}>

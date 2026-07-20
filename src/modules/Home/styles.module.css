@@ -120,3 +120,26 @@
         display: none;
     }
 }
+
+@media (max-width: 1023px) and (orientation: landscape) {
+    .wrap {
+        --home-content-offset-y: 1rem;
+        --home-content-offset-x: 1rem;
+        --home-content-bottom-offset: 2.25rem;
+    }
+
+    .main,
+    .scroll .scroll-viewport,
+    .main::after {
+        /* Fallback rounding before JS measures the squircle clip-path (useSquircleClipPath). */
+        border-radius: 1.5rem;
+    }
+
+    .main {
+        padding: 0;
+    }
+
+    .scroll :global(.scroll-area-scrollbar-vertical) {
+        display: none;
+    }
+}
