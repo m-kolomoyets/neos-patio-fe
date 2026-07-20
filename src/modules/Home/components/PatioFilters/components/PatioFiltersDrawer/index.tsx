@@ -87,7 +87,7 @@ export const PatioFiltersDrawer: React.FC = () => {
                                     onTypesChange={setLocalTypes}
                                 />
                             </Drawer.Body>
-                            <Drawer.Footer>
+                            <Drawer.Footer className={s.footer}>
                                 <Button
                                     className={clsx(s.cta, s.apply)}
                                     variant="surface"

@@ -131,15 +131,17 @@
 
 @media (max-width: 1023px) and (orientation: landscape) {
     .wrap {
-        --slides-pre-view: 2;
+        --slides-pre-view: 2.2;
 
         padding: calc(var(--gap-3) + var(--gap-0-5));
+        padding-bottom: 0;
+        margin-bottom: 0;
     }
 
     .slide,
     .skeleton-card,
     .slide:is(:first-child, :last-child) {
-        flex: 0 0 calc((100cqi - var(--gap-3)) / 2);
+        flex: 0 0 calc((100cqi - var(--gap-3)) / var(--slides-pre-view));
     }
 
     .slide:first-child {
