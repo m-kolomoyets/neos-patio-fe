@@ -28,3 +28,17 @@
 .description {
     color: hsl(var(--color-hsl-white) / 0.6);
 }
+
+@media (max-width: 767px) {
+    .wrap {
+        gap: var(--gap-2);
+        padding-block: calc(var(--gap-4) - var(--gap-0-5));
+    }
+}
+
+@media (max-width: 1023px) and (orientation: landscape) {
+    .wrap {
+        gap: var(--gap-2);
+        padding-block: calc(var(--gap-4) - var(--gap-0-5));
+    }
+}

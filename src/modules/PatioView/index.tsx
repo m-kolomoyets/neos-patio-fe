@@ -5,6 +5,8 @@ import { usePageTransition } from '@/contexts/PageTransitionContext';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { getAppBackground } from '@/lib/appBackground';
 import { useIdleRotation } from '@/hooks/useIdleRotation';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { useIsMobileLandscape } from '@/hooks/useIsMobileLandscape';
 import { useSquircleClipPath } from '@/hooks/useSquircleClipPath';
 import { getPatioQueryOptions } from '@/services/patios/queries';
 import { ActionBar } from '@/components/ActionBar';
@@ -34,9 +36,13 @@ export const PatioView: React.FC = () => {
     const { data: patio } = useSuspenseQuery(getPatioQueryOptions(id));
     const { update } = usePageTransition();
 
+    const isMobilePortrait = useIsMobile();
+    const isMobileLandscape = useIsMobileLandscape();
+    const isMobile = isMobilePortrait || isMobileLandscape;
+
     // Squircle corners matching Home / create-patio (40px surface, 22px map).
-    const [surfaceRef, surfaceSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: 46 });
-    const [mapRef, mapSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius: 24 });
+    const [surfaceRef, surfaceSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: isMobile ? 24 : 46 });
+    const [mapRef, mapSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius: isMobile ? 14 : 24 });
 
     // Fill the loading overlay with the real background + name once the patio
     // resolves. On the Home path these already match the seeded values; on a
@@ -58,7 +64,7 @@ export const PatioView: React.FC = () => {
                     <div ref={mapRef} className={s['map-clip']} style={mapSquircleStyle}>
                         <CesiumViewerProvider>
                             <CesiumMap bounds={patio.bounds} interaction="view" />
-                            <ViewCube bounds={patio.bounds} storageId={id} />
+                            <ViewCube className={s['view-cube']} bounds={patio.bounds} storageId={id} />
                             <IdleOrbit bounds={patio.bounds} />
                         </CesiumViewerProvider>
                     </div>

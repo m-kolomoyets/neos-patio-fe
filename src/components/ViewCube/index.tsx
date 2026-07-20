@@ -5,6 +5,7 @@ import ArrowRightFilledIcon from '@/icons/arrow-right-filled_24.svg?react';
 import ArrowBottomFilledIcon from '@/icons/arrow-top-filled_24.svg?react';
 import HomeIcon from '@/icons/home_24.svg?react';
 import clsx from 'clsx';
+import { WithClassName } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { useCesiumCamera } from './hooks/useCesiumCamera';
 import { useCubeInteraction } from './hooks/useCubeInteraction';
@@ -32,14 +33,14 @@ const FACE_LABELS: Record<CubeFace, string> = { north: 'N', east: 'E', south: 'S
  * camera subscription is pushed down into the {@link CubeView} and
  * {@link LiveZoomControl} leaves, so this shell does not re-render per frame.
  */
-type ViewCubeProps = {
+type ViewCubeProps = WithClassName<{
     /** Patio bounds framed by the camera; the orbit target is its centre. */
     bounds: PatioBounds;
     /** Stable id (the patio id) keying the per-patio Home-view localStorage entry. */
     storageId: string;
-};
+}>;
 
-export const ViewCube: React.FC<ViewCubeProps> = ({ bounds, storageId }) => {
+export const ViewCube: React.FC<ViewCubeProps> = ({ className, bounds, storageId }) => {
     const { viewer, referenceRange, readOrientation, easeTo, zoomTo, snapTo, beginDragOrbit, fitBounds } =
         useCesiumCamera(bounds);
     const { selectedFace, onSnap, onOrbitStart, stepBy, goTop } = useFlattenedFace({
@@ -60,7 +61,7 @@ export const ViewCube: React.FC<ViewCubeProps> = ({ bounds, storageId }) => {
     if (!viewer) return null;
 
     return (
-        <div className={s.wrap}>
+        <div className={clsx(s.wrap, className)}>
             <LiveZoomControl
                 viewer={viewer}
                 readOrientation={readOrientation}
