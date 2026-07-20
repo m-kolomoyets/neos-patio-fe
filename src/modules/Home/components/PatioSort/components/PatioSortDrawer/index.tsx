@@ -88,7 +88,7 @@ export const PatioSortDrawer: React.FC = () => {
                                     );
                                 })}
                             </Drawer.Body>
-                            <Drawer.Footer>
+                            <Drawer.Footer className={s.footer}>
                                 <Button
                                     className={clsx(s.cta, s.reset)}
                                     variant="link"

@@ -4,6 +4,7 @@ import ChevronRightIcon from '@/icons/chevrone-right_24.svg?react';
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useIsMobileLandscape } from '@/hooks/useIsMobileLandscape';
 import { getFeaturedPatiosQueryOptions } from '@/services/patios/queries';
 import { Button } from '@/components/ui/Button';
 import { useCarouselProximityAutoplay } from './hooks/useCarouselProximityAutoplay';
@@ -13,7 +14,9 @@ import { FeaturedPatioCard } from '../FeaturedPatioCard';
 import s from './styles.module.css';
 
 export const FeaturedPatios: React.FC = () => {
-    const isMobile = useIsMobile();
+    const isMobilePortrait = useIsMobile();
+    const isMobileLandscape = useIsMobileLandscape();
+    const isMobile = isMobilePortrait || isMobileLandscape;
 
     const { data, isLoading } = useQuery(getFeaturedPatiosQueryOptions());
     const viewportId = useId();
