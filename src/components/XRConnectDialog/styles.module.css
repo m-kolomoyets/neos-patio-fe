@@ -95,6 +95,13 @@
     justify-content: center;
 }
 
+@media (max-width: 767px) {
+    .code.code {
+        font-size: 3rem;
+        line-height: 1.2;
+    }
+}
+
 @media (max-width: 1023px) and (orientation: landscape) {
     .popup {
         padding: 1.5rem 1rem;

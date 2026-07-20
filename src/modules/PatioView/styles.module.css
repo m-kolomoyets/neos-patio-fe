@@ -61,3 +61,54 @@
         --patio-view-offset-x: 9.5rem;
     }
 }
+
+@media (max-width: 767px) {
+    .wrap {
+        --patio-view-offset-y: 1rem;
+        --patio-view-offset-x: 1rem;
+        --patio-view-bottom-offset: 3.3125rem;
+    }
+
+    .surface {
+        border-radius: 1.5rem;
+    }
+
+    .map {
+        padding: var(--gap-3);
+        padding-top: 0;
+    }
+
+    .map-clip {
+        border-radius: 0.875rem;
+    }
+
+    .view-cube {
+        bottom: calc(var(--gap-8) - var(--gap-0-5));
+    }
+}
+
+@media (max-width: 1023px) and (orientation: landscape) {
+    .wrap {
+        --patio-view-offset-y: 1rem;
+        --patio-view-offset-x: 1rem;
+        --patio-view-bottom-offset: 2.25rem;
+        --home-content-bottom-offset: 2.25rem;
+    }
+
+    .surface {
+        border-radius: 1.5rem;
+    }
+
+    .map {
+        padding: var(--gap-3);
+        padding-top: var(--gap-0-5);
+    }
+
+    .map-clip {
+        border-radius: 0.875rem;
+    }
+
+    .view-cube {
+        bottom: calc(var(--gap-8) - var(--gap-0-5));
+    }
+}
