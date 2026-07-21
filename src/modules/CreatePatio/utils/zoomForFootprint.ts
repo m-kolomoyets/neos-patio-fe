@@ -1,7 +1,7 @@
 import { metersToPixels } from './metersToPixels';
 
-/** Circumference-derived Web Mercator ground resolution at zoom 0, latitude 0. */
-const EQUATOR_METERS_PER_PIXEL_AT_Z0 = 156543.03392;
+/** Zoom-0 ground resolution for Mapbox GL's 512px tile — see {@link metersToPixels}. */
+const EQUATOR_METERS_PER_PIXEL_AT_Z0 = 40075016.686 / 512;
 
 /**
  * Inverse of {@link metersToPixels}: the Web Mercator zoom at which `meters`
