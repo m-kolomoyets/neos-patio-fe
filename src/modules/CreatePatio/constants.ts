@@ -1,3 +1,5 @@
+import type { IndicatorPaletteEntry, IndicatorType } from './types';
+
 /**
  * Mapbox base style — the "aerial" view (light vector street map). Satellite is
  * layered on top as a raster overlay (`SatelliteLayer`) whose opacity cross-fades
@@ -34,6 +36,9 @@ export const START_COORDINATE = {
 /** Street-level zoom so patio squares are visible without manual zooming. */
 export const DEFAULT_ZOOM = 16;
 
+/** Decimal places coordinates are rendered with in the map popups (Figma). */
+export const COORDINATE_PRECISION = 5;
+
 /** Ground footprint of the patio being placed, in meters (100×100m). */
 export const PATIO_SIZE_M = 100;
 
@@ -55,6 +60,23 @@ export const ZOOM_ENOUGH_RATIO = 0.2;
  * flips to "Create patio" after the fly — no boundary flicker.
  */
 export const ZOOM_IN_TARGET_RATIO = 0.3;
+
+/**
+ * Mint quote shown in the new-patio popup.
+ * TODO(contract): replace with the live price read from the patio contract —
+ * both the token amount and its fiat estimate are placeholders today.
+ */
+export const NEW_PATIO_PRICE = '340 NCR';
+export const NEW_PATIO_PRICE_USD = '~$10';
+
+/**
+ * Status of a patio that has not been minted yet.
+ * TODO(contract): derives from the on-chain state once minting is real.
+ */
+export const NEW_PATIO_STATUS = 'Draft';
+
+/** Owner shown in the new-patio popup while no wallet is connected. */
+export const NEW_PATIO_OWNER_FALLBACK = 'Neos';
 
 /**
  * Fallback azimuth (degrees, clockwise from north) before the map camera reports
@@ -94,13 +116,66 @@ export const GRID = {
     fadeEnd: 1,
 } as const;
 
-/** Existing-patio palette (blue), lifted from Figma node 9555:14606. */
-export const PATIO_SQUARE = {
-    border: '#258dff',
-    gradientEdge: '#007aff',
-    gradientOpacity: 0.35,
-    insetShadow: 'rgba(0, 122, 255, 0.7)',
-} as const;
+/**
+ * `Indicator` palette (Figma 9081:1180) — one entry per indicator type. Each
+ * square/badge is painted as a radial fill fading to `gradientEdge` plus an inner
+ * glow (`insetShadow`); `pressedBorder` is the 4px ring the design adds in the
+ * pressed state, which selection reuses (there is no `selected` variant).
+ *
+ * Shared by the SVG squares (`SquaresOverlay`) and the DOM singleton badges
+ * (`ClusterMarkers`), so the badge→square morph across `MORPH_BAND` is a pure
+ * shape change with no color jump. Clusters are deliberately *not* in here — they
+ * stay two-color (blue when `hasUnpublished`, green otherwise).
+ */
+export const INDICATOR_PALETTE = {
+    /** Published, not mine — green. */
+    owned: {
+        gradientEdge: '#0eb838',
+        gradientOpacity: 0.35,
+        insetShadow: 'rgba(14, 184, 56, 0.8)',
+        pressedBorder: '#01de37',
+        badgeFill: 'rgba(14, 184, 56, 0.6)',
+    },
+    /** Not published, not mine — blue (the previous flat treatment for every patio). */
+    'not-published': {
+        gradientEdge: '#007aff',
+        gradientOpacity: 0.35,
+        insetShadow: 'rgba(0, 122, 255, 0.7)',
+        pressedBorder: '#4ca2ff',
+        badgeFill: 'rgba(0, 122, 255, 0.6)',
+    },
+    /** Published and mine — orange. */
+    'owned-and-published': {
+        gradientEdge: '#ff9d00',
+        gradientOpacity: 0.35,
+        insetShadow: 'rgba(255, 157, 0, 0.8)',
+        pressedBorder: '#ff9d00',
+        badgeFill: 'rgba(255, 157, 0, 0.6)',
+    },
+    /** Not published and mine — yellow. */
+    'owned-and-not-published': {
+        gradientEdge: '#ffe100',
+        gradientOpacity: 0.35,
+        insetShadow: 'rgba(255, 225, 0, 0.8)',
+        pressedBorder: '#ffe100',
+        badgeFill: 'rgba(255, 225, 0, 0.6)',
+    },
+    /** The create-mode center cursor — dark orange, unchanged from `CENTER_SQUARE`. */
+    target: {
+        gradientEdge: CENTER_SQUARE.gradientEdge,
+        gradientOpacity: CENTER_SQUARE.gradientOpacity,
+        insetShadow: CENTER_SQUARE.insetShadow,
+        pressedBorder: CENTER_SQUARE.border,
+        badgeFill: 'rgba(255, 113, 0, 0.55)',
+    },
+} as const satisfies Record<IndicatorType, IndicatorPaletteEntry>;
+
+/**
+ * White radial wash the design lays over a hovered indicator (Figma: a 35%
+ * bottom-anchored white gradient). Rendered as its own overlay rect per square so
+ * hover is a pure CSS opacity flip on an already-mounted node.
+ */
+export const INDICATOR_HOVER_GLOW_OPACITY = 0.35;
 
 /**
  * Collision palette painted where the center square overlaps a patio. The exact
@@ -109,7 +184,7 @@ export const PATIO_SQUARE = {
 export const INTERSECTION = {
     fill: '#ff0000',
     fillOpacity: 0.8,
-    border: '##FF0404',
+    border: '#ff0404',
 } as const;
 
 /**

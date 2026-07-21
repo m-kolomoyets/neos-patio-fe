@@ -1,8 +1,10 @@
 /**
- * Cluster count bubble — blue, lifted from Figma node 9546:6320: a 168° linear
- * gradient with a 4px solid ring. Clusters do NOT morph into squares (they break
- * apart into individual patios), so they keep their own bubble treatment distinct
- * from the radial patio fill below.
+ * Cluster count bubble — a 168° linear gradient with a 4px solid ring, lifted from
+ * Figma node 9546:6320. Clusters do NOT morph into squares (they break apart into
+ * individual patios), so they keep their own bubble treatment distinct from the
+ * radial patio fill below. Colors come in as `--indicator-*` custom properties
+ * from `INDICATOR_PALETTE` — two-color for clusters, four-color for lone patios —
+ * so the palette has exactly one source of truth.
  */
 .badge {
     box-sizing: border-box;
@@ -12,8 +14,8 @@
     padding: 0;
     border: none;
     border-radius: 50%;
-    background-image: linear-gradient(168deg, rgb(0 122 255 / 0.6) 26%, rgb(9 177 255 / 0.6) 94%);
-    box-shadow: inset 0 0 0 4px #006ff6;
+    background-image: linear-gradient(168deg, var(--indicator-fill) 26%, var(--indicator-glow) 94%);
+    box-shadow: inset 0 0 0 4px var(--indicator-ring);
     color: var(--color-base-white);
     font-family: "Inter", sans-serif;
     font-size: 14px;
@@ -68,10 +70,10 @@
 
 /**
  * Morphing patio marker — overrides the bubble fill to match the SVG patio square
- * (SquaresOverlay / Figma node 9478:19647): radial #007aff @ 0.6, 4px #258dff
- * border, soft inner glow. So a lone patio badge swaps into its geo square with no
- * visible seam. Size / corner radius / rotation are driven per frame via the
- * `--morph-*` custom properties (square at z17 → circle at z14).
+ * (SquaresOverlay): the same indicator accent as a radial fill, a 4px ring, and a
+ * soft inner glow, so a lone patio badge swaps into its geo square with no visible
+ * seam and no color jump. Size / corner radius / rotation are driven per frame via
+ * the `--morph-*` custom properties (square at z17 → circle at z14).
  */
 .badge.morph {
     width: var(--morph-size, 42px);
@@ -83,10 +85,10 @@
        marker fades out exactly as the SVG square fades in. */
     opacity: var(--crossfade-opacity, 1);
     transform: rotate(var(--morph-rotate, 0deg));
-    background-image: radial-gradient(circle closest-side at 50% 50%, rgb(0 122 255 / 0) 0%, rgb(0 122 255 / 0.6) 100%);
+    background-image: radial-gradient(circle closest-side at 50% 50%, transparent 0%, var(--indicator-fill) 100%);
     box-shadow:
-        inset 0 0 0 4px #258dff,
-        inset 0 0 20px 4px rgb(0 122 255 / 0.7);
+        inset 0 0 0 4px var(--indicator-ring),
+        inset 0 0 20px 4px var(--indicator-glow);
 }
 
 /* Keep the count upright while its square badge counter-rotates with the world. */
@@ -114,20 +116,4 @@
     display: grid;
     place-items: center;
     pointer-events: none;
-}
-
-/**
- * Orange create marker — matches CENTER_SQUARE (border #ff6a00, gradientEdge
- * #ff7100 @ 0.55, soft inset shadow) so it swaps into the SVG center square
- * seamlessly.
- */
-.badge.morph[data-variant="create"] {
-    background-image: radial-gradient(
-        circle closest-side at 50% 50%,
-        rgb(255 113 0 / 0) 0%,
-        rgb(255 113 0 / 0.55) 100%
-    );
-    box-shadow:
-        inset 0 0 0 4px #ff6a00,
-        inset 0 0 20px 4px rgb(161 94 5 / 0.44);
 }

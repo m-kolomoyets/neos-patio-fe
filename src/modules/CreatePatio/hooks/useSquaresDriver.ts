@@ -47,11 +47,19 @@ export const useSquaresDriver = (patios: PatioGeometry[]): RegisterRect => {
     const applyRef = useRef<(() => void) | null>(null);
 
     const register = useCallback<RegisterRect>((key, geoId, el) => {
-        if (el) {
-            targetsRef.current.set(key, { geoId, el });
-        } else {
+        if (!el) {
             targetsRef.current.delete(key);
+
+            return;
         }
+
+        targetsRef.current.set(key, { geoId, el });
+        // Paint the newcomer immediately. Rects that mount without the patio list
+        // changing — the center square and the grid when create mode opens — would
+        // otherwise sit unpositioned at the origin until the map next emits
+        // `render`, i.e. until the user pans or zooms. No-ops before the driver's
+        // layout effect has run; that first mount is painted by the effect itself.
+        applyRef.current?.();
     }, []);
 
     useLayoutEffect(() => {

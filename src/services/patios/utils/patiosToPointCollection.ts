@@ -14,6 +14,9 @@ export const patiosToPointCollection = (patios: Patio[]): PatioPointCollection =
                 id: patio.id,
                 isPublished: patio.isPublished,
                 type: patio.type,
+                ownerAddress: patio.ownerAddress,
+                // Wallet-dependent, so never resolved here; see `usePatioPointsWithOwnership`.
+                isMine: false,
             },
         };
     });

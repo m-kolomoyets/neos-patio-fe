@@ -45,6 +45,8 @@ export type Patio = {
     continent: Continent;
     type: PatioType;
     author: string;
+    /** Wallet that minted the patio, when it was minted on-chain. Compared case-insensitively. */
+    ownerAddress?: string;
     createdAt: string;
     popularity: number;
     coords: { lat: number; lng: number };
@@ -52,6 +54,10 @@ export type Patio = {
     objects: PlacedObject[];
     isFeatured: boolean;
     isPublished: boolean;
+    /** Explorer URL for the minted token. Absent until the patio is on-chain. */
+    blockchainLink?: string;
+    /** Deep link into an external map/navigation app. Optional per patio. */
+    navigationLink?: string;
     videoUrl?: string;
     previewLowUrl?: string;
     previewHighUrl: string;
@@ -67,6 +73,13 @@ export type PatioPointProperties = {
     id: string;
     isPublished: boolean;
     type: PatioType;
+    /** Minting wallet, carried so ownership can be derived against the connected account. */
+    ownerAddress?: string;
+    /**
+     * Owned by the connected wallet. `false` in the raw collection (the service layer
+     * knows nothing about the wallet); derived per account by `usePatioPointsWithOwnership`.
+     */
+    isMine: boolean;
 };
 
 export type PatioPointFeature = Feature<GeoPoint, PatioPointProperties>;
