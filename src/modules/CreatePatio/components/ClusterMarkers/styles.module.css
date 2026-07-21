@@ -1,6 +1,8 @@
 /**
- * Cluster count bubble — a 168° linear gradient with a 4px solid ring, lifted from
- * Figma node 9546:6320. Clusters do NOT morph into squares (they break apart into
+ * Cluster count bubble — a 168° linear gradient under the layered inner shadows of
+ * Figma node 9096:429. Clusters carry **no ring**: the edge is drawn entirely by
+ * the two white inner highlights (bottom-right then top-left) over the colored
+ * fill/glow insets. Clusters do NOT morph into squares (they break apart into
  * individual patios), so they keep their own bubble treatment distinct from the
  * radial patio fill below. Colors come in as `--indicator-*` custom properties
  * from `INDICATOR_PALETTE` — two-color for clusters, four-color for lone patios —
@@ -15,7 +17,11 @@
     border: none;
     border-radius: 50%;
     background-image: linear-gradient(168deg, var(--indicator-fill) 26%, var(--indicator-glow) 94%);
-    box-shadow: inset 0 0 0 4px var(--indicator-ring);
+    box-shadow:
+        inset -3px -2px 5.8px -2px rgb(255 255 255 / 0.8),
+        inset 2px 3px 5.8px -2px rgb(255 255 255 / 0.9),
+        inset 0 4px 66.8px 58px var(--indicator-fill),
+        inset 0 0 21.6px 9px var(--indicator-glow);
     color: var(--color-base-white);
     font-family: "Inter", sans-serif;
     font-size: 14px;
@@ -70,9 +76,9 @@
 
 /**
  * Morphing patio marker — overrides the bubble fill to match the SVG patio square
- * (SquaresOverlay): the same indicator accent as a radial fill, a 4px ring, and a
- * soft inner glow, so a lone patio badge swaps into its geo square with no visible
- * seam and no color jump. Size / corner radius / rotation are driven per frame via
+ * (SquaresOverlay): the same indicator accent as a radial fill, the same white
+ * inner highlights, and a soft inner glow, so a lone patio badge swaps into its geo
+ * square with no visible seam and no color jump. Size / corner radius / rotation are driven per frame via
  * the `--morph-*` custom properties (square at z17 → circle at z14).
  */
 .badge.morph {
@@ -86,8 +92,12 @@
     opacity: var(--crossfade-opacity, 1);
     transform: rotate(var(--morph-rotate, 0deg));
     background-image: radial-gradient(circle closest-side at 50% 50%, transparent 0%, var(--indicator-fill) 100%);
+
+    /* Same white inner highlight the unselected SVG squares carry, so the badge →
+       square morph keeps its lit edge across the whole band. */
     box-shadow:
-        inset 0 0 0 4px var(--indicator-ring),
+        inset -3px -2px 5.8px -2px rgb(255 255 255 / 0.8),
+        inset 2px 3px 5.8px -2px rgb(255 255 255 / 0.9),
         inset 0 0 20px 4px var(--indicator-glow);
 }
 

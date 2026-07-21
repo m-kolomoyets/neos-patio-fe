@@ -24,11 +24,29 @@
  */
 .square {
     stroke: transparent;
+
+    /* Inner glow + the two white highlights of the unselected treatment. Selecting
+       swaps in the glow-only filter, since the accent ring draws the edge there. */
+    filter: var(--indicator-inset);
     transition: stroke 120ms ease-out;
 }
 
 .square[data-state="pressed"] {
     stroke: var(--indicator-pressed-border);
+    filter: var(--indicator-inset-pressed);
+}
+
+/**
+ * Accent sheen. Its gradient is authored at the pressed alphas, so the resting
+ * states just scale the whole rect down — one gradient, both treatments.
+ */
+.sheen {
+    opacity: var(--indicator-sheen-rest);
+    transition: opacity 120ms ease-out;
+}
+
+.sheen[data-state="pressed"] {
+    opacity: 1;
 }
 
 /** White wash of the hovered treatment; hidden in every other state. */
@@ -43,6 +61,7 @@
 
 @media (prefers-reduced-motion: reduce) {
     .square,
+    .sheen,
     .hover-wash {
         transition: none;
     }

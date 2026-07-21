@@ -85,8 +85,14 @@ export const NEW_PATIO_OWNER_FALLBACK = 'Neos';
  */
 export const DEFAULT_AZIMUTH = 0;
 
-/** Corner radius of every square, in pixels (Figma). */
+/**
+ * Corner radius of every square, in pixels, at the size the design draws it
+ * (`SQUARE_CORNER_RADIUS_BASIS`). Squares are geo-anchored, so their on-screen
+ * side grows with zoom — `getCornerRadius` scales the radius by the same ratio,
+ * treating this pair as the design's roundness rather than a fixed pixel value.
+ */
 export const SQUARE_CORNER_RADIUS = 28;
+export const SQUARE_CORNER_RADIUS_BASIS = 247;
 
 /** Border width of every square, in pixels (Figma). */
 export const SQUARE_BORDER_WIDTH = 4;
@@ -131,7 +137,7 @@ export const INDICATOR_PALETTE = {
     /** Published, not mine — green. */
     owned: {
         gradientEdge: '#0eb838',
-        gradientOpacity: 0.35,
+        gradientOpacity: 0.55,
         insetShadow: 'rgba(14, 184, 56, 0.8)',
         pressedBorder: '#01de37',
         badgeFill: 'rgba(14, 184, 56, 0.6)',
@@ -139,7 +145,7 @@ export const INDICATOR_PALETTE = {
     /** Not published, not mine — blue (the previous flat treatment for every patio). */
     'not-published': {
         gradientEdge: '#007aff',
-        gradientOpacity: 0.35,
+        gradientOpacity: 0.55,
         insetShadow: 'rgba(0, 122, 255, 0.7)',
         pressedBorder: '#4ca2ff',
         badgeFill: 'rgba(0, 122, 255, 0.6)',
@@ -147,7 +153,7 @@ export const INDICATOR_PALETTE = {
     /** Published and mine — orange. */
     'owned-and-published': {
         gradientEdge: '#ff9d00',
-        gradientOpacity: 0.35,
+        gradientOpacity: 0.55,
         insetShadow: 'rgba(255, 157, 0, 0.8)',
         pressedBorder: '#ff9d00',
         badgeFill: 'rgba(255, 157, 0, 0.6)',
@@ -155,7 +161,7 @@ export const INDICATOR_PALETTE = {
     /** Not published and mine — yellow. */
     'owned-and-not-published': {
         gradientEdge: '#ffe100',
-        gradientOpacity: 0.35,
+        gradientOpacity: 0.55,
         insetShadow: 'rgba(255, 225, 0, 0.8)',
         pressedBorder: '#ffe100',
         badgeFill: 'rgba(255, 225, 0, 0.6)',
@@ -169,6 +175,47 @@ export const INDICATOR_PALETTE = {
         badgeFill: 'rgba(255, 113, 0, 0.55)',
     },
 } as const satisfies Record<IndicatorType, IndicatorPaletteEntry>;
+
+/**
+ * The pair of white inner highlights every *unselected* indicator carries (Figma
+ * 9081:1180 default/hovered, and the ring-less clusters at 9096:429): a soft lit
+ * edge bottom-right, a brighter one top-left. `blur` is the CSS blur radius —
+ * SVG filters halve it for `stdDeviation` — and `spread` reaches further inward
+ * than Figma's -2px so the lit edge reads at map scale, where a square is many
+ * times the 247px artboard. The selected (pressed) square drops them in favour of
+ * its solid accent ring.
+ */
+export const INDICATOR_HIGHLIGHTS = [
+    { color: 'rgba(255, 255, 255, 0.9)', blur: 5.8, dx: 2, dy: 3, spread: -2 },
+    { color: 'rgba(255, 255, 255, 0.8)', blur: 5.8, dx: -3, dy: -2, spread: -2 },
+] as const;
+
+/**
+ * Middle stop of every indicator's radial fill, as a fraction of the radius and a
+ * fraction of `gradientOpacity`. Two stops ramp linearly and leave the square
+ * evenly tinted; holding the mid-point low keeps the center readable and packs the
+ * color into the outer edge, where the design puts it.
+ */
+export const INDICATOR_FILL_MID = {
+    offset: 0.6,
+    opacityRatio: 0.3,
+} as const;
+
+/**
+ * Diagonal sheen the design lays over every indicator's inner rectangle (Figma
+ * 9081:1180): a 222.5° linear gradient in the type's own accent — bright at the
+ * top-right and bottom-left corners, all but gone across the middle. `stops` are
+ * the pressed alphas; the unpressed states are the same ramp scaled down by
+ * `restOpacity`, which is how the design draws them (0.25 → 0.01).
+ */
+export const INDICATOR_SHEEN = {
+    stops: [
+        { offset: 0.17734, opacity: 0.25 },
+        { offset: 0.46843, opacity: 0.005 },
+        { offset: 0.82838, opacity: 0.25 },
+    ],
+    restOpacity: 0.04,
+} as const;
 
 /**
  * White radial wash the design lays over a hovered indicator (Figma: a 35%
@@ -249,6 +296,25 @@ export const SINGLE_PATIO_VIEW_ZOOM = 18;
 
 /** Globe projection reaches the full planet at this zoom. */
 export const GLOBE_MIN_ZOOM = 0;
+
+/**
+ * Mount zoom: the whole planet in frame, so the flow opens on the globe and the
+ * idle spin reads immediately. Street-level framing (`DEFAULT_ZOOM`) is reached
+ * by search or by zooming in.
+ */
+export const GLOBE_START_ZOOM = 1.2;
+
+/**
+ * Above this zoom the globe has effectively flattened into the mercator plane,
+ * so the idle spin stops — it only ever runs while the sphere is visible.
+ */
+export const GLOBE_SPIN_MAX_ZOOM = 4;
+
+/** Idle spin rate, degrees of longitude per second. */
+export const GLOBE_SPIN_DEG_PER_SEC = 3;
+
+/** Quiet time after the last interaction before the idle spin resumes. */
+export const GLOBE_SPIN_IDLE_DELAY_MS = 3_000;
 
 /** Count-bubble diameter (px) by member count. Extendable to a third tier. */
 export const BADGE_SIZE_SM = 42;

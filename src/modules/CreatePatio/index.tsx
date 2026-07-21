@@ -5,9 +5,9 @@ import { ActionBar } from '@/components/ActionBar';
 import { AppBackground } from '@/components/AppBackground';
 import {
     CREATE_PATIO_MAP_ID,
-    DEFAULT_ZOOM,
     GLOBE_FOG,
     GLOBE_MIN_ZOOM,
+    GLOBE_START_ZOOM,
     MAPBOX_STYLE,
     START_COORDINATE,
 } from './constants';
@@ -15,6 +15,7 @@ import { hideAerialClutter } from './utils/hideAerialClutter';
 import { prefersReducedMotion } from './utils/prefersReducedMotion';
 import { CreatePatioProvider } from './context/CreatePatioContext';
 import { useExitCreateModeOnEscape } from './hooks/useExitCreateModeOnEscape';
+import { useGlobeIdleRotation } from './hooks/useGlobeIdleRotation';
 import { ClusterMarkers } from './components/ClusterMarkers';
 import { Header } from './components/Header';
 import { MapViewTabs } from './components/MapViewTabs';
@@ -38,6 +39,8 @@ const createPatioBackgroundSrc = getAppBackground();
 const CreatePatioSurface: React.FC = () => {
     // Module-level `Escape` exit from create mode (guarded inside the hook).
     useExitCreateModeOnEscape();
+    // Slow globe drift while the map is untouched — stops once zoomed past the globe.
+    useGlobeIdleRotation();
 
     // Squircle corners matching Home (border-radius: 2.5rem = 40px).
     const [surfaceRef, surfaceSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius: 40 });
@@ -58,7 +61,7 @@ const CreatePatioSurface: React.FC = () => {
                             initialViewState={{
                                 longitude: START_COORDINATE.longitude,
                                 latitude: START_COORDINATE.latitude,
-                                zoom: DEFAULT_ZOOM,
+                                zoom: GLOBE_START_ZOOM,
                                 pitch: 0,
                                 bearing: 0,
                             }}

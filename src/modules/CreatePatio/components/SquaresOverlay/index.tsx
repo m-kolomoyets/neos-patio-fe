@@ -1,11 +1,15 @@
 import type { CSSProperties } from 'react';
 import type { IndicatorType } from '../../types';
+import { Fragment } from 'react';
 import {
     CENTER_SQUARE,
     CROSSFADE_BAND,
     GRID,
+    INDICATOR_FILL_MID,
+    INDICATOR_HIGHLIGHTS,
     INDICATOR_HOVER_GLOW_OPACITY,
     INDICATOR_PALETTE,
+    INDICATOR_SHEEN,
     INTERSECTION,
     SQUARE_BORDER_WIDTH,
     SQUARE_CORNER_RADIUS,
@@ -22,11 +26,26 @@ import { useViewportSize } from './hooks/useViewportSize';
 import { GridPath } from './components/GridPath';
 import s from './styles.module.css';
 
-/** Custom property the cross-fade driver writes onto the overlay each frame. */
-type CrossfadeVars = CSSProperties & { '--crossfade-opacity': string };
+/**
+ * Overlay-level custom properties: the cross-fade opacity the driver rewrites each
+ * frame, and the resting scale of the accent sheen (constant across types, so it is
+ * declared once here and inherited by every square).
+ */
+type OverlayVars = CSSProperties & {
+    '--crossfade-opacity': string;
+    '--indicator-sheen-rest': string;
+};
 
-/** Pressed/selected ring color, read by `styles.module.css` per square. */
-type IndicatorVars = CSSProperties & { '--indicator-pressed-border': string };
+/**
+ * Per-square paint read by `styles.module.css`: the pressed/selected ring color and
+ * the two inner-glow filters (with the white highlights for default/hovered,
+ * without them once selected — the accent ring takes over there).
+ */
+type IndicatorVars = CSSProperties & {
+    '--indicator-pressed-border': string;
+    '--indicator-inset': string;
+    '--indicator-inset-pressed': string;
+};
 
 /** Every indicator type gets its own gradient + inner-glow filter, defined once. */
 const INDICATOR_TYPES = Object.keys(INDICATOR_PALETTE) as IndicatorType[];
@@ -37,6 +56,77 @@ const indicatorGradientId = (type: IndicatorType) => {
 
 const indicatorInsetId = (type: IndicatorType) => {
     return `indicator-inset-${type}`;
+};
+
+/** Same glow, minus the white highlights — the selected/pressed treatment. */
+const indicatorInsetPressedId = (type: IndicatorType) => {
+    return `${indicatorInsetId(type)}-pressed`;
+};
+
+/** The 222.5° accent sheen laid over the square, one ramp per indicator type. */
+const indicatorSheenId = (type: IndicatorType) => {
+    return `indicator-sheen-${type}`;
+};
+
+/**
+ * Filter-local name of the square's *silhouette*. The squares are filled with a
+ * mostly-transparent radial gradient, so `SourceAlpha` is a soft blob rather than
+ * the rounded rect — inverting it would leave the whole interior lit and wash the
+ * square white. Saturating alpha first gives the shadows the shape they need.
+ */
+const SHAPE_RESULT = 'shape';
+
+type InnerShadowProps = {
+    color: string;
+    /** CSS blur radius; halved for the filter's `stdDeviation`. */
+    blur: number;
+    dx?: number;
+    dy?: number;
+    /** CSS shadow spread; negative narrows the band, as in `box-shadow`. */
+    spread?: number;
+    /** Filter-local result name this chain publishes. */
+    result: string;
+};
+
+/**
+ * One CSS-`inset`-equivalent shadow as filter primitives: spread the silhouette,
+ * invert it to get the "outside" mask, blur it, offset it (same sign convention as
+ * `box-shadow`), paint it, then clip back to the silhouette. Composed into the
+ * indicator filters below, once for the colored glow and once per white highlight.
+ */
+const InnerShadow: React.FC<InnerShadowProps> = ({ color, blur, dx = 0, dy = 0, spread = 0, result }) => {
+    // A negative inset spread widens the hole (dilate); a positive one shrinks it.
+    const spreadResult = spread === 0 ? SHAPE_RESULT : `${result}-spread`;
+
+    return (
+        <>
+            {spread !== 0 && (
+                <feMorphology
+                    in={SHAPE_RESULT}
+                    operator={spread < 0 ? 'dilate' : 'erode'}
+                    radius={Math.abs(spread)}
+                    result={spreadResult}
+                />
+            )}
+            <feComponentTransfer in={spreadResult} result={`${result}-inverted`}>
+                <feFuncA type="table" tableValues="1 0" />
+            </feComponentTransfer>
+            <feGaussianBlur in={`${result}-inverted`} stdDeviation={blur / 2} result={`${result}-blurred`} />
+            <feOffset in={`${result}-blurred`} dx={dx} dy={dy} result={`${result}-offset`} />
+            <feFlood floodColor={color} result={`${result}-flood`} />
+            <feComposite in={`${result}-flood`} in2={`${result}-offset`} operator="in" result={`${result}-painted`} />
+            <feComposite in={`${result}-painted`} in2={SHAPE_RESULT} operator="in" result={result} />
+        </>
+    );
+};
+
+/** Saturates the square's alpha into the solid silhouette every shadow masks off. */
+const ShapeMask: React.FC = () => {
+    return (
+        <feComponentTransfer in="SourceAlpha" result={SHAPE_RESULT}>
+            <feFuncA type="linear" slope={255} />
+        </feComponentTransfer>
+    );
 };
 
 /** Shared white wash the hovered treatment fades in over a square. */
@@ -91,20 +181,23 @@ export const SquaresOverlay: React.FC = () => {
     // at the right cross-fade value (no full-opacity flash on mount); the driver
     // then updates `--crossfade-opacity` every frame. Positions are seeded by
     // `useSquaresDriver`'s layout-effect paint before the browser first paints.
-    const crossfadeVars: CrossfadeVars = {
+    const overlayVars: OverlayVars = {
         '--crossfade-opacity': `${getCrossfadeOpacity(CROSSFADE_BAND.min, 'placement')}`,
+        '--indicator-sheen-rest': `${INDICATOR_SHEEN.restOpacity}`,
     };
 
     return (
         <svg
             className={s.overlay}
-            style={crossfadeVars}
+            style={overlayVars}
             ref={(el) => {
                 registerCrossfade(OVERLAY_KEY, el ? { el, layer: 'placement' } : null);
             }}
         >
             <defs>
-                {/* One radial fill per indicator type (`target` is the center cursor). */}
+                {/* One radial fill per indicator type (`target` is the center cursor).
+                    The mid stop holds the ramp back so most of the fade happens in the
+                    outer third — a clear center, a dense edge, as in the design. */}
                 {INDICATOR_TYPES.map((type) => {
                     const palette = INDICATOR_PALETTE[type];
 
@@ -112,11 +205,37 @@ export const SquaresOverlay: React.FC = () => {
                         <radialGradient key={type} id={indicatorGradientId(type)}>
                             <stop offset="0%" stopColor={palette.gradientEdge} stopOpacity={0} />
                             <stop
+                                offset={`${INDICATOR_FILL_MID.offset * 100}%`}
+                                stopColor={palette.gradientEdge}
+                                stopOpacity={palette.gradientOpacity * INDICATOR_FILL_MID.opacityRatio}
+                            />
+                            <stop
                                 offset="100%"
                                 stopColor={palette.gradientEdge}
                                 stopOpacity={palette.gradientOpacity}
                             />
                         </radialGradient>
+                    );
+                })}
+                {/* Accent sheen per type — 222.5° in Figma, i.e. top-right → bottom-left,
+                    bright at both ends and near-zero across the middle. Painted at the
+                    pressed alphas here; CSS scales the rect down for the other states. */}
+                {INDICATOR_TYPES.map((type) => {
+                    const palette = INDICATOR_PALETTE[type];
+
+                    return (
+                        <linearGradient key={type} id={indicatorSheenId(type)} x1="1" y1="0" x2="0" y2="1">
+                            {INDICATOR_SHEEN.stops.map((stop) => {
+                                return (
+                                    <stop
+                                        key={stop.offset}
+                                        offset={stop.offset}
+                                        stopColor={palette.gradientEdge}
+                                        stopOpacity={stop.opacity}
+                                    />
+                                );
+                            })}
+                        </linearGradient>
                     );
                 })}
                 {/* Hovered treatment: a white wash rising from the bottom of the square
@@ -158,24 +277,45 @@ export const SquaresOverlay: React.FC = () => {
                     </feMerge>
                 </filter>
                 {/* Inner glow per indicator type — the ring the design draws inside each
-                    square's edge. Same construction as the center square, one flood
-                    color per palette entry. */}
+                    square's edge — in two flavours: with the white highlights on top
+                    (default / hovered) and without (selected, which adds an accent ring
+                    instead). CSS picks between them off `data-state`. */}
                 {INDICATOR_TYPES.map((type) => {
                     return (
-                        <filter key={type} id={indicatorInsetId(type)}>
-                            <feComponentTransfer in="SourceAlpha">
-                                <feFuncA type="table" tableValues="1 0" />
-                            </feComponentTransfer>
-                            <feGaussianBlur stdDeviation={6} />
-                            <feOffset result="offsetblur" />
-                            <feFlood floodColor={INDICATOR_PALETTE[type].insetShadow} />
-                            <feComposite in2="offsetblur" operator="in" />
-                            <feComposite in2="SourceAlpha" operator="in" />
-                            <feMerge>
-                                <feMergeNode in="SourceGraphic" />
-                                <feMergeNode />
-                            </feMerge>
-                        </filter>
+                        <Fragment key={type}>
+                            <filter id={indicatorInsetId(type)}>
+                                <ShapeMask />
+                                <InnerShadow color={INDICATOR_PALETTE[type].insetShadow} blur={12} result="glow" />
+                                {INDICATOR_HIGHLIGHTS.map((highlight, index) => {
+                                    return (
+                                        <InnerShadow
+                                            key={highlight.color}
+                                            color={highlight.color}
+                                            blur={highlight.blur}
+                                            dx={highlight.dx}
+                                            dy={highlight.dy}
+                                            spread={highlight.spread}
+                                            result={`highlight-${index}`}
+                                        />
+                                    );
+                                })}
+                                <feMerge>
+                                    <feMergeNode in="SourceGraphic" />
+                                    <feMergeNode in="glow" />
+                                    {INDICATOR_HIGHLIGHTS.map((highlight, index) => {
+                                        return <feMergeNode key={highlight.color} in={`highlight-${index}`} />;
+                                    })}
+                                </feMerge>
+                            </filter>
+                            <filter id={indicatorInsetPressedId(type)}>
+                                <ShapeMask />
+                                <InnerShadow color={INDICATOR_PALETTE[type].insetShadow} blur={12} result="glow" />
+                                <feMerge>
+                                    <feMergeNode in="SourceGraphic" />
+                                    <feMergeNode in="glow" />
+                                </feMerge>
+                            </filter>
+                        </Fragment>
                     );
                 })}
                 {isCreate && (
@@ -210,6 +350,8 @@ export const SquaresOverlay: React.FC = () => {
             {patios.map(({ id, indicatorType }) => {
                 const indicatorVars: IndicatorVars = {
                     '--indicator-pressed-border': INDICATOR_PALETTE[indicatorType].pressedBorder,
+                    '--indicator-inset': `url(#${indicatorInsetId(indicatorType)})`,
+                    '--indicator-inset-pressed': `url(#${indicatorInsetPressedId(indicatorType)})`,
                 };
 
                 return (
@@ -224,7 +366,15 @@ export const SquaresOverlay: React.FC = () => {
                             rx={SQUARE_CORNER_RADIUS}
                             strokeWidth={SQUARE_BORDER_WIDTH}
                             fill={`url(#${indicatorGradientId(indicatorType)})`}
-                            filter={`url(#${indicatorInsetId(indicatorType)})`}
+                        />
+                        <rect
+                            className={s.sheen}
+                            ref={(el) => {
+                                registerRect(`patio-sheen-${id}`, patioGeoId(id), el);
+                                registerState(`patio-sheen-${id}`, id, el);
+                            }}
+                            rx={SQUARE_CORNER_RADIUS}
+                            fill={`url(#${indicatorSheenId(indicatorType)})`}
                         />
                         <rect
                             className={s['hover-wash']}

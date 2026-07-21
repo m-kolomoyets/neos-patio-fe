@@ -49,7 +49,6 @@ type PatioMarker = ClusterMarker | SingletonMarker;
 /** Indicator palette entry a badge paints with, as CSS custom properties. */
 type IndicatorVars = CSSProperties & {
     '--indicator-fill': string;
-    '--indicator-ring': string;
     '--indicator-glow': string;
 };
 
@@ -74,7 +73,6 @@ const toIndicatorVars = (type: IndicatorType): IndicatorVars => {
 
     return {
         '--indicator-fill': palette.badgeFill,
-        '--indicator-ring': palette.pressedBorder,
         '--indicator-glow': palette.insetShadow,
     };
 };
