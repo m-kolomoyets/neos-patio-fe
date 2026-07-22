@@ -91,8 +91,8 @@
     .wrap {
         --patio-view-offset-y: 1rem;
         --patio-view-offset-x: 1rem;
-        --patio-view-bottom-offset: 2.25rem;
-        --home-content-bottom-offset: 2.25rem;
+        --patio-view-bottom-offset: 1rem;
+        --home-content-bottom-offset: 1.75rem;
     }
 
     .surface {

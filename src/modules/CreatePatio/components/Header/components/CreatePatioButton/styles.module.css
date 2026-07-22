@@ -1,4 +1,5 @@
 .wrap {
     flex-shrink: 0;
     white-space: nowrap;
+    min-width: 9.3125rem;
 }
