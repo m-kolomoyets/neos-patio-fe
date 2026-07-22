@@ -76,6 +76,7 @@
     .map {
         padding: var(--gap-3);
         padding-top: 0;
+        padding-bottom: var(--gap-4);
     }
 
     .map-clip {
@@ -100,8 +101,9 @@
     }
 
     .map {
-        padding: var(--gap-3);
+        padding: var(--gap-4);
         padding-top: var(--gap-0-5);
+        padding-bottom: var(--gap-4);
     }
 
     .map-clip {
@@ -109,6 +111,6 @@
     }
 
     .view-cube {
-        bottom: calc(var(--gap-8) - var(--gap-0-5));
+        bottom: calc(var(--gap-2));
     }
 }

@@ -4,7 +4,7 @@
     align-items: center;
     gap: var(--gap-8);
     padding: calc(var(--gap-4) - var(--gap-0-5)) calc(var(--gap-6) - var(--gap-0-5));
-    padding-bottom: calc(var(--gap-4) - var(--gap-1));
+    padding-bottom: calc(var(--gap-4) - var(--gap-0-5));
 }
 
 .left {
@@ -38,6 +38,7 @@
         gap: var(--gap-2);
         padding-block: calc(var(--gap-4) - var(--gap-0-5));
         grid-template-columns: minmax(2.75rem, 1fr) minmax(0, auto);
+        padding-inline: var(--gap-3);
     }
 
     .titles-wrap {
@@ -49,5 +50,6 @@
     .wrap {
         gap: var(--gap-2);
         padding-block: calc(var(--gap-4) - var(--gap-0-5));
+        padding-inline: var(--gap-4);
     }
 }
