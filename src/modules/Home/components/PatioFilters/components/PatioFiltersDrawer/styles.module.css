@@ -26,4 +26,5 @@
 .cta.reset {
     width: 100%;
     height: 2.75rem;
+    font-weight: var(--fw-bold);
 }

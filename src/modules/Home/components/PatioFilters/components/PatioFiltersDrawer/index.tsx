@@ -91,7 +91,7 @@ export const PatioFiltersDrawer: React.FC = () => {
                                 <Button
                                     className={clsx(s.cta, s.apply)}
                                     variant="surface"
-                                    size="lg"
+                                    size="md"
                                     onClick={handleApply}
                                 >
                                     Filter
@@ -99,7 +99,7 @@ export const PatioFiltersDrawer: React.FC = () => {
                                 <Button
                                     className={clsx(s.cta, s.reset)}
                                     variant="link"
-                                    size="lg"
+                                    size="md"
                                     onClick={handleReset}
                                     disabled={!hasActiveFilters}
                                 >
