@@ -4,6 +4,7 @@
     border: 0;
     margin: 0;
     pointer-events: none;
+    border-radius: var(--radius-full);
 }
 
 .wrap[data-orientation="horizontal"] {

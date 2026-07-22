@@ -1,25 +1,136 @@
 import type { CSSProperties } from 'react';
+import type { IndicatorType } from '../../types';
+import { Fragment } from 'react';
 import {
     CENTER_SQUARE,
     CROSSFADE_BAND,
     GRID,
+    INDICATOR_FILL_MID,
+    INDICATOR_HIGHLIGHTS,
+    INDICATOR_HOVER_GLOW_OPACITY,
+    INDICATOR_PALETTE,
+    INDICATOR_SHEEN,
     INTERSECTION,
-    PATIO_SQUARE,
     SQUARE_BORDER_WIDTH,
     SQUARE_CORNER_RADIUS,
 } from '../../constants';
 import { getCrossfadeOpacity } from '../../utils/getCrossfadeOpacity';
+import { useCreatePatioMode } from '../../context/CreatePatioContext';
 import { useCrossfadeDriver } from '../../hooks/useCrossfadeDriver';
 import { usePatioGeometries } from '../../hooks/usePatioGeometries';
 import { useSelectPatioOnClick } from '../../hooks/useSelectPatioOnClick';
 import { patioGeoId, useSquaresDriver } from '../../hooks/useSquaresDriver';
+import { useSquareStates } from '../../hooks/useSquareStates';
 import { useZoomAtLeast } from '../../hooks/useZoomAtLeast';
-import { useGridDriver } from './hooks/useGridDriver';
 import { useViewportSize } from './hooks/useViewportSize';
+import { GridPath } from './components/GridPath';
 import s from './styles.module.css';
 
-/** Custom property the cross-fade driver writes onto the overlay each frame. */
-type CrossfadeVars = CSSProperties & { '--crossfade-opacity': string };
+/**
+ * Overlay-level custom properties: the cross-fade opacity the driver rewrites each
+ * frame, and the resting scale of the accent sheen (constant across types, so it is
+ * declared once here and inherited by every square).
+ */
+type OverlayVars = CSSProperties & {
+    '--crossfade-opacity': string;
+    '--indicator-sheen-rest': string;
+};
+
+/**
+ * Per-square paint read by `styles.module.css`: the pressed/selected ring color and
+ * the two inner-glow filters (with the white highlights for default/hovered,
+ * without them once selected — the accent ring takes over there).
+ */
+type IndicatorVars = CSSProperties & {
+    '--indicator-pressed-border': string;
+    '--indicator-inset': string;
+    '--indicator-inset-pressed': string;
+};
+
+/** Every indicator type gets its own gradient + inner-glow filter, defined once. */
+const INDICATOR_TYPES = Object.keys(INDICATOR_PALETTE) as IndicatorType[];
+
+const indicatorGradientId = (type: IndicatorType) => {
+    return `indicator-gradient-${type}`;
+};
+
+const indicatorInsetId = (type: IndicatorType) => {
+    return `indicator-inset-${type}`;
+};
+
+/** Same glow, minus the white highlights — the selected/pressed treatment. */
+const indicatorInsetPressedId = (type: IndicatorType) => {
+    return `${indicatorInsetId(type)}-pressed`;
+};
+
+/** The 222.5° accent sheen laid over the square, one ramp per indicator type. */
+const indicatorSheenId = (type: IndicatorType) => {
+    return `indicator-sheen-${type}`;
+};
+
+/**
+ * Filter-local name of the square's *silhouette*. The squares are filled with a
+ * mostly-transparent radial gradient, so `SourceAlpha` is a soft blob rather than
+ * the rounded rect — inverting it would leave the whole interior lit and wash the
+ * square white. Saturating alpha first gives the shadows the shape they need.
+ */
+const SHAPE_RESULT = 'shape';
+
+type InnerShadowProps = {
+    color: string;
+    /** CSS blur radius; halved for the filter's `stdDeviation`. */
+    blur: number;
+    dx?: number;
+    dy?: number;
+    /** CSS shadow spread; negative narrows the band, as in `box-shadow`. */
+    spread?: number;
+    /** Filter-local result name this chain publishes. */
+    result: string;
+};
+
+/**
+ * One CSS-`inset`-equivalent shadow as filter primitives: spread the silhouette,
+ * invert it to get the "outside" mask, blur it, offset it (same sign convention as
+ * `box-shadow`), paint it, then clip back to the silhouette. Composed into the
+ * indicator filters below, once for the colored glow and once per white highlight.
+ */
+const InnerShadow: React.FC<InnerShadowProps> = ({ color, blur, dx = 0, dy = 0, spread = 0, result }) => {
+    // A negative inset spread widens the hole (dilate); a positive one shrinks it.
+    const spreadResult = spread === 0 ? SHAPE_RESULT : `${result}-spread`;
+
+    return (
+        <>
+            {spread !== 0 && (
+                <feMorphology
+                    in={SHAPE_RESULT}
+                    operator={spread < 0 ? 'dilate' : 'erode'}
+                    radius={Math.abs(spread)}
+                    result={spreadResult}
+                />
+            )}
+            <feComponentTransfer in={spreadResult} result={`${result}-inverted`}>
+                <feFuncA type="table" tableValues="1 0" />
+            </feComponentTransfer>
+            <feGaussianBlur in={`${result}-inverted`} stdDeviation={blur / 2} result={`${result}-blurred`} />
+            <feOffset in={`${result}-blurred`} dx={dx} dy={dy} result={`${result}-offset`} />
+            <feFlood floodColor={color} result={`${result}-flood`} />
+            <feComposite in={`${result}-flood`} in2={`${result}-offset`} operator="in" result={`${result}-painted`} />
+            <feComposite in={`${result}-painted`} in2={SHAPE_RESULT} operator="in" result={result} />
+        </>
+    );
+};
+
+/** Saturates the square's alpha into the solid silhouette every shadow masks off. */
+const ShapeMask: React.FC = () => {
+    return (
+        <feComponentTransfer in="SourceAlpha" result={SHAPE_RESULT}>
+            <feFuncA type="linear" slope={255} />
+        </feComponentTransfer>
+    );
+};
+
+/** Shared white wash the hovered treatment fades in over a square. */
+const HOVER_WASH_ID = 'indicator-hover-wash';
 
 /** Stable registry key for the single placement-layer overlay element. */
 const OVERLAY_KEY = 'squares-overlay';
@@ -51,8 +162,13 @@ export const SquaresOverlay: React.FC = () => {
     const registerCrossfade = useCrossfadeDriver();
     const patios = usePatioGeometries();
     const registerRect = useSquaresDriver(patios);
-    const registerGrid = useGridDriver();
+    const registerState = useSquareStates(patios);
     const viewport = useViewportSize();
+    // Placement chrome — grid, center square, intersection paint — belongs to create
+    // mode only. Patio geometry is needed in both modes, so the driver and the
+    // `center` entry stay unconditional; only the JSX below branches.
+    const { mode } = useCreatePatioMode();
+    const isCreate = mode === 'create';
 
     // Mount from the bottom of the cross-fade band (below the placement threshold)
     // so the squares can fade in against the outgoing browse markers. Placement
@@ -65,34 +181,68 @@ export const SquaresOverlay: React.FC = () => {
     // at the right cross-fade value (no full-opacity flash on mount); the driver
     // then updates `--crossfade-opacity` every frame. Positions are seeded by
     // `useSquaresDriver`'s layout-effect paint before the browser first paints.
-    const crossfadeVars: CrossfadeVars = {
+    const overlayVars: OverlayVars = {
         '--crossfade-opacity': `${getCrossfadeOpacity(CROSSFADE_BAND.min, 'placement')}`,
+        '--indicator-sheen-rest': `${INDICATOR_SHEEN.restOpacity}`,
     };
 
     return (
         <svg
             className={s.overlay}
-            style={crossfadeVars}
+            style={overlayVars}
             ref={(el) => {
                 registerCrossfade(OVERLAY_KEY, el ? { el, layer: 'placement' } : null);
             }}
         >
             <defs>
-                <radialGradient id="center-square-gradient">
-                    <stop offset="0%" stopColor={CENTER_SQUARE.gradientEdge} stopOpacity={0} />
-                    <stop
-                        offset="100%"
-                        stopColor={CENTER_SQUARE.gradientEdge}
-                        stopOpacity={CENTER_SQUARE.gradientOpacity}
-                    />
-                </radialGradient>
-                <radialGradient id="patio-square-gradient">
-                    <stop offset="0%" stopColor={PATIO_SQUARE.gradientEdge} stopOpacity={0} />
-                    <stop
-                        offset="100%"
-                        stopColor={PATIO_SQUARE.gradientEdge}
-                        stopOpacity={PATIO_SQUARE.gradientOpacity}
-                    />
+                {/* One radial fill per indicator type (`target` is the center cursor).
+                    The mid stop holds the ramp back so most of the fade happens in the
+                    outer third — a clear center, a dense edge, as in the design. */}
+                {INDICATOR_TYPES.map((type) => {
+                    const palette = INDICATOR_PALETTE[type];
+
+                    return (
+                        <radialGradient key={type} id={indicatorGradientId(type)}>
+                            <stop offset="0%" stopColor={palette.gradientEdge} stopOpacity={0} />
+                            <stop
+                                offset={`${INDICATOR_FILL_MID.offset * 100}%`}
+                                stopColor={palette.gradientEdge}
+                                stopOpacity={palette.gradientOpacity * INDICATOR_FILL_MID.opacityRatio}
+                            />
+                            <stop
+                                offset="100%"
+                                stopColor={palette.gradientEdge}
+                                stopOpacity={palette.gradientOpacity}
+                            />
+                        </radialGradient>
+                    );
+                })}
+                {/* Accent sheen per type — 222.5° in Figma, i.e. top-right → bottom-left,
+                    bright at both ends and near-zero across the middle. Painted at the
+                    pressed alphas here; CSS scales the rect down for the other states. */}
+                {INDICATOR_TYPES.map((type) => {
+                    const palette = INDICATOR_PALETTE[type];
+
+                    return (
+                        <linearGradient key={type} id={indicatorSheenId(type)} x1="1" y1="0" x2="0" y2="1">
+                            {INDICATOR_SHEEN.stops.map((stop) => {
+                                return (
+                                    <stop
+                                        key={stop.offset}
+                                        offset={stop.offset}
+                                        stopColor={palette.gradientEdge}
+                                        stopOpacity={stop.opacity}
+                                    />
+                                );
+                            })}
+                        </linearGradient>
+                    );
+                })}
+                {/* Hovered treatment: a white wash rising from the bottom of the square
+                    (Figma), faded in by CSS on the overlay rect — never re-rendered. */}
+                <radialGradient id={HOVER_WASH_ID} cx="50%" cy="90%" r="75%">
+                    <stop offset="0%" stopColor="#fff" stopOpacity={INDICATOR_HOVER_GLOW_OPACITY} />
+                    <stop offset="100%" stopColor="#fff" stopOpacity={0} />
                 </radialGradient>
                 {/* Radial fade for the reference grid: opaque core centered on the
                     viewport, transparent by `fadeEnd`. `userSpaceOnUse` + a scale to
@@ -126,28 +276,58 @@ export const SquaresOverlay: React.FC = () => {
                         <feMergeNode />
                     </feMerge>
                 </filter>
-                <filter id="patio-square-inset">
-                    <feComponentTransfer in="SourceAlpha">
-                        <feFuncA type="table" tableValues="1 0" />
-                    </feComponentTransfer>
-                    <feGaussianBlur stdDeviation={6} />
-                    <feOffset result="offsetblur" />
-                    <feFlood floodColor={PATIO_SQUARE.insetShadow} />
-                    <feComposite in2="offsetblur" operator="in" />
-                    <feComposite in2="SourceAlpha" operator="in" />
-                    <feMerge>
-                        <feMergeNode in="SourceGraphic" />
-                        <feMergeNode />
-                    </feMerge>
-                </filter>
-                <clipPath id={centerClipId}>
-                    <rect
-                        ref={(el) => {
-                            return registerRect('center-clip', 'center', el);
-                        }}
-                        rx={SQUARE_CORNER_RADIUS}
-                    />
-                </clipPath>
+                {/* Inner glow per indicator type — the ring the design draws inside each
+                    square's edge — in two flavours: with the white highlights on top
+                    (default / hovered) and without (selected, which adds an accent ring
+                    instead). CSS picks between them off `data-state`. */}
+                {INDICATOR_TYPES.map((type) => {
+                    return (
+                        <Fragment key={type}>
+                            <filter id={indicatorInsetId(type)}>
+                                <ShapeMask />
+                                <InnerShadow color={INDICATOR_PALETTE[type].insetShadow} blur={12} result="glow" />
+                                {INDICATOR_HIGHLIGHTS.map((highlight, index) => {
+                                    return (
+                                        <InnerShadow
+                                            key={highlight.color}
+                                            color={highlight.color}
+                                            blur={highlight.blur}
+                                            dx={highlight.dx}
+                                            dy={highlight.dy}
+                                            spread={highlight.spread}
+                                            result={`highlight-${index}`}
+                                        />
+                                    );
+                                })}
+                                <feMerge>
+                                    <feMergeNode in="SourceGraphic" />
+                                    <feMergeNode in="glow" />
+                                    {INDICATOR_HIGHLIGHTS.map((highlight, index) => {
+                                        return <feMergeNode key={highlight.color} in={`highlight-${index}`} />;
+                                    })}
+                                </feMerge>
+                            </filter>
+                            <filter id={indicatorInsetPressedId(type)}>
+                                <ShapeMask />
+                                <InnerShadow color={INDICATOR_PALETTE[type].insetShadow} blur={12} result="glow" />
+                                <feMerge>
+                                    <feMergeNode in="SourceGraphic" />
+                                    <feMergeNode in="glow" />
+                                </feMerge>
+                            </filter>
+                        </Fragment>
+                    );
+                })}
+                {isCreate && (
+                    <clipPath id={centerClipId}>
+                        <rect
+                            ref={(el) => {
+                                return registerRect('center-clip', 'center', el);
+                            }}
+                            rx={SQUARE_CORNER_RADIUS}
+                        />
+                    </clipPath>
+                )}
                 {patios.map(({ id }) => {
                     return (
                         <clipPath key={id} id={patioClipId(id)}>
@@ -161,81 +341,106 @@ export const SquaresOverlay: React.FC = () => {
                     );
                 })}
             </defs>
-            {/* Reference grid of 100×100 m cells (center cell = the center square),
-                radially faded toward the viewport edges. Painted first so every square
-                sits on top of it; inherits the svg's `--crossfade-opacity`, so it fades
-                in/out with the squares. Its `d` is written per frame by `useGridDriver`. */}
-            <path
-                ref={registerGrid}
-                fill="none"
-                stroke={GRID.lineColor}
-                strokeWidth={GRID.lineWidth}
-                strokeOpacity={GRID.opacity}
-                mask="url(#grid-fade)"
-            />
-            {/* Base blue patio squares (geo-anchored). */}
-            {patios.map(({ id }) => {
-                return (
-                    <rect
-                        key={id}
-                        ref={(el) => {
-                            return registerRect(`patio-base-${id}`, patioGeoId(id), el);
-                        }}
-                        rx={SQUARE_CORNER_RADIUS}
-                        fill="url(#patio-square-gradient)"
-                        filter="url(#patio-square-inset)"
-                    />
-                );
-            })}
+            {/* Create-mode reference grid; mounts `useGridDriver` only in create mode. */}
+            {isCreate && <GridPath />}
+            {/* Patio squares (geo-anchored), colored by the indicator palette. Each
+                carries a `data-state` written imperatively by `useSquareStates`, plus a
+                white wash rect faded in on hover — both are plain CSS flips on nodes
+                that are already mounted, so interaction never re-renders this tree. */}
+            {patios.map(({ id, indicatorType }) => {
+                const indicatorVars: IndicatorVars = {
+                    '--indicator-pressed-border': INDICATOR_PALETTE[indicatorType].pressedBorder,
+                    '--indicator-inset': `url(#${indicatorInsetId(indicatorType)})`,
+                    '--indicator-inset-pressed': `url(#${indicatorInsetPressedId(indicatorType)})`,
+                };
 
-            {/* Base orange center square (pinned to viewport). */}
-            <rect
-                ref={(el) => {
-                    return registerRect('center-base', 'center', el);
-                }}
-                rx={SQUARE_CORNER_RADIUS}
-                fill="url(#center-square-gradient)"
-                stroke={CENTER_SQUARE.border}
-                strokeWidth={SQUARE_BORDER_WIDTH}
-                filter="url(#center-square-inset)"
-            />
-
-            {/* Red collision layer: one independent overlap per patio. */}
-            {patios.map(({ id }) => {
-                const clipToPatio = `url(#${patioClipId(id)})`;
-
-                // clip-path (userSpaceOnUse) is applied in the user space of the
-                // element it sits on — including that element's own transform. So
-                // the clip-path must live on a non-transformed wrapper <g>, never
-                // on the rotated rect, or the clip geometry gets double-rotated.
                 return (
                     <g key={id}>
-                        {/* Overlap region: center filled red, clipped to the patio. */}
-                        <g clipPath={clipToPatio}>
-                            <rect
-                                ref={(el) => {
-                                    return registerRect(`x-fill-${id}`, 'center', el);
-                                }}
-                                rx={SQUARE_CORNER_RADIUS}
-                                fill={INTERSECTION.fill}
-                                fillOpacity={INTERSECTION.fillOpacity}
-                            />
-                        </g>
-                        {/* Center border segments inside the patio. */}
-                        <g clipPath={clipToPatio}>
-                            <rect
-                                ref={(el) => {
-                                    return registerRect(`x-center-border-${id}`, 'center', el);
-                                }}
-                                rx={SQUARE_CORNER_RADIUS}
-                                fill="none"
-                                stroke={INTERSECTION.border}
-                                strokeWidth={SQUARE_BORDER_WIDTH}
-                            />
-                        </g>
+                        <rect
+                            className={s.square}
+                            style={indicatorVars}
+                            ref={(el) => {
+                                registerRect(`patio-base-${id}`, patioGeoId(id), el);
+                                registerState(`patio-base-${id}`, id, el);
+                            }}
+                            rx={SQUARE_CORNER_RADIUS}
+                            strokeWidth={SQUARE_BORDER_WIDTH}
+                            fill={`url(#${indicatorGradientId(indicatorType)})`}
+                        />
+                        <rect
+                            className={s.sheen}
+                            ref={(el) => {
+                                registerRect(`patio-sheen-${id}`, patioGeoId(id), el);
+                                registerState(`patio-sheen-${id}`, id, el);
+                            }}
+                            rx={SQUARE_CORNER_RADIUS}
+                            fill={`url(#${indicatorSheenId(indicatorType)})`}
+                        />
+                        <rect
+                            className={s['hover-wash']}
+                            ref={(el) => {
+                                registerRect(`patio-hover-${id}`, patioGeoId(id), el);
+                                registerState(`patio-hover-${id}`, id, el);
+                            }}
+                            rx={SQUARE_CORNER_RADIUS}
+                            fill={`url(#${HOVER_WASH_ID})`}
+                        />
                     </g>
                 );
             })}
+
+            {/* Base orange center square (pinned to viewport), create mode only. */}
+            {isCreate && (
+                <rect
+                    ref={(el) => {
+                        return registerRect('center-base', 'center', el);
+                    }}
+                    rx={SQUARE_CORNER_RADIUS}
+                    fill={`url(#${indicatorGradientId('target')})`}
+                    stroke={CENTER_SQUARE.border}
+                    strokeWidth={SQUARE_BORDER_WIDTH}
+                    filter="url(#center-square-inset)"
+                />
+            )}
+
+            {/* Red collision layer: one independent overlap per patio. Create mode only —
+                it paints the center square against its neighbours. */}
+            {isCreate &&
+                patios.map(({ id }) => {
+                    const clipToPatio = `url(#${patioClipId(id)})`;
+
+                    // clip-path (userSpaceOnUse) is applied in the user space of the
+                    // element it sits on — including that element's own transform. So
+                    // the clip-path must live on a non-transformed wrapper <g>, never
+                    // on the rotated rect, or the clip geometry gets double-rotated.
+                    return (
+                        <g key={id}>
+                            {/* Overlap region: center filled red, clipped to the patio. */}
+                            <g clipPath={clipToPatio}>
+                                <rect
+                                    ref={(el) => {
+                                        return registerRect(`x-fill-${id}`, 'center', el);
+                                    }}
+                                    rx={SQUARE_CORNER_RADIUS}
+                                    fill={INTERSECTION.fill}
+                                    fillOpacity={INTERSECTION.fillOpacity}
+                                />
+                            </g>
+                            {/* Center border segments inside the patio. */}
+                            <g clipPath={clipToPatio}>
+                                <rect
+                                    ref={(el) => {
+                                        return registerRect(`x-center-border-${id}`, 'center', el);
+                                    }}
+                                    rx={SQUARE_CORNER_RADIUS}
+                                    fill="none"
+                                    stroke={INTERSECTION.border}
+                                    strokeWidth={SQUARE_BORDER_WIDTH}
+                                />
+                            </g>
+                        </g>
+                    );
+                })}
         </svg>
     );
 };

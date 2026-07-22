@@ -1,4 +1,5 @@
 import ArrowLeftIcon from '@/icons/arrow-left_24.svg?react';
+import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
 import { usePatioViewNavigate } from '../../hooks/usePatioViewRouteApi';
@@ -32,11 +33,11 @@ export const Header: React.FC<HeaderProps> = ({ name }) => {
                 </Button>
             </div>
             <div className={s['titles-wrap']}>
-                <Typography className={s.title} variant="display-xs" render={<h1 />}>
+                <Typography className={clsx(s.title, 'truncate')} variant="display-xs" render={<h1 />}>
                     {name}
                 </Typography>
                 {/* TODO: retrieve quote from the API */}
-                <Typography className={s.description} variant="text-sm">
+                <Typography className={clsx(s.description, 'truncate')} variant="text-sm">
                     Every good tree bears good fruit
                 </Typography>
             </div>

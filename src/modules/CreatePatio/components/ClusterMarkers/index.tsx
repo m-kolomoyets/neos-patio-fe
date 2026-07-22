@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { GeoJSONFeature, GeoJSONSource } from 'mapbox-gl';
+import type { IndicatorType } from '../../types';
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { Marker, useMap } from 'react-map-gl/mapbox';
@@ -8,14 +9,17 @@ import {
     CLUSTER_EXPAND_ZOOM_PADDING,
     CREATE_PATIO_MAP_ID,
     DEFAULT_ZOOM,
+    INDICATOR_PALETTE,
     PATIO_CLUSTER_SOURCE_ID,
     SINGLE_PATIO_VIEW_ZOOM,
     START_COORDINATE,
 } from '../../constants';
 import { derivePatioMapGeometry } from '../../utils/derivePatioMapGeometry';
+import { flyToView } from '../../utils/flyToView';
 import { getCrossfadeOpacity } from '../../utils/getCrossfadeOpacity';
 import { getProjectedNorthDeg } from '../../utils/getProjectedNorthDeg';
 import { prefersReducedMotion } from '../../utils/prefersReducedMotion';
+import { resolveIndicatorType } from '../../utils/resolveIndicatorType';
 import { getBadgeSize } from './utils/getBadgeSize';
 import { getMorphStyle } from './utils/getMorphStyle';
 import { useCreatePatioMode } from '../../context/CreatePatioContext';
@@ -39,16 +43,38 @@ type BaseMarker = {
 /** A count bubble; taps fly the camera down to where it breaks apart. */
 type ClusterMarker = BaseMarker & { cluster: true; clusterId: number };
 /** A lone patio; taps select it via the shared selection path. */
-type SingletonMarker = BaseMarker & { cluster: false; patioId: string };
+type SingletonMarker = BaseMarker & { cluster: false; patioId: string; indicatorType: IndicatorType };
 type PatioMarker = ClusterMarker | SingletonMarker;
 
+/** Indicator palette entry a badge paints with, as CSS custom properties. */
+type IndicatorVars = CSSProperties & {
+    '--indicator-fill': string;
+    '--indicator-glow': string;
+};
+
 /** CSS custom properties the morph driver / initial render write onto a marker. */
-type MorphVars = CSSProperties & {
+type MorphVars = IndicatorVars & {
     '--morph-size': string;
     '--morph-radius': string;
     '--morph-text-opacity': string;
     '--morph-rotate': string;
     '--crossfade-opacity': string;
+};
+
+/**
+ * Badge colors for one indicator type. Singleton badges use the full four-color
+ * palette (the same entries the SVG squares use) so the badge→square morph across
+ * `MORPH_BAND` is a pure shape change; clusters pass only the two aggregate
+ * colors — `owned` (green) when everything inside is published, `not-published`
+ * (blue) otherwise.
+ */
+const toIndicatorVars = (type: IndicatorType): IndicatorVars => {
+    const palette = INDICATOR_PALETTE[type];
+
+    return {
+        '--indicator-fill': palette.badgeFill,
+        '--indicator-glow': palette.insetShadow,
+    };
 };
 
 /** Key for the always-on-top orange create-patio marker (never in the source). */
@@ -62,20 +88,18 @@ const markerKey = (marker: PatioMarker) => {
 /** How long an outgoing marker lingers to cross-fade out; matches `badge-fade-in`. */
 const BADGE_FADE_MS = 220;
 
-/** Fly (or, with reduced motion, jump) the camera to a center + zoom. */
-const flyToView = (map: mapboxgl.Map, center: [number, number], zoom: number) => {
-    if (prefersReducedMotion()) {
-        map.jumpTo({ center, zoom });
-        return;
-    }
-    map.flyTo({ center, zoom });
-};
-
 /** Turns resolved morph geometry into the CSS custom properties the badge reads. */
-const toMorphVars = (zoom: number, latitude: number, circleSize: number, rotateDeg: number): MorphVars => {
+const toMorphVars = (
+    zoom: number,
+    latitude: number,
+    circleSize: number,
+    rotateDeg: number,
+    indicatorType: IndicatorType
+): MorphVars => {
     const { size, radius, progress } = getMorphStyle(zoom, latitude, circleSize);
 
     return {
+        ...toIndicatorVars(indicatorType),
         '--morph-size': `${size}px`,
         '--morph-radius': `${radius}px`,
         '--morph-text-opacity': `${progress}`,
@@ -113,6 +137,8 @@ const toMarker = (feature: GeoJSONFeature): PatioMarker | null => {
         latitude,
         count: 1,
         hasUnpublished: !props.isPublished,
+        // Same helper the SVG squares use, off the ownership-resolved source data.
+        indicatorType: resolveIndicatorType(Boolean(props.isPublished), Boolean(props.isMine)),
     };
 };
 
@@ -128,7 +154,7 @@ const toMarker = (feature: GeoJSONFeature): PatioMarker | null => {
  */
 export const ClusterMarkers: React.FC = () => {
     const maps = useMap();
-    const { setMode, setSelectedPatioId } = useCreatePatioMode();
+    const { mode, selectPatio } = useCreatePatioMode();
     const [markers, setMarkers] = useState<PatioMarker[]>([]);
     // Snapshot zoom (updated on `moveend`) seeds each marker's initial morph size;
     // the driver then updates size and rotation per frame.
@@ -167,8 +193,7 @@ export const ClusterMarkers: React.FC = () => {
      * resolves straight to its footprint rather than staying a distant bubble.
      */
     const selectSingleton = (marker: SingletonMarker) => {
-        setSelectedPatioId(marker.patioId);
-        setMode('view');
+        selectPatio(marker.patioId);
 
         const map = (maps.current ?? maps[CREATE_PATIO_MAP_ID])?.getMap();
         if (map) flyToView(map, [marker.longitude, marker.latitude], SINGLE_PATIO_VIEW_ZOOM);
@@ -213,7 +238,8 @@ export const ClusterMarkers: React.FC = () => {
 
     // Below the placement threshold the orange create-patio marker morphs too, as
     // its own always-on-top overlay — never sourced from (or merged into) clusters.
-    const showCreateMarker = !placementEnabled;
+    // Placement chrome, so create mode only; view mode never shows a center cursor.
+    const showCreateMarker = !placementEnabled && mode === 'create';
 
     // Keep outgoing markers mounted through a fade-out so the cluster ⇆ patio swap
     // cross-fades symmetrically. Reduced motion purges instantly (leaveMs 0).
@@ -241,7 +267,14 @@ export const ClusterMarkers: React.FC = () => {
                                     type="button"
                                     className={s.badge}
                                     data-leaving={leaving || undefined}
-                                    style={{ width: size, height: size }}
+                                    // Clusters stay two-color: blue while anything inside is
+                                    // unpublished, green once everything is. Ownership is
+                                    // never aggregated — a mixed cluster has no honest owner.
+                                    style={{
+                                        width: size,
+                                        height: size,
+                                        ...toIndicatorVars(marker.hasUnpublished ? 'not-published' : 'owned'),
+                                    }}
                                     aria-label={`Zoom into cluster of ${marker.count} patios`}
                                     onClick={() => {
                                         return expandCluster(marker);
@@ -271,7 +304,7 @@ export const ClusterMarkers: React.FC = () => {
                                 type="button"
                                 className={clsx(s.badge, s.morph)}
                                 data-leaving={leaving || undefined}
-                                style={toMorphVars(zoom, marker.latitude, size, seedRotate)}
+                                style={toMorphVars(zoom, marker.latitude, size, seedRotate, marker.indicatorType)}
                                 ref={(el) => {
                                     registerMorph(
                                         marker.key,
@@ -305,12 +338,12 @@ export const ClusterMarkers: React.FC = () => {
                 <div className={s['create-overlay']} aria-hidden="true">
                     <span
                         className={clsx(s.badge, s.morph)}
-                        data-variant="create"
                         style={toMorphVars(
                             zoom,
                             seedMap?.getCenter().lat ?? START_COORDINATE.latitude,
                             BADGE_SIZE_SM,
-                            0
+                            0,
+                            'target'
                         )}
                         ref={(el) => {
                             registerMorph(

@@ -1,3 +1,5 @@
+import type { IndicatorPaletteEntry, IndicatorType } from './types';
+
 /**
  * Mapbox base style — the "aerial" view (light vector street map). Satellite is
  * layered on top as a raster overlay (`SatelliteLayer`) whose opacity cross-fades
@@ -34,6 +36,9 @@ export const START_COORDINATE = {
 /** Street-level zoom so patio squares are visible without manual zooming. */
 export const DEFAULT_ZOOM = 16;
 
+/** Decimal places coordinates are rendered with in the map popups (Figma). */
+export const COORDINATE_PRECISION = 5;
+
 /** Ground footprint of the patio being placed, in meters (100×100m). */
 export const PATIO_SIZE_M = 100;
 
@@ -57,14 +62,37 @@ export const ZOOM_ENOUGH_RATIO = 0.2;
 export const ZOOM_IN_TARGET_RATIO = 0.3;
 
 /**
+ * Mint quote shown in the new-patio popup.
+ * TODO(contract): replace with the live price read from the patio contract —
+ * both the token amount and its fiat estimate are placeholders today.
+ */
+export const NEW_PATIO_PRICE = '340 NCR';
+export const NEW_PATIO_PRICE_USD = '~$10';
+
+/**
+ * Status of a patio that has not been minted yet.
+ * TODO(contract): derives from the on-chain state once minting is real.
+ */
+export const NEW_PATIO_STATUS = 'Draft';
+
+/** Owner shown in the new-patio popup while no wallet is connected. */
+export const NEW_PATIO_OWNER_FALLBACK = 'Neos';
+
+/**
  * Fallback azimuth (degrees, clockwise from north) before the map camera reports
  * its bearing. The center square renders screen-upright; map drag-rotate turns the
  * world under it rather than rotating the square.
  */
 export const DEFAULT_AZIMUTH = 0;
 
-/** Corner radius of every square, in pixels (Figma). */
+/**
+ * Corner radius of every square, in pixels, at the size the design draws it
+ * (`SQUARE_CORNER_RADIUS_BASIS`). Squares are geo-anchored, so their on-screen
+ * side grows with zoom — `getCornerRadius` scales the radius by the same ratio,
+ * treating this pair as the design's roundness rather than a fixed pixel value.
+ */
 export const SQUARE_CORNER_RADIUS = 28;
+export const SQUARE_CORNER_RADIUS_BASIS = 247;
 
 /** Border width of every square, in pixels (Figma). */
 export const SQUARE_BORDER_WIDTH = 4;
@@ -94,13 +122,107 @@ export const GRID = {
     fadeEnd: 1,
 } as const;
 
-/** Existing-patio palette (blue), lifted from Figma node 9555:14606. */
-export const PATIO_SQUARE = {
-    border: '#258dff',
-    gradientEdge: '#007aff',
-    gradientOpacity: 0.35,
-    insetShadow: 'rgba(0, 122, 255, 0.7)',
+/**
+ * `Indicator` palette (Figma 9081:1180) — one entry per indicator type. Each
+ * square/badge is painted as a radial fill fading to `gradientEdge` plus an inner
+ * glow (`insetShadow`); `pressedBorder` is the 4px ring the design adds in the
+ * pressed state, which selection reuses (there is no `selected` variant).
+ *
+ * Shared by the SVG squares (`SquaresOverlay`) and the DOM singleton badges
+ * (`ClusterMarkers`), so the badge→square morph across `MORPH_BAND` is a pure
+ * shape change with no color jump. Clusters are deliberately *not* in here — they
+ * stay two-color (blue when `hasUnpublished`, green otherwise).
+ */
+export const INDICATOR_PALETTE = {
+    /** Published, not mine — green. */
+    owned: {
+        gradientEdge: '#0eb838',
+        gradientOpacity: 0.55,
+        insetShadow: 'rgba(14, 184, 56, 0.8)',
+        pressedBorder: '#01de37',
+        badgeFill: 'rgba(14, 184, 56, 0.6)',
+    },
+    /** Not published, not mine — blue (the previous flat treatment for every patio). */
+    'not-published': {
+        gradientEdge: '#007aff',
+        gradientOpacity: 0.55,
+        insetShadow: 'rgba(0, 122, 255, 0.7)',
+        pressedBorder: '#4ca2ff',
+        badgeFill: 'rgba(0, 122, 255, 0.6)',
+    },
+    /** Published and mine — orange. */
+    'owned-and-published': {
+        gradientEdge: '#ff9d00',
+        gradientOpacity: 0.55,
+        insetShadow: 'rgba(255, 157, 0, 0.8)',
+        pressedBorder: '#ff9d00',
+        badgeFill: 'rgba(255, 157, 0, 0.6)',
+    },
+    /** Not published and mine — yellow. */
+    'owned-and-not-published': {
+        gradientEdge: '#ffe100',
+        gradientOpacity: 0.55,
+        insetShadow: 'rgba(255, 225, 0, 0.8)',
+        pressedBorder: '#ffe100',
+        badgeFill: 'rgba(255, 225, 0, 0.6)',
+    },
+    /** The create-mode center cursor — dark orange, unchanged from `CENTER_SQUARE`. */
+    target: {
+        gradientEdge: CENTER_SQUARE.gradientEdge,
+        gradientOpacity: CENTER_SQUARE.gradientOpacity,
+        insetShadow: CENTER_SQUARE.insetShadow,
+        pressedBorder: CENTER_SQUARE.border,
+        badgeFill: 'rgba(255, 113, 0, 0.55)',
+    },
+} as const satisfies Record<IndicatorType, IndicatorPaletteEntry>;
+
+/**
+ * The pair of white inner highlights every *unselected* indicator carries (Figma
+ * 9081:1180 default/hovered, and the ring-less clusters at 9096:429): a soft lit
+ * edge bottom-right, a brighter one top-left. `blur` is the CSS blur radius —
+ * SVG filters halve it for `stdDeviation` — and `spread` reaches further inward
+ * than Figma's -2px so the lit edge reads at map scale, where a square is many
+ * times the 247px artboard. The selected (pressed) square drops them in favour of
+ * its solid accent ring.
+ */
+export const INDICATOR_HIGHLIGHTS = [
+    { color: 'rgba(255, 255, 255, 0.9)', blur: 5.8, dx: 2, dy: 3, spread: -2 },
+    { color: 'rgba(255, 255, 255, 0.8)', blur: 5.8, dx: -3, dy: -2, spread: -2 },
+] as const;
+
+/**
+ * Middle stop of every indicator's radial fill, as a fraction of the radius and a
+ * fraction of `gradientOpacity`. Two stops ramp linearly and leave the square
+ * evenly tinted; holding the mid-point low keeps the center readable and packs the
+ * color into the outer edge, where the design puts it.
+ */
+export const INDICATOR_FILL_MID = {
+    offset: 0.6,
+    opacityRatio: 0.3,
 } as const;
+
+/**
+ * Diagonal sheen the design lays over every indicator's inner rectangle (Figma
+ * 9081:1180): a 222.5° linear gradient in the type's own accent — bright at the
+ * top-right and bottom-left corners, all but gone across the middle. `stops` are
+ * the pressed alphas; the unpressed states are the same ramp scaled down by
+ * `restOpacity`, which is how the design draws them (0.25 → 0.01).
+ */
+export const INDICATOR_SHEEN = {
+    stops: [
+        { offset: 0.17734, opacity: 0.25 },
+        { offset: 0.46843, opacity: 0.005 },
+        { offset: 0.82838, opacity: 0.25 },
+    ],
+    restOpacity: 0.04,
+} as const;
+
+/**
+ * White radial wash the design lays over a hovered indicator (Figma: a 35%
+ * bottom-anchored white gradient). Rendered as its own overlay rect per square so
+ * hover is a pure CSS opacity flip on an already-mounted node.
+ */
+export const INDICATOR_HOVER_GLOW_OPACITY = 0.35;
 
 /**
  * Collision palette painted where the center square overlaps a patio. The exact
@@ -109,7 +231,7 @@ export const PATIO_SQUARE = {
 export const INTERSECTION = {
     fill: '#ff0000',
     fillOpacity: 0.8,
-    border: '##FF0404',
+    border: '#ff0404',
 } as const;
 
 /**
@@ -174,6 +296,25 @@ export const SINGLE_PATIO_VIEW_ZOOM = 18;
 
 /** Globe projection reaches the full planet at this zoom. */
 export const GLOBE_MIN_ZOOM = 0;
+
+/**
+ * Mount zoom: the whole planet in frame, so the flow opens on the globe and the
+ * idle spin reads immediately. Street-level framing (`DEFAULT_ZOOM`) is reached
+ * by search or by zooming in.
+ */
+export const GLOBE_START_ZOOM = 1.2;
+
+/**
+ * Above this zoom the globe has effectively flattened into the mercator plane,
+ * so the idle spin stops — it only ever runs while the sphere is visible.
+ */
+export const GLOBE_SPIN_MAX_ZOOM = 4;
+
+/** Idle spin rate, degrees of longitude per second. */
+export const GLOBE_SPIN_DEG_PER_SEC = 3;
+
+/** Quiet time after the last interaction before the idle spin resumes. */
+export const GLOBE_SPIN_IDLE_DELAY_MS = 3_000;
 
 /** Count-bubble diameter (px) by member count. Extendable to a third tier. */
 export const BADGE_SIZE_SM = 42;

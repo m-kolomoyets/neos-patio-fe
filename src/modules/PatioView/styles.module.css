@@ -76,6 +76,7 @@
     .map {
         padding: var(--gap-3);
         padding-top: 0;
+        padding-bottom: var(--gap-4);
     }
 
     .map-clip {
@@ -91,8 +92,8 @@
     .wrap {
         --patio-view-offset-y: 1rem;
         --patio-view-offset-x: 1rem;
-        --patio-view-bottom-offset: 2.25rem;
-        --home-content-bottom-offset: 2.25rem;
+        --patio-view-bottom-offset: 1rem;
+        --home-content-bottom-offset: 1.75rem;
     }
 
     .surface {
@@ -100,7 +101,7 @@
     }
 
     .map {
-        padding: var(--gap-3);
+        padding: var(--gap-4);
         padding-top: var(--gap-0-5);
     }
 
@@ -109,6 +110,6 @@
     }
 
     .view-cube {
-        bottom: calc(var(--gap-8) - var(--gap-0-5));
+        bottom: calc(var(--gap-2));
     }
 }

@@ -2,6 +2,17 @@ import type { Patio, PatioBounds } from './types';
 
 const DEFAULT_BOUNDS_HALF_DEG = 0.005;
 
+/**
+ * Wallet the "mine" fixtures are minted by, so the owned indicator colors (orange
+ * / yellow) are reachable while developing. Swap for your own test wallet — the
+ * comparison is case-insensitive. Hardhat's first dev account by default.
+ * TODO: drop once patios carry a real on-chain owner.
+ */
+export const DEV_OWNER_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+
+/** A second wallet, so "minted by someone else" is distinguishable from "unminted". */
+const OTHER_OWNER_ADDRESS = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+
 type PatioFixture = Omit<Patio, 'bounds' | 'objects'> & {
     bounds?: PatioBounds;
 };
@@ -32,11 +43,14 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'europe',
         type: 'landmark',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2025-09-12T10:00:00Z',
         popularity: 980,
         coords: { lat: 48.6361, lng: -1.5115 },
         isFeatured: true,
         isPublished: true,
+        blockchainLink: 'https://etherscan.io/token/0xD8dA6BF26964aF9D7eEd9e03E53415D37aA96045?a=417',
+        navigationLink: 'https://maps.google.com/?q=48.6361,-1.5115&mode=417',
     },
     {
         id: '2',
@@ -52,11 +66,13 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'europe',
         type: 'historic-site',
         author: 'Neos',
+        ownerAddress: OTHER_OWNER_ADDRESS,
         createdAt: '2025-08-30T10:00:00Z',
         popularity: 1200,
         coords: { lat: 55.68889, lng: 12.57861 },
         isFeatured: true,
         isPublished: true,
+        blockchainLink: 'https://etherscan.io/token/0xD8dA6BF26964aF9D7eEd9e03E53415D37aA96045?a=118',
     },
     {
         id: '3',
@@ -72,6 +88,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'europe',
         type: 'historic-site',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2025-10-02T10:00:00Z',
         popularity: 540,
         coords: { lat: 53.541328, lng: 9.984355 },
@@ -92,11 +109,13 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'north-america',
         type: 'architecture',
         author: 'Neos',
+        ownerAddress: OTHER_OWNER_ADDRESS,
         createdAt: '2025-11-04T10:00:00Z',
         popularity: 1100,
         coords: { lat: 40.77432, lng: -73.97083 },
         isFeatured: true,
         isPublished: true,
+        navigationLink: 'https://maps.google.com/?q=40.7739,-73.9709&mode=204',
     },
     {
         id: '5',
@@ -112,6 +131,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'europe',
         type: 'historic-site',
         author: 'Neos',
+        ownerAddress: OTHER_OWNER_ADDRESS,
         createdAt: '2025-07-22T10:00:00Z',
         popularity: 410,
         coords: { lat: 47.616, lng: 1.5167 },
@@ -132,6 +152,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'europe',
         type: 'architecture',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2025-12-01T10:00:00Z',
         popularity: 380,
         coords: { lat: 41.890209, lng: 12.492231 },
@@ -172,6 +193,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'north-america',
         type: 'landmark',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2026-02-04T10:00:00Z',
         popularity: 220,
         // 34.118404° N and 118.300514° W.
@@ -193,11 +215,14 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'north-america',
         type: 'architecture',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2026-03-01T10:00:00Z',
         popularity: 890,
         coords: { lat: 43.2687, lng: -2.934 },
         isFeatured: true,
-        isPublished: true,
+        // Unpublished on purpose: this one lands in the hub the camera starts on, so
+        // the owned-not-published (yellow) indicator is on screen from first paint.
+        isPublished: false,
     },
     {
         id: '10',
@@ -212,6 +237,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'north-america',
         type: 'stadium',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2025-06-18T10:00:00Z',
         popularity: 670,
         coords: { lat: 40.750504, lng: -73.993439 },
@@ -231,6 +257,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'europe',
         type: 'historic-site',
         author: 'Neos',
+        ownerAddress: OTHER_OWNER_ADDRESS,
         createdAt: '2025-05-09T10:00:00Z',
         popularity: 1320,
         coords: { lat: 50.0904, lng: 14.4018 },
@@ -269,6 +296,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'asia',
         type: 'historic-site',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2025-03-22T10:00:00Z',
         popularity: 1500,
         coords: { lat: 34.687748, lng: 135.83984 },
@@ -288,6 +316,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'north-america',
         type: 'historic-site',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2025-02-11T10:00:00Z',
         popularity: 1700,
         coords: { lat: 38.889463, lng: -77.035237 },

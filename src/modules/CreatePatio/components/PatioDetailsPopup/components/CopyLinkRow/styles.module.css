@@ -1,0 +1,25 @@
+.chip {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-1);
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    color: hsl(var(--color-hsl-white) / 0.9);
+}
+
+.text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

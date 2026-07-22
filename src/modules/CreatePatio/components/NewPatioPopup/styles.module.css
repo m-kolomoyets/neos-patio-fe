@@ -1,0 +1,53 @@
+.location {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-1);
+    margin: 0;
+    overflow: hidden;
+    color: hsl(var(--color-hsl-white) / 0.8);
+    font-family: "Inter", sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pin {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.price-row {
+    align-items: center;
+}
+
+.price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.usd {
+    color: hsl(var(--color-hsl-white) / 0.6);
+    font-weight: var(--fw-regular);
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
+.status-dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: hsl(var(--color-hsl-white) / 0.4);
+}
+
+.action.action {
+    flex: 1;
+}
+
+.icon {
+    width: 20px;
+    height: 20px;
+}

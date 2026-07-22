@@ -40,8 +40,8 @@ const Home: React.FC = () => {
                         <FeaturedPatios />
                         <PatioLibrary />
                     </ScrollArea>
-                    <AlphabetIndex />
                 </main>
+                <AlphabetIndex />
                 <ActionBar />
             </div>
         </div>
