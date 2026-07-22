@@ -23,6 +23,12 @@
     }
 }
 
+@media (max-width: 1023px) and (orientation: landscape) {
+    .wrap {
+        padding: 0;
+    }
+}
+
 .wrap::after {
     content: "";
     position: absolute;

@@ -111,12 +111,14 @@
 
         padding-inline: calc(var(--gap-3) + var(--gap-0-5));
         margin-top: var(--gap-3);
+        gap: var(--gap-4);
     }
 }
 
 @media (max-width: 1023px) and (orientation: landscape) {
     .grid {
         padding-inline: calc(var(--gap-3) + var(--gap-0-5));
+        gap: var(--gap-3) var(--gap-4);
     }
 }
 
