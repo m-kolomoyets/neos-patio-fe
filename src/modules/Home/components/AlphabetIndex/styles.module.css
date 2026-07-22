@@ -1,7 +1,7 @@
 .wrap {
     position: absolute;
     top: 50%;
-    right: calc(var(--gap-6) * -2);
+    right: calc((var(--home-content-offset-x) - 20px) * 0.5);
     transform: translateY(-50%);
     z-index: 20;
     display: flex;
@@ -46,4 +46,16 @@
 
 .letter[data-active="true"] {
     color: hsl(var(--color-hsl-white) / 0.96);
+}
+
+@media (max-width: 767px) {
+    .wrap {
+        display: none;
+    }
+}
+
+@media (max-width: 1023px) and (orientation: landscape) {
+    .wrap {
+        display: none;
+    }
 }
