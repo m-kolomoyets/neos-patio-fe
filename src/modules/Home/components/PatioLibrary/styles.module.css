@@ -154,16 +154,13 @@
 
     .group .group-title {
         margin-bottom: calc(var(--gap-1) + var(--gap-0-5));
+        padding-inline: calc(var(--gap-5) + var(--gap-0-5));
         line-height: 0.9375rem;
     }
 
     .group .group-separator {
         margin-inline: calc(var(--gap-5) + var(--gap-0-5));
         width: calc(100% - calc(var(--gap-5) + var(--gap-0-5)) * 2) !important;
-    }
-
-    .group .group-title {
-        padding-inline: calc(var(--gap-5) + var(--gap-0-5));
     }
 }
 

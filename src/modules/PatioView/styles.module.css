@@ -103,7 +103,6 @@
     .map {
         padding: var(--gap-4);
         padding-top: var(--gap-0-5);
-        padding-bottom: var(--gap-4);
     }
 
     .map-clip {
