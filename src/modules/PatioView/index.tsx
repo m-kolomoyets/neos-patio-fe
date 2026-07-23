@@ -59,7 +59,7 @@ export const PatioView: React.FC = () => {
         <div className={s.wrap}>
             <AppBackground src={patioViewBackgroundSrc} />
             <main ref={surfaceRef} className={s.surface} style={surfaceSquircleStyle}>
-                <Header name={patio.name} />
+                <Header name={patio.name} description={patio.description} />
                 <div className={s.map}>
                     <div ref={mapRef} className={s['map-clip']} style={mapSquircleStyle}>
                         <CesiumViewerProvider>

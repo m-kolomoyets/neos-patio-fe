@@ -41,6 +41,8 @@ export type PlacedObject = {
 export type Patio = {
     id: string;
     name: string;
+    /** Short one-line tagline capturing the place or its vibe. Shown in Patio View header. */
+    description: string;
     country: string;
     continent: Continent;
     type: PatioType;
