@@ -131,9 +131,9 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
                         ID {patio.id}
                     </Typography>
                     <ul className={s.meta}>
-                        <Tag render={<li />}>
+                        <Tag className={s.tag} render={<li />}>
                             <MapPin24Icon className={s.icon} aria-hidden />
-                            <Typography variant="text-sm" render={<span />}>
+                            <Typography className={s.label} variant="text-sm" render={<span />}>
                                 <span className="sr-only">Continent: </span>
                                 {CONTINENT_LABELS?.[patio.continent] ?? 'N/A'}
                             </Typography>

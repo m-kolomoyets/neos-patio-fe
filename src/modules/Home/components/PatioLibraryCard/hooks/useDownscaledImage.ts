@@ -7,10 +7,8 @@ import { HOME_SCROLL_ROOT_SELECTOR } from '../../../constants';
 // paint the result directly into a <canvas>, which is cheaper than re-encoding
 // to a blob (no encode + second decode round-trip).
 
-// Painted image box, mirrors --image-width / --image-height in styles.module.css
-// plus the parallax overshoot (.image height is 140%).
-const BOX_WIDTH = 221;
-const BOX_HEIGHT = 132;
+const BOX_WIDTH = 480;
+const BOX_HEIGHT = 320;
 const PARALLAX_OVERSHOOT = 1;
 const MAX_DPR = 2;
 

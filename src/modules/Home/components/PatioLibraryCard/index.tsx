@@ -65,7 +65,7 @@ export const PatioLibraryCard: React.FC<PatioLibraryCardProps> = ({ patio }) => 
                         </Typography>
                     </div>
                     <Typography className={s.id} variant="text-sm" render={<p />}>
-                        ID <span>{patio.id}</span>
+                        ID&nbsp;{patio.id}
                     </Typography>
                 </header>
                 <footer className={s.footer}>

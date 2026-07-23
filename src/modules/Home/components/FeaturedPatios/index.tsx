@@ -21,23 +21,15 @@ export const FeaturedPatios: React.FC = () => {
     const { data, isLoading } = useQuery(getFeaturedPatiosQueryOptions());
     const viewportId = useId();
 
-    const {
-        emblaRef,
-        emblaApi,
-        snapList,
-        scrollPrev,
-        scrollNext,
-        reducedMotion,
-        videoCapable,
-        slidesInViewWithNeighbors,
-    } = useFeaturedCarousel({
-        dataKey: data,
-    });
+    const { emblaRef, emblaApi, snapList, scrollPrev, scrollNext, reducedMotion, slidesInViewWithNeighbors } =
+        useFeaturedCarousel({
+            dataKey: data,
+        });
 
-    useCarouselVideoScrub({ emblaApi, enabled: !isMobile && videoCapable });
+    useCarouselVideoScrub({ emblaApi, enabled: !isMobile });
     const { boost, unboost } = useCarouselProximityAutoplay({
         emblaApi,
-        enabled: !isMobile && videoCapable && !reducedMotion,
+        enabled: !isMobile && !reducedMotion,
     });
 
     const hasMultipleSlides = snapList.length > 1;
