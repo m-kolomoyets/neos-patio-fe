@@ -129,7 +129,7 @@ export const useFeaturedCarousel = ({ dataKey }: Params): Result => {
     }, [emblaApi, reducedMotion, isMobile, dataKey]);
 
     useEffect(() => {
-        if (!emblaApi || !videoCapable) return;
+        if (!emblaApi) return;
         const NEIGHBOR_RADIUS = 2;
         const EAGER_MOUNT_THRESHOLD = 8;
         const sync = () => {
@@ -162,7 +162,7 @@ export const useFeaturedCarousel = ({ dataKey }: Params): Result => {
             emblaApi.off('slidesInView', sync);
             emblaApi.off('reInit', sync);
         };
-    }, [emblaApi, videoCapable]);
+    }, [emblaApi]);
 
     const scrollPrev = useCallback(() => {
         return emblaApi?.scrollPrev();
