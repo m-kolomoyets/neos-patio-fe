@@ -5,31 +5,76 @@
     margin-bottom: var(--gap-8);
 }
 
+.header-sentinel {
+    height: 0;
+}
+
+/* Reserves the header's height in flow while the header is portaled out to
+   <body> (stuck), so the content below doesn't jump. Height set from JS. */
+.header-spacer {
+    flex-shrink: 0;
+}
+
 .header {
-    position: sticky;
+    /* NOT stuck: plain in-flow header, scrolls natively with the content —
+       no JS positioning, so no per-frame glitch. */
+    position: static;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: calc(var(--gap-5) + var(--gap-0-5)) var(--gap-8);
     padding-bottom: calc(var(--gap-5) - var(--gap-1) - var(--gap-0-5));
     gap: var(--gap-4);
-    top: 0;
-    z-index: 10;
+    transition:
+        backdrop-filter 0.2s ease,
+        background-color 0.2s ease;
+}
 
-    /* Blur on the element, not ::after: a nested backdrop-filter under another
-       (::after inside .header) is unreliable in Blink. Gated by stuck state so
-       it only frosts the cards once the header pins. */
-    transition: backdrop-filter 0.2s ease;
+/* Fixed clip window at the panel top (portaled to <body>). left / top / width
+   driven imperatively by useJsSticky. overflow:hidden clips the header sliding
+   in from above; the top corners match the panel's squircle. */
+.header-portal {
+    position: fixed;
+    z-index: 20;
+    overflow: hidden;
+    isolation: isolate;
+    border-start-start-radius: 2.5rem;
+    border-start-end-radius: 2.5rem;
 }
 
 .header[data-stuck="true"] {
-    backdrop-filter: blur(100px);
+    /* Inside the clip window: full width, blurs the cards showing through the
+       panel (backdrop-filter now escapes the squircle clip-path backdrop root).
+       Slides down into view from the top edge on mount. */
+    width: 100%;
+    backdrop-filter: blur(50px);
+    animation: header-slide-in 0.28s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    padding-bottom: 1.375rem;
+}
+
+@keyframes header-slide-in {
+    from {
+        transform: translateY(-100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
 }
 
 @media (max-width: 767px) {
     .header {
         padding-inline: calc(var(--gap-3) + var(--gap-0-5));
         padding-top: var(--gap-3);
+    }
+
+    .header[data-stuck="true"] {
+        padding-bottom: var(--gap-3);
+    }
+
+    .header-portal {
+        border-start-start-radius: 1.5rem;
+        border-start-end-radius: 1.5rem;
     }
 }
 
@@ -38,6 +83,15 @@
         padding-top: calc(var(--gap-2) + var(--gap-0-5));
         padding-bottom: var(--gap-3);
         padding-inline: calc(var(--gap-3) + var(--gap-0-5));
+    }
+
+    .header[data-stuck="true"] {
+        padding-bottom: var(--gap-3);
+    }
+
+    .header-portal {
+        border-start-start-radius: 1.5rem;
+        border-start-end-radius: 1.5rem;
     }
 }
 
@@ -53,7 +107,9 @@
     transition: opacity 0.2s ease;
     pointer-events: none;
 
-    /* NOTE: surface-regular in index.css */
+    /* Glass surface = the reliable frosted read (renders even when
+       backdrop-filter is unavailable). surface-thick is opaque enough to
+       separate the pinned header from the cards scrolling behind it. */
 
     background: var(--surface-regular);
     background-blend-mode: normal, luminosity;
@@ -61,29 +117,6 @@
 
 .header[data-stuck="true"]::after {
     opacity: 1;
-}
-
-@supports (container-type: scroll-state) {
-    .header {
-        container-type: scroll-state;
-    }
-
-    @container scroll-state(stuck: top) {
-        .header {
-            backdrop-filter: blur(100px);
-        }
-
-        .header::after {
-            opacity: 1;
-        }
-
-        .header .title {
-            /*  NOTE: Typography variant display-xs */
-
-            font-size: 1.5rem;
-            line-height: 2rem;
-        }
-    }
 }
 
 .title {

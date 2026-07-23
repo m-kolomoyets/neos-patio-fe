@@ -1,8 +1,9 @@
 import type { GroupingMode } from '../../hooks/useGroupedPatios';
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { useInView } from 'react-intersection-observer';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { useStickyStuck } from '@/hooks/useStickyStuck';
+import { useJsSticky } from '@/hooks/useJsSticky';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Separator } from '@/components/ui/Separator';
@@ -25,7 +26,14 @@ export const PatioLibrary: React.FC = () => {
             // NOTE: Search should work for search autocomplete only
             q: '',
         });
-    const { ref: headerRef, flag: isHeaderStuck } = useStickyStuck({
+    const {
+        containerRef,
+        sentinelRef: stickySentinelRef,
+        wrapperRef,
+        headerRef,
+        stuck: isHeaderStuck,
+        headerHeight,
+    } = useJsSticky({
         rootSelector: HOME_SCROLL_ROOT_SELECTOR,
     });
 
@@ -136,18 +144,49 @@ export const PatioLibrary: React.FC = () => {
         }
     }, [mode, sentinelInView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+    const headerInner = (
+        <>
+            <Typography
+                variant={!isMobile && isHeaderStuck ? 'display-xs' : 'text-xl'}
+                className={s.title}
+                render={<h2 />}
+            >
+                Patio Library
+            </Typography>
+            <LibraryToolbar className={s.toolbar} />
+        </>
+    );
+
     return (
-        <section className={s.wrap}>
-            <header ref={headerRef} className={s.header} data-stuck={isHeaderStuck || undefined}>
-                <Typography
-                    variant={!isMobile && isHeaderStuck ? 'display-xs' : 'text-xl'}
-                    className={s.title}
-                    render={<h2 />}
-                >
-                    Patio Library
-                </Typography>
-                <LibraryToolbar className={s.toolbar} />
-            </header>
+        <section ref={containerRef} className={s.wrap}>
+            {isHeaderStuck ? (
+                // Reserve the vacated height so flow doesn't jump when the header
+                // leaves flow for the <body> portal.
+                <div className={s['header-spacer']} style={{ height: headerHeight }} aria-hidden="true" />
+            ) : (
+                // In flow, position: static — scrolls natively with the content,
+                // no JS positioning, no glitch. Portaled + fixed only once stuck.
+                <header ref={headerRef} className={s.header}>
+                    {headerInner}
+                </header>
+            )}
+            {/* 0-height marker at the header's BOTTOM edge; stuck flips only once
+                it crosses the container top (header fully out of view). */}
+            <div ref={stickySentinelRef} className={s['header-sentinel']} aria-hidden="true" />
+            {isHeaderStuck
+                ? createPortal(
+                      // Fixed clip window at the panel top; the header slides in
+                      // from above (overflow: hidden reveals it emerging from the
+                      // top edge). Portaled so backdrop-filter escapes the squircle
+                      // clip-path backdrop root.
+                      <div ref={wrapperRef} className={s['header-portal']}>
+                          <header ref={headerRef} className={s.header} data-stuck="true">
+                              {headerInner}
+                          </header>
+                      </div>,
+                      document.body
+                  )
+                : null}
             {body}
         </section>
     );
