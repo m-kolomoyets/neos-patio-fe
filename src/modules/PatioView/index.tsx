@@ -23,7 +23,7 @@ const patioViewBackgroundSrc = getAppBackground();
 
 /** Drives the ambient idle-orbit; renders nothing. Must live inside CesiumViewerProvider. */
 const IdleOrbit: React.FC<{ bounds: PatioBounds }> = ({ bounds }) => {
-    useIdleRotation(bounds);
+    useIdleRotation(bounds, true);
     return null;
 };
 

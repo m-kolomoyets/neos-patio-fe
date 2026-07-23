@@ -48,7 +48,7 @@ type ViewCubeProps = WithClassName<{
 }>;
 
 export const ViewCube: React.FC<ViewCubeProps> = ({ className, bounds, storageId, interaction = 'edit' }) => {
-    const { viewer, referenceRange, readOrientation, easeTo, zoomTo, snapTo, orbitTo, beginDragOrbit, fitBounds } =
+    const { viewer, referenceRange, readOrientation, easeTo, zoomTo, orbitTo, beginDragOrbit, fitBounds } =
         useCesiumCamera(bounds, interaction);
     const { selectedFace, onSnap, onOrbitStart, stepBy, goTop } = useFlattenedFace({
         viewer,
@@ -58,7 +58,6 @@ export const ViewCube: React.FC<ViewCubeProps> = ({ className, bounds, storageId
     const { isDragging, handlers } = useCubeInteraction({
         viewer,
         readOrientation,
-        snapTo,
         orbitTo,
         beginDragOrbit,
         onSnap,
