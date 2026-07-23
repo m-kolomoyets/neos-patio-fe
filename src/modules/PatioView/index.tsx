@@ -8,6 +8,7 @@ import { useIdleRotation } from '@/hooks/useIdleRotation';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useIsMobileLandscape } from '@/hooks/useIsMobileLandscape';
 import { useSquircleClipPath } from '@/hooks/useSquircleClipPath';
+import { useViewOrbitControls } from '@/hooks/useViewOrbitControls';
 import { getPatioQueryOptions } from '@/services/patios/queries';
 import { ActionBar } from '@/components/ActionBar';
 import { AppBackground } from '@/components/AppBackground';
@@ -23,6 +24,12 @@ const patioViewBackgroundSrc = getAppBackground();
 /** Drives the ambient idle-orbit; renders nothing. Must live inside CesiumViewerProvider. */
 const IdleOrbit: React.FC<{ bounds: PatioBounds }> = ({ bounds }) => {
     useIdleRotation(bounds);
+    return null;
+};
+
+/** Drives the center-locked drag-orbit for view mode; renders nothing. Must live inside CesiumViewerProvider. */
+const ViewOrbitControls: React.FC<{ bounds: PatioBounds }> = ({ bounds }) => {
+    useViewOrbitControls(bounds);
     return null;
 };
 
@@ -64,7 +71,13 @@ export const PatioView: React.FC = () => {
                     <div ref={mapRef} className={s['map-clip']} style={mapSquircleStyle}>
                         <CesiumViewerProvider>
                             <CesiumMap bounds={patio.bounds} interaction="view" />
-                            <ViewCube className={s['view-cube']} bounds={patio.bounds} storageId={id} />
+                            <ViewCube
+                                className={s['view-cube']}
+                                bounds={patio.bounds}
+                                storageId={id}
+                                interaction="view"
+                            />
+                            <ViewOrbitControls bounds={patio.bounds} />
                             <IdleOrbit bounds={patio.bounds} />
                         </CesiumViewerProvider>
                     </div>

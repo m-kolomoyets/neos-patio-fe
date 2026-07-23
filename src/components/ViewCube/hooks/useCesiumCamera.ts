@@ -1,4 +1,5 @@
 import type { Viewer } from 'cesium';
+import type { MapInteraction } from '@/components/CesiumMap/utils/sceneBootstrap';
 import type { PatioBounds } from '@/services/patios/types';
 import type { CameraState, CameraTarget } from '../types';
 import { useCallback, useMemo } from 'react';
@@ -65,10 +66,14 @@ const pumpRenderDuringFlight = (viewer: Viewer, durationMs: number) => {
  * re-renders per frame — the leaves own that via {@link useCameraState}. Every
  * writer ends in a render request, satisfying `requestRenderMode`.
  */
-export const useCesiumCamera = (bounds: PatioBounds) => {
+export const useCesiumCamera = (bounds: PatioBounds, interaction: MapInteraction = 'edit') => {
     const viewer = useCesiumViewer();
     // Bounds centre at surface height — the lookAt pivot for every camera move.
     const targetRef = useOrbitTarget(viewer, bounds);
+    // View mode locks every ViewCube move to the fixed bounds centre so it can
+    // never nudge the patio off-axis (agrees with the center-locked map drags);
+    // edit mode keeps pivoting on what the camera currently looks at.
+    const centerLocked = interaction === 'view';
 
     const [west, south, east, north] = bounds;
 
@@ -170,15 +175,20 @@ export const useCesiumCamera = (bounds: PatioBounds) => {
         (range: number) => {
             if (!viewer) return;
             const { camera, scene } = viewer;
-            const center = new Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2);
-            let pivot = scene.pickPositionSupported ? scene.pickPosition(center) : undefined;
-            pivot = pivot ?? camera.pickEllipsoid(center, Ellipsoid.WGS84) ?? targetRef.current ?? undefined;
+            let pivot: Cartesian3 | undefined;
+            if (centerLocked) {
+                pivot = targetRef.current ?? undefined;
+            } else {
+                const center = new Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2);
+                pivot = scene.pickPositionSupported ? scene.pickPosition(center) : undefined;
+                pivot = pivot ?? camera.pickEllipsoid(center, Ellipsoid.WGS84) ?? targetRef.current ?? undefined;
+            }
             if (!pivot) return;
             const offset = new HeadingPitchRange(camera.heading, camera.pitch, clampRange(range));
             camera.flyToBoundingSphere(new BoundingSphere(pivot, 0), { offset, duration: CAMERA_EASE_S });
             pumpRenderDuringFlight(viewer, CAMERA_EASE_MS);
         },
-        [viewer, targetRef, clampRange]
+        [viewer, targetRef, clampRange, centerLocked]
     );
 
     /**
@@ -222,9 +232,14 @@ export const useCesiumCamera = (bounds: PatioBounds) => {
         if (!viewer) return null;
         const { camera, scene } = viewer;
 
-        const center = new Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2);
-        let pivot = scene.pickPositionSupported ? scene.pickPosition(center) : undefined;
-        pivot = pivot ?? camera.pickEllipsoid(center, Ellipsoid.WGS84) ?? targetRef.current ?? undefined;
+        let pivot: Cartesian3 | undefined;
+        if (centerLocked) {
+            pivot = targetRef.current ?? undefined;
+        } else {
+            const center = new Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2);
+            pivot = scene.pickPositionSupported ? scene.pickPosition(center) : undefined;
+            pivot = pivot ?? camera.pickEllipsoid(center, Ellipsoid.WGS84) ?? targetRef.current ?? undefined;
+        }
         if (!pivot) return null;
 
         const frozenPivot = Cartesian3.clone(pivot);
@@ -249,7 +264,7 @@ export const useCesiumCamera = (bounds: PatioBounds) => {
                 scene.requestRender();
             },
         };
-    }, [viewer, targetRef]);
+    }, [viewer, targetRef, centerLocked]);
 
     /**
      * Animated zoom-to-fit: frame the whole patio at the default orientation.
