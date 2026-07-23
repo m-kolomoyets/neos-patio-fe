@@ -183,6 +183,18 @@ export const bootstrapScene = (
 
             // Provider ToS requires on-screen data attributions.
             tileset.showCreditsOnScreen = true;
+
+            // Cap the tile cache so a long session can't grow the working set
+            // unbounded. Without a ceiling, orbiting keeps streaming tiles until
+            // memory pressure forces evict→re-fetch→GPU-upload thrash on the main
+            // thread — the progressive micro-freezes seen after interacting a while.
+            // `cacheBytes` is the steady-state target; overflow tolerates transient
+            // spikes during a move before trimming back down. `dynamicScreenSpaceError`
+            // relaxes detail on distant tiles, cutting the tile count (and churn).
+            tileset.cacheBytes = 512 * 1024 * 1024;
+            tileset.maximumCacheOverflowBytes = 256 * 1024 * 1024;
+            tileset.dynamicScreenSpaceError = true;
+
             viewer.scene.primitives.add(tileset);
 
             // Authoritative re-frame now the canvas is certainly laid out (the

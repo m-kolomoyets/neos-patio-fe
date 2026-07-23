@@ -2,7 +2,7 @@ import type { Viewer } from 'cesium';
 import type { MapInteraction } from '@/components/CesiumMap/utils/sceneBootstrap';
 import type { PatioBounds } from '@/services/patios/types';
 import type { CameraState, CameraTarget } from '../types';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useCesiumViewer } from '@/contexts/CesiumViewerContext';
 import {
     BoundingSphere,
@@ -156,6 +156,62 @@ export const useCesiumCamera = (bounds: PatioBounds, interaction: MapInteraction
         [readOrientation, clampRange]
     );
 
+    // Handle of the in-flight orbit tween (see `orbitTo`), so a new step cancels
+    // the previous one instead of stacking rAF loops.
+    const orbitRaf = useRef<number | null>(null);
+    useEffect(function cancelOrbitOnUnmount() {
+        return () => {
+            if (orbitRaf.current !== null) cancelAnimationFrame(orbitRaf.current);
+        };
+    }, []);
+
+    /**
+     * Eased **in-place orbit** to an absolute orientation — interpolates
+     * bearing/pitch/range around the fixed target via per-frame `lookAt`, so the
+     * camera simply rotates around the patio. Unlike `moveCamera`'s
+     * `flyToBoundingSphere` (which arcs the camera up-and-over between poses),
+     * this keeps it on the orbit sphere — the smooth quarter-turn the flattened
+     * step arrows want. Bearing takes the shortest signed path so a +270° step
+     * rotates -90° instead of the long way round.
+     */
+    const orbitTo = useCallback(
+        (target: CameraTarget) => {
+            const orbitTarget = targetRef.current;
+            if (!viewer || !orbitTarget) return;
+            const { camera, scene } = viewer;
+            const from = readOrientation();
+            const to = resolve(target);
+            const bearingDelta = ((to.bearing - from.bearing + 540) % 360) - 180;
+            const pitchDelta = to.pitch - from.pitch;
+            const rangeDelta = to.range - from.range;
+
+            if (orbitRaf.current !== null) cancelAnimationFrame(orbitRaf.current);
+            camera.cancelFlight();
+
+            const ease = (t: number) => {
+                return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+            };
+            let start: number | null = null;
+            const tick = (ts: number) => {
+                if (viewer.isDestroyed()) return;
+                if (start === null) start = ts;
+                const t = Math.min((ts - start) / CAMERA_EASE_MS, 1);
+                const k = ease(t);
+                const offset = new HeadingPitchRange(
+                    bearingToHeading(from.bearing + bearingDelta * k),
+                    displayPitchToCesium(from.pitch + pitchDelta * k),
+                    from.range + rangeDelta * k
+                );
+                camera.lookAt(orbitTarget, offset);
+                camera.lookAtTransform(Matrix4.IDENTITY);
+                scene.requestRender();
+                orbitRaf.current = t < 1 ? requestAnimationFrame(tick) : null;
+            };
+            orbitRaf.current = requestAnimationFrame(tick);
+        },
+        [viewer, targetRef, readOrientation, resolve]
+    );
+
     /** Animated camera move (home, rotate presets). */
     const easeTo = useCallback(
         (target: CameraTarget) => {
@@ -286,5 +342,5 @@ export const useCesiumCamera = (bounds: PatioBounds, interaction: MapInteraction
         easeTo({ bearing: DEFAULT_BEARING, pitch: DEFAULT_PITCH, range });
     }, [viewer, referenceRange, easeTo]);
 
-    return { viewer, referenceRange, readOrientation, easeTo, zoomTo, snapTo, beginDragOrbit, fitBounds };
+    return { viewer, referenceRange, readOrientation, easeTo, zoomTo, snapTo, orbitTo, beginDragOrbit, fitBounds };
 };

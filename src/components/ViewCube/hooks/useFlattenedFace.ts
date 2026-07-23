@@ -7,8 +7,8 @@ import { isCubeFace, isSnappedToFace, resolveSnapOrientation, stepFace } from '.
 type UseFlattenedFaceArgs = {
     viewer: Viewer | null;
     readOrientation: () => CameraState;
-    /** Animated snap that keeps the patio framed (no out-of-bounds in view). */
-    snapTo: (_target: CameraTarget) => void;
+    /** Eased in-place orbit (rotate only, no fly-arc) for the step + top arrows. */
+    orbitTo: (_target: CameraTarget) => void;
 };
 
 /**
@@ -24,7 +24,7 @@ type UseFlattenedFaceArgs = {
  * Returns the selected face plus the callbacks the widget wires to the cube
  * interaction (`onSnap`/`onOrbitStart`) and the arrow buttons (`stepBy`/`goTop`).
  */
-export const useFlattenedFace = ({ viewer, readOrientation, snapTo }: UseFlattenedFaceArgs) => {
+export const useFlattenedFace = ({ viewer, readOrientation, orbitTo }: UseFlattenedFaceArgs) => {
     const [selectedFace, setSelectedFace] = useState<CubeFace | null>(null);
     const snapping = useRef(false);
     const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -86,22 +86,25 @@ export const useFlattenedFace = ({ viewer, readOrientation, snapTo }: UseFlatten
                 if (!face) return face;
                 const next = stepFace(face, dir);
                 beginSnapping();
-                snapTo({
+                // In-place orbit (rotate only) — the neighbor face shares pitch/range,
+                // so this is a pure quarter-turn with no fly-arc up-and-over.
+                orbitTo({
                     bearing: CUBE_TARGETS[next].bearing ?? readOrientation().bearing,
                     pitch: CUBE_TARGETS[next].pitch,
                 });
                 return next;
             });
         },
-        [beginSnapping, snapTo, readOrientation]
+        [beginSnapping, orbitTo, readOrientation]
     );
 
     /** Up arrow: jump to the top view (exits flattened — top is not a side face). */
     const goTop = useCallback(() => {
         beginSnapping();
-        snapTo(resolveSnapOrientation('top', readOrientation().bearing));
+        // In-place orbit (rotate/tilt only, no fly-arc) up to the top-down view.
+        orbitTo(resolveSnapOrientation('top', readOrientation().bearing));
         setSelectedFace(null);
-    }, [beginSnapping, snapTo, readOrientation]);
+    }, [beginSnapping, orbitTo, readOrientation]);
 
     return { selectedFace, onSnap, onOrbitStart, stepBy, goTop };
 };

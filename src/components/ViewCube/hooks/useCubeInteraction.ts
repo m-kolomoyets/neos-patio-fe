@@ -11,6 +11,8 @@ type UseCubeInteractionArgs = {
     readOrientation: () => CameraState;
     /** Animated snap to a face/corner that keeps the patio framed (no out-of-bounds). */
     snapTo: (_target: CameraTarget) => void;
+    /** Eased in-place orbit (rotate/tilt only, no fly-arc) — used for the top face. */
+    orbitTo: (_target: CameraTarget) => void;
     /** Begins a live drag-orbit from the current viewport (seamless pivot capture). */
     beginDragOrbit: () => DragOrbit | null;
     /** Fired with the clicked target right after its snap `easeTo` (drives flattened mode). */
@@ -61,6 +63,7 @@ export const useCubeInteraction = ({
     viewer,
     readOrientation,
     snapTo,
+    orbitTo,
     beginDragOrbit,
     onSnap,
     onOrbitStart,
@@ -127,11 +130,17 @@ export const useCubeInteraction = ({
             }
             // No meaningful travel → treat as a click and snap to the pressed target.
             if (g.target) {
-                snapTo(resolveSnapOrientation(g.target, readOrientation().bearing));
+                const orientation = resolveSnapOrientation(g.target, readOrientation().bearing);
+                // Top view rotates/tilts in place (no fly-arc); sides/corners snap-frame.
+                if (g.target === 'top') {
+                    orbitTo(orientation);
+                } else {
+                    snapTo(orientation);
+                }
                 onSnap?.(g.target);
             }
         },
-        [viewer, snapTo, readOrientation, onSnap]
+        [viewer, snapTo, orbitTo, readOrientation, onSnap]
     );
 
     return {
