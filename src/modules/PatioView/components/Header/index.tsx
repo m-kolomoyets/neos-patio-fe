@@ -7,6 +7,7 @@ import s from './styles.module.css';
 
 type HeaderProps = {
     name: string;
+    description: string;
 };
 
 /**
@@ -14,7 +15,7 @@ type HeaderProps = {
  * Left = back-to-home. Right slot is intentionally empty: no location search,
  * no mode/create controls on the view surface.
  */
-export const Header: React.FC<HeaderProps> = ({ name }) => {
+export const Header: React.FC<HeaderProps> = ({ name, description }) => {
     const navigate = usePatioViewNavigate();
 
     return (
@@ -36,9 +37,8 @@ export const Header: React.FC<HeaderProps> = ({ name }) => {
                 <Typography className={clsx(s.title, 'truncate')} variant="display-xs" render={<h1 />}>
                     {name}
                 </Typography>
-                {/* TODO: retrieve quote from the API */}
                 <Typography className={clsx(s.description, 'truncate')} variant="text-sm">
-                    Every good tree bears good fruit
+                    {description}
                 </Typography>
             </div>
             <div />

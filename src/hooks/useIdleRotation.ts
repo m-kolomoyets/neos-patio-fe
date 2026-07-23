@@ -48,7 +48,7 @@ const DRAG_MOVE_EVENT = 'pointermove' as const;
  * (view cube, panels); the orbit's own `lookAt` emits no DOM events, so the loop
  * can never feed itself.
  */
-export const useIdleRotation = (bounds: PatioBounds) => {
+export const useIdleRotation = (bounds: PatioBounds, centerLocked = false) => {
     const viewer = useCesiumViewer();
     const ready = useCesiumMapReady();
     const targetRef = useOrbitTarget(viewer, bounds);
@@ -77,6 +77,11 @@ export const useIdleRotation = (bounds: PatioBounds) => {
         let orbitRange = 0;
 
         const resolvePivot = () => {
+            // Center-locked routes (Patio View) orbit the fixed bounds-centre — the
+            // exact pivot useViewOrbitControls uses — so the idle→drag handoff reads
+            // back an identical pose with no reproject jump. Free-pan routes (editor)
+            // keep the live screen-centre pick so orbit resumes from wherever panned.
+            if (centerLocked) return targetRef.current;
             const { camera, scene, canvas } = viewer;
             const center = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
             // Prefer the real rendered surface under the screen centre (depth
@@ -178,5 +183,5 @@ export const useIdleRotation = (bounds: PatioBounds) => {
             if (idleTimer !== null) clearTimeout(idleTimer);
             stopOrbit();
         };
-    }, [viewer, ready, targetRef]);
+    }, [viewer, ready, targetRef, centerLocked]);
 };

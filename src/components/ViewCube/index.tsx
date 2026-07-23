@@ -1,3 +1,4 @@
+import type { MapInteraction } from '@/components/CesiumMap/utils/sceneBootstrap';
 import type { PatioBounds } from '@/services/patios/types';
 import type { CubeFace } from './types';
 import ArrowLeftFilledIcon from '@/icons/arrow-left-filled_24.svg?react';
@@ -38,20 +39,26 @@ type ViewCubeProps = WithClassName<{
     bounds: PatioBounds;
     /** Stable id (the patio id) keying the per-patio Home-view localStorage entry. */
     storageId: string;
+    /**
+     * Camera mode. In `'view'` the cube's orbit/zoom pivot on the fixed bounds
+     * centre (center-locked, agrees with the map drags); `'edit'` (default)
+     * pivots on the viewport-centre ground pick.
+     */
+    interaction?: MapInteraction;
 }>;
 
-export const ViewCube: React.FC<ViewCubeProps> = ({ className, bounds, storageId }) => {
-    const { viewer, referenceRange, readOrientation, easeTo, zoomTo, snapTo, beginDragOrbit, fitBounds } =
-        useCesiumCamera(bounds);
+export const ViewCube: React.FC<ViewCubeProps> = ({ className, bounds, storageId, interaction = 'edit' }) => {
+    const { viewer, referenceRange, readOrientation, easeTo, zoomTo, orbitTo, beginDragOrbit, fitBounds } =
+        useCesiumCamera(bounds, interaction);
     const { selectedFace, onSnap, onOrbitStart, stepBy, goTop } = useFlattenedFace({
         viewer,
         readOrientation,
-        snapTo,
+        orbitTo,
     });
     const { isDragging, handlers } = useCubeInteraction({
         viewer,
         readOrientation,
-        snapTo,
+        orbitTo,
         beginDragOrbit,
         onSnap,
         onOrbitStart,
@@ -103,7 +110,7 @@ export const ViewCube: React.FC<ViewCubeProps> = ({ className, bounds, storageId
                                         e.stopPropagation();
                                     }}
                                     onClick={() => {
-                                        stepBy(-1);
+                                        stepBy(1);
                                     }}
                                 >
                                     <ArrowRightFilledIcon />
@@ -119,7 +126,7 @@ export const ViewCube: React.FC<ViewCubeProps> = ({ className, bounds, storageId
                                         e.stopPropagation();
                                     }}
                                     onClick={() => {
-                                        stepBy(1);
+                                        stepBy(-1);
                                     }}
                                 >
                                     <ArrowLeftFilledIcon />

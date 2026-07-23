@@ -1,7 +1,8 @@
 import type { Viewer } from 'cesium';
+import type { MapInteraction } from '@/components/CesiumMap/utils/sceneBootstrap';
 import type { PatioBounds } from '@/services/patios/types';
 import type { CameraState, CameraTarget } from '../types';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useCesiumViewer } from '@/contexts/CesiumViewerContext';
 import {
     BoundingSphere,
@@ -65,10 +66,14 @@ const pumpRenderDuringFlight = (viewer: Viewer, durationMs: number) => {
  * re-renders per frame — the leaves own that via {@link useCameraState}. Every
  * writer ends in a render request, satisfying `requestRenderMode`.
  */
-export const useCesiumCamera = (bounds: PatioBounds) => {
+export const useCesiumCamera = (bounds: PatioBounds, interaction: MapInteraction = 'edit') => {
     const viewer = useCesiumViewer();
     // Bounds centre at surface height — the lookAt pivot for every camera move.
     const targetRef = useOrbitTarget(viewer, bounds);
+    // View mode locks every ViewCube move to the fixed bounds centre so it can
+    // never nudge the patio off-axis (agrees with the center-locked map drags);
+    // edit mode keeps pivoting on what the camera currently looks at.
+    const centerLocked = interaction === 'view';
 
     const [west, south, east, north] = bounds;
 
@@ -151,6 +156,62 @@ export const useCesiumCamera = (bounds: PatioBounds) => {
         [readOrientation, clampRange]
     );
 
+    // Handle of the in-flight orbit tween (see `orbitTo`), so a new step cancels
+    // the previous one instead of stacking rAF loops.
+    const orbitRaf = useRef<number | null>(null);
+    useEffect(function cancelOrbitOnUnmount() {
+        return () => {
+            if (orbitRaf.current !== null) cancelAnimationFrame(orbitRaf.current);
+        };
+    }, []);
+
+    /**
+     * Eased **in-place orbit** to an absolute orientation — interpolates
+     * bearing/pitch/range around the fixed target via per-frame `lookAt`, so the
+     * camera simply rotates around the patio. Unlike `moveCamera`'s
+     * `flyToBoundingSphere` (which arcs the camera up-and-over between poses),
+     * this keeps it on the orbit sphere — the smooth quarter-turn the flattened
+     * step arrows want. Bearing takes the shortest signed path so a +270° step
+     * rotates -90° instead of the long way round.
+     */
+    const orbitTo = useCallback(
+        (target: CameraTarget) => {
+            const orbitTarget = targetRef.current;
+            if (!viewer || !orbitTarget) return;
+            const { camera, scene } = viewer;
+            const from = readOrientation();
+            const to = resolve(target);
+            const bearingDelta = ((to.bearing - from.bearing + 540) % 360) - 180;
+            const pitchDelta = to.pitch - from.pitch;
+            const rangeDelta = to.range - from.range;
+
+            if (orbitRaf.current !== null) cancelAnimationFrame(orbitRaf.current);
+            camera.cancelFlight();
+
+            const ease = (t: number) => {
+                return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+            };
+            let start: number | null = null;
+            const tick = (ts: number) => {
+                if (viewer.isDestroyed()) return;
+                if (start === null) start = ts;
+                const t = Math.min((ts - start) / CAMERA_EASE_MS, 1);
+                const k = ease(t);
+                const offset = new HeadingPitchRange(
+                    bearingToHeading(from.bearing + bearingDelta * k),
+                    displayPitchToCesium(from.pitch + pitchDelta * k),
+                    from.range + rangeDelta * k
+                );
+                camera.lookAt(orbitTarget, offset);
+                camera.lookAtTransform(Matrix4.IDENTITY);
+                scene.requestRender();
+                orbitRaf.current = t < 1 ? requestAnimationFrame(tick) : null;
+            };
+            orbitRaf.current = requestAnimationFrame(tick);
+        },
+        [viewer, targetRef, readOrientation, resolve]
+    );
+
     /** Animated camera move (home, rotate presets). */
     const easeTo = useCallback(
         (target: CameraTarget) => {
@@ -170,15 +231,20 @@ export const useCesiumCamera = (bounds: PatioBounds) => {
         (range: number) => {
             if (!viewer) return;
             const { camera, scene } = viewer;
-            const center = new Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2);
-            let pivot = scene.pickPositionSupported ? scene.pickPosition(center) : undefined;
-            pivot = pivot ?? camera.pickEllipsoid(center, Ellipsoid.WGS84) ?? targetRef.current ?? undefined;
+            let pivot: Cartesian3 | undefined;
+            if (centerLocked) {
+                pivot = targetRef.current ?? undefined;
+            } else {
+                const center = new Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2);
+                pivot = scene.pickPositionSupported ? scene.pickPosition(center) : undefined;
+                pivot = pivot ?? camera.pickEllipsoid(center, Ellipsoid.WGS84) ?? targetRef.current ?? undefined;
+            }
             if (!pivot) return;
             const offset = new HeadingPitchRange(camera.heading, camera.pitch, clampRange(range));
             camera.flyToBoundingSphere(new BoundingSphere(pivot, 0), { offset, duration: CAMERA_EASE_S });
             pumpRenderDuringFlight(viewer, CAMERA_EASE_MS);
         },
-        [viewer, targetRef, clampRange]
+        [viewer, targetRef, clampRange, centerLocked]
     );
 
     /**
@@ -222,9 +288,14 @@ export const useCesiumCamera = (bounds: PatioBounds) => {
         if (!viewer) return null;
         const { camera, scene } = viewer;
 
-        const center = new Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2);
-        let pivot = scene.pickPositionSupported ? scene.pickPosition(center) : undefined;
-        pivot = pivot ?? camera.pickEllipsoid(center, Ellipsoid.WGS84) ?? targetRef.current ?? undefined;
+        let pivot: Cartesian3 | undefined;
+        if (centerLocked) {
+            pivot = targetRef.current ?? undefined;
+        } else {
+            const center = new Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2);
+            pivot = scene.pickPositionSupported ? scene.pickPosition(center) : undefined;
+            pivot = pivot ?? camera.pickEllipsoid(center, Ellipsoid.WGS84) ?? targetRef.current ?? undefined;
+        }
         if (!pivot) return null;
 
         const frozenPivot = Cartesian3.clone(pivot);
@@ -249,7 +320,7 @@ export const useCesiumCamera = (bounds: PatioBounds) => {
                 scene.requestRender();
             },
         };
-    }, [viewer, targetRef]);
+    }, [viewer, targetRef, centerLocked]);
 
     /**
      * Animated zoom-to-fit: frame the whole patio at the default orientation.
@@ -271,5 +342,5 @@ export const useCesiumCamera = (bounds: PatioBounds) => {
         easeTo({ bearing: DEFAULT_BEARING, pitch: DEFAULT_PITCH, range });
     }, [viewer, referenceRange, easeTo]);
 
-    return { viewer, referenceRange, readOrientation, easeTo, zoomTo, snapTo, beginDragOrbit, fitBounds };
+    return { viewer, referenceRange, readOrientation, easeTo, zoomTo, snapTo, orbitTo, beginDragOrbit, fitBounds };
 };

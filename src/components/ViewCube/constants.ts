@@ -66,11 +66,18 @@ export const CLICK_THRESHOLD_PX = 4;
  * testable place.
  */
 export const CUBE_TARGETS: Record<CubeTarget, { bearing: number | null; pitch: number }> = {
-    top: { bearing: null, pitch: 0 },
-    north: { bearing: 0, pitch: SIDE_PITCH },
-    east: { bearing: 90, pitch: SIDE_PITCH },
-    south: { bearing: 180, pitch: SIDE_PITCH },
-    west: { bearing: 270, pitch: SIDE_PITCH },
+    // Top-down is always north-up (azimuth 0), however it's reached (cube top
+    // face or the flattened up-arrow) — never inheriting a stale rotation.
+    top: { bearing: 0, pitch: 0 },
+    // Side faces use direct manipulation like the corners: the CLICKED face ends
+    // up facing the viewer. The cube mirrors the camera heading, so the face
+    // facing the viewer is opposite the heading — hence each bearing is its
+    // geometric compass direction + 180 (click N → camera looks south from the
+    // north side, so the north face fills the view).
+    north: { bearing: 180, pitch: SIDE_PITCH },
+    east: { bearing: 270, pitch: SIDE_PITCH },
+    south: { bearing: 0, pitch: SIDE_PITCH },
+    west: { bearing: 90, pitch: SIDE_PITCH },
     // Corners / edges use direct manipulation: the CLICKED corner/edge ends up
     // facing the viewer. The cube mirrors the camera heading, so the target
     // facing the viewer is opposite the heading — hence each bearing is its

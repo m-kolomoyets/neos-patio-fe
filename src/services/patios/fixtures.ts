@@ -32,6 +32,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '1',
         name: 'Mont Saint Michel',
+        description: 'A tidal island abbey rising from silver sands.',
         videoUrl: '/videos/Mont_Saint_Michel_Parallax_optimized.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Mont%20Saint%20Michel-parallax.mp4',
         previewLowUrl: '/images/patios/mont-saint-michel/preview-low.jpg',
@@ -55,6 +56,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '2',
         name: 'National Gallery of Denmark',
+        description: 'Grand halls where centuries of Nordic art breathe.',
         videoUrl: '/videos/National_Gallery_of_Denmark-parallax_optimized_6_per_frame.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/National Gallery of Denmark-parallax.mp4',
         previewLowUrl: '/images/patios/national-gallery-of-denmark/preview-low.jpg',
@@ -77,6 +79,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '3',
         name: 'Elbe Philharmonic Hall',
+        description: 'A glass wave crowning the harbor, humming with sound.',
         videoUrl: '/videos/Elbe_Philharmonic_Hall-parallax_optimized_6_per_frame.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Elbe%20Philharmonic%20Hall-parallax.mp4',
         previewLowUrl: '/images/patios/elbe-philharmonic-hall/preview-low.jpg',
@@ -98,6 +101,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '4',
         name: 'Bethesda Terrace',
+        description: 'A stone heart of the park where strangers linger.',
         videoUrl: '/videos/Bethesda_New_York_Parallax_optimized.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Bethesda%20Terrace-parallax.mp4',
         previewLowUrl: '/images/patios/bethesda-terrace/preview-low.jpg',
@@ -120,6 +124,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '5',
         name: 'Castillo de Chambord',
+        description: 'A fairytale château lost in wild royal forests.',
         videoUrl: '/videos/Chateau_de_Chambord-parallax_optimized_6_per_frame.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Ch%C3%A2teau%20de%20Chambord-parallax.mp4',
         previewLowUrl: '/images/patios/castillo-de-chambord/preview-low.jpg',
@@ -141,6 +146,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '6',
         name: 'Colosseo',
+        description: 'Ancient arena still echoing with roaring crowds.',
         videoUrl: '/videos/Colosseo-parallax_optimized_6_per_frame.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Colosseo-parallax.mp4',
         previewLowUrl: '/images/patios/colosseo/preview-low.jpg',
@@ -163,6 +169,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '7',
         name: 'Eiffel Tower',
+        description: 'Iron lacework reaching high above romantic Paris.',
         videoUrl: '/videos/Eiffel_Tower-parallax_optimized_6_per_frame.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Eiffel%20Tower-parallax.mp4',
         previewLowUrl: '/images/patios/eiffel-tower/preview-low.jpg',
@@ -183,6 +190,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '8',
         name: 'Griffith Observatory',
+        description: 'Where the city glitters below and stars above.',
         videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Griffith%20Observatory-parallax.mp4',
         previewLowUrl: '/images/patios/griffith-observatory/preview-low.jpg',
         previewHighUrl: '/images/patios/griffith-observatory/preview.jpg',
@@ -204,6 +212,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '9',
         name: 'Guggenheim New York',
+        description: 'A white spiral where art curves toward the sky.',
         videoUrl: '/videos/Guggenheim_Bilbao_Parallax_optimized.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Guggenheim%20New%20York-parallax.mp4',
         previewLowUrl: '/images/patios/guggenheim-new-york/preview-low.jpg',
@@ -227,6 +236,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '10',
         name: 'Madison Square Garden',
+        description: 'The buzzing arena where legends and crowds collide.',
         videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Madison%20Square%20Garden-parallax.mp4',
         previewLowUrl: '/images/patios/madison-square-garden/preview-low.jpg',
         previewHighUrl: '/images/patios/madison-square-garden/preview.jpg',
@@ -247,6 +257,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '11',
         name: 'Prague Castle',
+        description: 'A hilltop crown watching over the golden city.',
         videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Prague%20Castle-parallax.mp4',
         previewLowUrl: '/images/patios/prague-castle/preview-low.jpg',
         previewHighUrl: '/images/patios/prague-castle/preview.jpg',
@@ -267,6 +278,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '12',
         name: 'Sagrada Família',
+        description: 'Gaudí unfinished dream of stone reaching heaven.',
         videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Sagrada%20Fam%C3%ADlia-parallax.mp4',
         previewLowUrl: '/images/patios/sagrada-familia/preview-low.jpg',
         previewHighUrl: '/images/patios/sagrada-familia/preview.jpg',
@@ -286,6 +298,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '13',
         name: 'Tōdai-ji',
+        description: 'An ancient temple sheltering a giant serene Buddha.',
         videoUrl: 'https://patiostorage.blob.core.windows.net/assets/T%C5%8Ddai-ji-parallax.mp4',
         previewLowUrl: '/images/patios/todai-ji/preview-low.jpg',
         previewHighUrl: '/images/patios/todai-ji/preview.jpg',
@@ -306,6 +319,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '14',
         name: 'Washington Monument',
+        description: 'A pale obelisk standing tall over the nation.',
         videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Washington%20Monument-parallax.mp4',
         previewLowUrl: '/images/patios/washington-monument/preview-low.jpg',
         previewHighUrl: '/images/patios/washington-monument/preview.jpg',
