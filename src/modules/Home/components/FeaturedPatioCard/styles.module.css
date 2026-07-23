@@ -87,7 +87,7 @@
         linear-gradient(
             to bottom,
             hsl(var(--color-hsl-black) / 0) 0%,
-            hsl(var(--color-hsl-black) / 0) 70%,
+            hsl(var(--color-hsl-black) / 0) 60%,
             hsl(var(--color-hsl-black) / 1) 100%
         );
     background-blend-mode: overlay, multiply;
@@ -222,7 +222,7 @@
 
 .id {
     margin-bottom: var(--gap-6);
-    color: hsl(var(--color-hsl-white) / 0.6);
+    color: hsl(var(--color-hsl-white) / 0.5);
     font-weight: var(--fw-regular);
 }
 
@@ -247,6 +247,11 @@
     height: 1rem;
     flex-shrink: 0;
     color: hsl(var(--color-hsl-white) / 0.6);
+}
+
+.tag .label {
+    font-weight: var(--fw-regular);
+    color: hsl(var(--color-hsl-white) / 0.8);
 }
 
 @media (max-width: 767px) {
