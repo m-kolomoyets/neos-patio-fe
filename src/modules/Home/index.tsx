@@ -30,17 +30,23 @@ const Home: React.FC = () => {
         <div className={s.wrap}>
             <AppBackground src={homeBackgroundSrc} />
             <div>
-                <main ref={mainRef} className={s.main} style={mainSquircleStyle}>
-                    <ScrollArea
-                        className={s.scroll}
-                        viewportClassName={clsx(s['scroll-viewport'], HOME_SCROLL_ROOT_CLASS)}
-                        viewportRef={viewportRef}
-                        viewportStyle={viewportSquircleStyle}
-                    >
-                        <FeaturedPatios />
-                        <PatioLibrary />
-                    </ScrollArea>
-                </main>
+                <div className={s['main-frame']}>
+                    {/* Sibling glass layer: blurs the app background behind the panel.
+                        Kept OUTSIDE <main> so main is not a backdrop-filter root — that
+                        would blank the sticky header's own backdrop-filter (nested). */}
+                    <div className={s['main-glass']} style={mainSquircleStyle} aria-hidden="true" />
+                    <main ref={mainRef} className={s.main} style={mainSquircleStyle}>
+                        <ScrollArea
+                            className={s.scroll}
+                            viewportClassName={clsx(s['scroll-viewport'], HOME_SCROLL_ROOT_CLASS)}
+                            viewportRef={viewportRef}
+                            viewportStyle={viewportSquircleStyle}
+                        >
+                            <FeaturedPatios />
+                            <PatioLibrary />
+                        </ScrollArea>
+                    </main>
+                </div>
                 <AlphabetIndex />
                 <ActionBar />
             </div>

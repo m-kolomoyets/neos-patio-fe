@@ -49,7 +49,7 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
         preserveSmoothing: false,
     });
     const [mediaSquircleRef, mediaSquircleStyle] = useSquircleClipPath<HTMLDivElement>({
-        cornerRadius: isMobile ? 24 : 28,
+        cornerRadius: isMobile ? 12 : 16,
         cornerSmoothing: 0.5,
         preserveSmoothing: false,
         as: 'mask',

@@ -67,7 +67,7 @@ export const PatioFiltersPopover: React.FC = () => {
                 ) : null}
             </span>
             <Popover.Portal>
-                <Popover.Positioner side="bottom" align="end" sideOffset={8}>
+                <Popover.Positioner className={s.positioner} side="bottom" align="end" sideOffset={8}>
                     <Popover.Popup render={<PopupWrapper className={s.popup} />}>
                         <div className={s.header}>
                             <Typography variant="text-xs" className={s.heading}>

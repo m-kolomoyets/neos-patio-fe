@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { usePageTransition } from '@/contexts/PageTransitionContext';
 import { useUpdateEffect } from '@react-hookz/web';
 import { AnimatePresence, motion } from 'motion/react';
@@ -28,7 +29,10 @@ export const PageTransitionOverlay: React.FC = () => {
         setFullLoaded(false);
     }, [backgroundUrl]);
 
-    return (
+    // Portaled to <body> so its z-index competes at the top-level stacking
+    // context — otherwise the app root traps it below other <body> portals
+    // (e.g. the sticky library header) despite the huge z-index.
+    return createPortal(
         <AnimatePresence>
             {active ? (
                 <motion.div
@@ -65,6 +69,7 @@ export const PageTransitionOverlay: React.FC = () => {
                     </div>
                 </motion.div>
             ) : null}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 };
