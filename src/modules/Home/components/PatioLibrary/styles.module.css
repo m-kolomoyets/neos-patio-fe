@@ -15,6 +15,15 @@
     gap: var(--gap-4);
     top: 0;
     z-index: 10;
+
+    /* Blur on the element, not ::after: a nested backdrop-filter under another
+       (::after inside .header) is unreliable in Blink. Gated by stuck state so
+       it only frosts the cards once the header pins. */
+    transition: backdrop-filter 0.2s ease;
+}
+
+.header[data-stuck="true"] {
+    backdrop-filter: blur(100px);
 }
 
 @media (max-width: 767px) {
@@ -48,7 +57,6 @@
 
     background: var(--surface-regular);
     background-blend-mode: normal, luminosity;
-    backdrop-filter: blur(100px);
 }
 
 .header[data-stuck="true"]::after {
@@ -61,6 +69,10 @@
     }
 
     @container scroll-state(stuck: top) {
+        .header {
+            backdrop-filter: blur(100px);
+        }
+
         .header::after {
             opacity: 1;
         }
