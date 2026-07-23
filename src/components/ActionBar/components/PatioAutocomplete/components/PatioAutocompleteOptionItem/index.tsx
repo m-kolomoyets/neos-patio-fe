@@ -24,7 +24,7 @@ export const PatioAutocompleteOptionItem: React.FC<PatioAutocompleteOptionItemPr
                 title: `Open ${name} patio`,
                 children: (
                     <>
-                        <div className={s.left}>
+                        <div className={clsx(s.left, 'truncate')}>
                             <Typography variant="text-sm" render={<span />} className={clsx(s.label, 'truncate')}>
                                 {name}
                             </Typography>
