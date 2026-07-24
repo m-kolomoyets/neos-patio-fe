@@ -188,12 +188,5 @@
         .header::after {
             opacity: 1;
         }
-
-        .header .title {
-            /*  NOTE: Typography variant display-xs */
-
-            font-size: 1.5rem;
-            line-height: 2rem;
-        }
     }
 }

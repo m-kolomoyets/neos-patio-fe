@@ -1,7 +1,6 @@
 import type { GroupingMode } from '../../hooks/useGroupedPatios';
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
-import { useIsMobile } from '@/hooks/useIsMobile';
 import { useStickyStuck } from '@/hooks/useStickyStuck';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -16,8 +15,6 @@ import { PatioLibraryCardSkeleton } from '../PatioLibraryCardSkeleton';
 import s from './styles.module.css';
 
 export const PatioLibrary: React.FC = () => {
-    const isMobile = useIsMobile();
-
     const { filters } = usePatioFilters();
     const { mode, items, groups, isError, refetch, hasNextPage, isFetched, isFetchingNextPage, fetchNextPage } =
         useGroupedPatios({
@@ -139,11 +136,7 @@ export const PatioLibrary: React.FC = () => {
     return (
         <section className={s.wrap}>
             <header ref={headerRef} className={s.header} data-stuck={isHeaderStuck || undefined}>
-                <Typography
-                    variant={!isMobile && isHeaderStuck ? 'display-xs' : 'text-xl'}
-                    className={s.title}
-                    render={<h2 />}
-                >
+                <Typography variant="text-xl" className={s.title} render={<h2 />}>
                     Patio Library
                 </Typography>
                 <LibraryToolbar className={s.toolbar} />
