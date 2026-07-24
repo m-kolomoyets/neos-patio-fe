@@ -37,7 +37,7 @@ export const PatioSortMenu: React.FC = () => {
                 ) : null}
             </span>
             <Menu.Portal>
-                <Menu.Positioner className={s.positioner} side="bottom" align="end" sideOffset={8}>
+                <Menu.Positioner side="bottom" align="end" sideOffset={8}>
                     <Menu.Popup render={<PopupWrapper className={s.popup} />}>
                         <div className={s.header}>
                             <Typography variant="text-xs" className={s.heading}>

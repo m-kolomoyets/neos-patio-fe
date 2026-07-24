@@ -54,7 +54,3 @@
     height: 1.25rem;
     color: var(--color-base-white);
 }
-
-.positioner {
-    z-index: 99;
-}
