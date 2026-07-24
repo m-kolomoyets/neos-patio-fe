@@ -20,7 +20,3 @@
 .heading {
     color: hsl(var(--color-hsl-white) / 0.8);
 }
-
-.positioner {
-    z-index: 99;
-}
