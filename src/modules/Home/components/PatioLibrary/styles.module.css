@@ -20,7 +20,8 @@
 
 .header[data-stuck="true"] {
     background:
-        linear-gradient(0deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.25) 100%), rgba(0, 0, 0, 0.76);
+        linear-gradient(0deg, hsl(var(--color-hsl-white) / 0.25) 0%, hsl(var(--color-hsl-white) / 0.25) 100%),
+        hsl(var(--color-hsl-black) / 0.76);
     background-blend-mode: normal, luminosity;
 }
 
@@ -179,7 +180,8 @@
     @container scroll-state(stuck: top) {
         .header.header {
             background:
-                linear-gradient(0deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.25) 100%), rgba(0, 0, 0, 0.76);
+                linear-gradient(0deg, hsl(var(--color-hsl-white) / 0.25) 0%, hsl(var(--color-hsl-white) / 0.25) 100%),
+                hsl(var(--color-hsl-black) / 0.76);
             background-blend-mode: normal, luminosity;
         }
 
