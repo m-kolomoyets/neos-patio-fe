@@ -42,13 +42,19 @@ export const CesiumMap: React.FC<CesiumMapProps> = ({ className, bounds, interac
         const teardownInteraction = applyInteractionMode(viewer, interaction, bounds);
         registerViewer(viewer);
 
-        // Clear the loading overlay AND flag the scene ready once the place is
-        // framed and its first LOD has settled (or after the bootstrap safety
-        // timeout). Camera-driving widgets (idle orbit) gate on `ready` so they
-        // never start while the camera is still at the default whole-earth view.
+        // Flag the scene ready once the place is framed and its first LOD has
+        // settled (or after the bootstrap safety timeout). Camera-driving widgets
+        // (idle orbit) gate on `ready` so they never start while the camera is
+        // still at the default whole-earth view.
+        //
+        // Overlay ownership: the editor route clears the overlay here on ready.
+        // The view route does NOT — Patio View gates the reveal on map-ready AND
+        // its placed models finishing, so the scene is complete on first paint.
         const teardownScene = bootstrapScene(viewer, bounds, {
             onReady: () => {
-                finish();
+                if (interaction !== 'view') {
+                    finish();
+                }
                 setReady(true);
             },
         });

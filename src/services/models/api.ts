@@ -27,7 +27,14 @@ const buildAsset = (
     };
 };
 
-const MODELS_FIXTURES: Model3D[] = [{ id: 'lantern', name: 'Lantern', ...buildAsset('Lantern', 9_146_368) }];
+// A small catalog of distinct Khronos glTF sample assets, so multi-model
+// rendering and concurrent batching are actually exercised by the fixtures.
+const MODELS_FIXTURES: Model3D[] = [
+    { id: 'lantern', name: 'Lantern', ...buildAsset('Lantern', 9_146_368) },
+    { id: 'duck', name: 'Duck', ...buildAsset('Duck', 120_484) },
+    { id: 'avocado', name: 'Avocado', ...buildAsset('Avocado', 8_110_040) },
+    { id: 'box-textured', name: 'Box Textured', ...buildAsset('BoxTextured', 5_956) },
+];
 
 export const listModels = async (): Promise<Model3D[]> => {
     await sleep(MOCK_DELAY_MS);

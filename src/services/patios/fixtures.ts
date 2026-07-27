@@ -1,4 +1,4 @@
-import type { Patio, PatioBounds } from './types';
+import type { Patio, PatioBounds, PlacedObject } from './types';
 
 const DEFAULT_BOUNDS_HALF_DEG = 0.005;
 
@@ -15,17 +15,20 @@ const OTHER_OWNER_ADDRESS = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
 
 type PatioFixture = Omit<Patio, 'bounds' | 'objects'> & {
     bounds?: PatioBounds;
+    // Optional placed models. Defaults to `[]`, preserving current behavior for
+    // un-seeded patios.
+    objects?: PlacedObject[];
 };
 
 const definePatio = (fixture: PatioFixture): Patio => {
-    const { coords, bounds, ...rest } = fixture;
+    const { coords, bounds, objects, ...rest } = fixture;
     const derivedBounds: PatioBounds = bounds ?? [
         coords.lng - DEFAULT_BOUNDS_HALF_DEG,
         coords.lat - DEFAULT_BOUNDS_HALF_DEG,
         coords.lng + DEFAULT_BOUNDS_HALF_DEG,
         coords.lat + DEFAULT_BOUNDS_HALF_DEG,
     ];
-    return { ...rest, coords, bounds: derivedBounds, objects: [] };
+    return { ...rest, coords, bounds: derivedBounds, objects: objects ?? [] };
 };
 
 const RAW_PATIOS: PatioFixture[] = [
@@ -48,6 +51,60 @@ const RAW_PATIOS: PatioFixture[] = [
         createdAt: '2025-09-12T10:00:00Z',
         popularity: 980,
         coords: { lat: 48.6361, lng: -1.5115 },
+        // Multi-model seed: mixed catalog models inside the derived bounds, plus a
+        // repeated Lantern so same-URL fetch dedupe (ResourceCache) is exercised.
+        // Heights are placeholder absolute WGS84 altitudes — refine via editor pose
+        // readback (see PRD absolute-height note); may float until then.
+        objects: [
+            {
+                id: 'msm-lantern-1',
+                modelId: 'lantern',
+                name: 'Lantern',
+                lng: -1.5115,
+                lat: 48.6321,
+                height: 160,
+                heading: 0,
+                pitch: 0,
+                roll: 0,
+                scale: 5,
+            },
+            {
+                id: 'msm-lantern-2',
+                modelId: 'lantern',
+                name: 'Lantern',
+                lng: -1.5122,
+                lat: 48.6347,
+                height: 60,
+                heading: 180,
+                pitch: 0,
+                roll: 0,
+                scale: 5,
+            },
+            {
+                id: 'msm-duck-1',
+                modelId: 'duck',
+                name: 'Duck',
+                lng: -1.5108,
+                lat: 48.6364,
+                height: 205,
+                heading: 45,
+                pitch: 0,
+                roll: 0,
+                scale: 20,
+            },
+            {
+                id: 'msm-avocado-1',
+                modelId: 'avocado',
+                name: 'Avocado',
+                lng: -1.5119,
+                lat: 48.6366,
+                height: 155,
+                heading: 0,
+                pitch: 0,
+                roll: 0,
+                scale: 400,
+            },
+        ],
         isFeatured: true,
         isPublished: true,
         blockchainLink: 'https://etherscan.io/token/0xD8dA6BF26964aF9D7eEd9e03E53415D37aA96045?a=417',
@@ -162,6 +219,45 @@ const RAW_PATIOS: PatioFixture[] = [
         createdAt: '2025-12-01T10:00:00Z',
         popularity: 380,
         coords: { lat: 41.890209, lng: 12.492231 },
+        // Multi-model seed: three distinct catalog models inside the derived bounds.
+        objects: [
+            {
+                id: 'colosseo-box-1',
+                modelId: 'box-textured',
+                name: 'Box Textured',
+                lng: 12.492231,
+                lat: 41.890209,
+                height: 160,
+                heading: 0,
+                pitch: 0,
+                roll: 0,
+                scale: 5,
+            },
+            {
+                id: 'colosseo-duck-1',
+                modelId: 'duck',
+                name: 'Duck',
+                lng: 12.49165,
+                lat: 41.89055,
+                height: 128,
+                heading: 90,
+                pitch: 0,
+                roll: 0,
+                scale: 15,
+            },
+            {
+                id: 'colosseo-lantern-1',
+                modelId: 'lantern',
+                name: 'Lantern',
+                lng: 12.4928,
+                lat: 41.88985,
+                height: 130,
+                heading: 0,
+                pitch: 0,
+                roll: 0,
+                scale: 4,
+            },
+        ],
         isFeatured: true,
         isPublished: true,
     },
