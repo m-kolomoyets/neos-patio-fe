@@ -1,6 +1,6 @@
 import type { PatioBounds } from '@/services/patios/types';
-import { useEffect } from 'react';
-import { CesiumViewerProvider } from '@/contexts/CesiumViewerContext';
+import { useEffect, useRef, useState } from 'react';
+import { CesiumViewerProvider, useCesiumMapReady } from '@/contexts/CesiumViewerContext';
 import { usePageTransition } from '@/contexts/PageTransitionContext';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { getAppBackground } from '@/lib/appBackground';
@@ -16,10 +16,60 @@ import { CesiumMap } from '@/components/CesiumMap';
 import { ViewCube } from '@/components/ViewCube';
 import { usePatioViewParams } from './hooks/usePatioViewRouteApi';
 import { Header } from './components/Header';
+import { ViewObjectsLayer } from './components/ViewObjectsLayer';
 import s from './styles.module.css';
 
 // Inherits the background the previous screen picked (persisted). No re-roll.
 const patioViewBackgroundSrc = getAppBackground();
+
+// Upper bound on the reveal wait. Exceeds the map's 8s bootstrap safety timeout
+// so a hung / never-resolving model load can never strand the loading overlay.
+const REVEAL_SAFETY_MS = 12000;
+
+/**
+ * Reveal-gate glue: clears the loading overlay only once the map is framed
+ * (`ready`) AND the placed-model batch has settled. A patio with no objects
+ * settles immediately, so it reveals on map-ready as before. A safety timeout
+ * forces the reveal if the objects-loaded signal never arrives. Renders nothing;
+ * must live inside CesiumViewerProvider. In view mode, CesiumMap no longer clears
+ * the overlay itself — this owns it.
+ */
+const RevealGate: React.FC<{ objectsLoaded: boolean }> = ({ objectsLoaded }) => {
+    const mapReady = useCesiumMapReady();
+    const { finish } = usePageTransition();
+    const revealedRef = useRef(false);
+
+    useEffect(
+        function revealWhenReady() {
+            if (revealedRef.current) {
+                return;
+            }
+            if (mapReady && objectsLoaded) {
+                revealedRef.current = true;
+                finish();
+            }
+        },
+        [mapReady, objectsLoaded, finish]
+    );
+
+    useEffect(
+        function revealSafetyTimeout() {
+            const timer = setTimeout(function forceReveal() {
+                if (!revealedRef.current) {
+                    revealedRef.current = true;
+                    finish();
+                }
+            }, REVEAL_SAFETY_MS);
+
+            return function clearRevealTimer() {
+                clearTimeout(timer);
+            };
+        },
+        [finish]
+    );
+
+    return null;
+};
 
 /** Drives the ambient idle-orbit; renders nothing. Must live inside CesiumViewerProvider. */
 const IdleOrbit: React.FC<{ bounds: PatioBounds }> = ({ bounds }) => {
@@ -42,6 +92,13 @@ export const PatioView: React.FC = () => {
     const { id } = usePatioViewParams();
     const { data: patio } = useSuspenseQuery(getPatioQueryOptions(id));
     const { update } = usePageTransition();
+
+    // Reveal is gated on the placed models settling (see RevealGate). Fired by
+    // the objects layer's onLoaded; empty patios settle immediately.
+    const [objectsLoaded, setObjectsLoaded] = useState(false);
+    const handleObjectsLoaded = () => {
+        setObjectsLoaded(true);
+    };
 
     const isMobilePortrait = useIsMobile();
     const isMobileLandscape = useIsMobileLandscape();
@@ -77,6 +134,12 @@ export const PatioView: React.FC = () => {
                                 storageId={id}
                                 interaction="view"
                             />
+                            <ViewObjectsLayer
+                                objects={patio.objects}
+                                bounds={patio.bounds}
+                                onLoaded={handleObjectsLoaded}
+                            />
+                            <RevealGate objectsLoaded={objectsLoaded} />
                             <ViewOrbitControls bounds={patio.bounds} />
                             <IdleOrbit bounds={patio.bounds} />
                         </CesiumViewerProvider>
