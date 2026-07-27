@@ -26,7 +26,7 @@ const stateTransition = { duration: 0.2, ease: [0.4, 0, 0.2, 1] as [number, numb
 
 export const ActionBar: React.FC = () => {
     const navigate = useNavigate();
-    const { isSearchOpened, openSearch, query, setQuery, wrapRef } = useActionBarSearch();
+    const { isSearchOpened, openSearch, closeSearch, query, setQuery, wrapRef } = useActionBarSearch();
 
     const { isConnected } = useAccount();
 
@@ -41,7 +41,9 @@ export const ActionBar: React.FC = () => {
     );
 
     const handleOptionSelect = (option: Patio) => {
-        setQuery('');
+        // Reset the bar back to its default (collapsed) state and clear the
+        // search value / `q` param before navigating to the picked patio.
+        closeSearch();
         navigate({
             to: '/patios/$id',
             params: {

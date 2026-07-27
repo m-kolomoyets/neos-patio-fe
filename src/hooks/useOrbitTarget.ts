@@ -23,7 +23,9 @@ export const useOrbitTarget = (viewer: Viewer | null, bounds: PatioBounds) => {
     const centerLat = (south + north) / 2;
 
     useEffect(() => {
-        if (!viewer) return undefined;
+        if (!viewer || viewer.isDestroyed()) {
+            return undefined;
+        }
         targetRef.current = Cartesian3.fromDegrees(centerLng, centerLat, 0);
 
         let cancelled = false;
