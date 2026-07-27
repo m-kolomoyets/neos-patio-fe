@@ -1,4 +1,4 @@
-import type { PatioBounds } from '@/services/patios/types';
+import type { Patio, PatioBounds } from '@/services/patios/types';
 import { useEffect, useRef, useState } from 'react';
 import { CesiumViewerProvider, useCesiumMapReady } from '@/contexts/CesiumViewerContext';
 import { usePageTransition } from '@/contexts/PageTransitionContext';
@@ -84,6 +84,33 @@ const ViewOrbitControls: React.FC<{ bounds: PatioBounds }> = ({ bounds }) => {
 };
 
 /**
+ * The full map scene for one patio: its own Cesium Viewer (via a fresh
+ * CesiumViewerProvider), overlays, and reveal state. Keyed by patio id in
+ * {@link PatioView} so switching patios fully unmounts and remounts it —
+ * destroying the old Viewer cleanly and re-initialising like a first open,
+ * instead of re-running CesiumMap in place against a live/destroyed Viewer.
+ */
+const PatioScene: React.FC<{ patio: Patio; storageId: string }> = ({ patio, storageId }) => {
+    // Reveal is gated on the placed models settling (see RevealGate). Fired by
+    // the objects layer's onLoaded; empty patios settle immediately.
+    const [objectsLoaded, setObjectsLoaded] = useState(false);
+    const handleObjectsLoaded = () => {
+        setObjectsLoaded(true);
+    };
+
+    return (
+        <CesiumViewerProvider>
+            <CesiumMap bounds={patio.bounds} interaction="view" />
+            <ViewCube className={s['view-cube']} bounds={patio.bounds} storageId={storageId} interaction="view" />
+            <ViewObjectsLayer objects={patio.objects} bounds={patio.bounds} onLoaded={handleObjectsLoaded} />
+            <RevealGate objectsLoaded={objectsLoaded} />
+            <ViewOrbitControls bounds={patio.bounds} />
+            <IdleOrbit bounds={patio.bounds} />
+        </CesiumViewerProvider>
+    );
+};
+
+/**
  * Read-only Patio View: create-patio-style framed surface + app background.
  * Header on top, the shared Cesium map below in view-only mode (orbit + zoom +
  * limited pan, no free-fly) with ambient idle rotation.
@@ -91,14 +118,8 @@ const ViewOrbitControls: React.FC<{ bounds: PatioBounds }> = ({ bounds }) => {
 export const PatioView: React.FC = () => {
     const { id } = usePatioViewParams();
     const { data: patio } = useSuspenseQuery(getPatioQueryOptions(id));
-    const { update } = usePageTransition();
-
-    // Reveal is gated on the placed models settling (see RevealGate). Fired by
-    // the objects layer's onLoaded; empty patios settle immediately.
-    const [objectsLoaded, setObjectsLoaded] = useState(false);
-    const handleObjectsLoaded = () => {
-        setObjectsLoaded(true);
-    };
+    const { start, update } = usePageTransition();
+    const prevIdRef = useRef(id);
 
     const isMobilePortrait = useIsMobile();
     const isMobileLandscape = useIsMobileLandscape();
@@ -111,13 +132,30 @@ export const PatioView: React.FC = () => {
     // Fill the loading overlay with the real background + name once the patio
     // resolves. On the Home path these already match the seeded values; on a
     // deep-link they replace the bare dark fallback.
-    useEffect(() => {
-        update({
-            backgroundUrl: patio.previewBackgroundUrl,
-            backgroundLowUrl: patio.previewBackgroundLowUrl,
-            name: patio.name,
-        });
-    }, [patio, update]);
+    useEffect(
+        function syncTransitionOverlay() {
+            // Switching to a different patio (e.g. from the action-bar search)
+            // re-raises the loading overlay so the new scene streams in behind
+            // it, mirroring a fresh open. First mount is already covered by the
+            // deep-link self-activation / Home-navigate seed, so only re-raise on
+            // an actual id change; `start` also seeds the new background + name.
+            if (prevIdRef.current !== id) {
+                prevIdRef.current = id;
+                start({
+                    backgroundUrl: patio.previewBackgroundUrl,
+                    backgroundLowUrl: patio.previewBackgroundLowUrl,
+                    name: patio.name,
+                });
+                return;
+            }
+            update({
+                backgroundUrl: patio.previewBackgroundUrl,
+                backgroundLowUrl: patio.previewBackgroundLowUrl,
+                name: patio.name,
+            });
+        },
+        [id, patio, start, update]
+    );
 
     return (
         <div className={s.wrap}>
@@ -126,23 +164,7 @@ export const PatioView: React.FC = () => {
                 <Header name={patio.name} description={patio.description} />
                 <div className={s.map}>
                     <div ref={mapRef} className={s['map-clip']} style={mapSquircleStyle}>
-                        <CesiumViewerProvider>
-                            <CesiumMap bounds={patio.bounds} interaction="view" />
-                            <ViewCube
-                                className={s['view-cube']}
-                                bounds={patio.bounds}
-                                storageId={id}
-                                interaction="view"
-                            />
-                            <ViewObjectsLayer
-                                objects={patio.objects}
-                                bounds={patio.bounds}
-                                onLoaded={handleObjectsLoaded}
-                            />
-                            <RevealGate objectsLoaded={objectsLoaded} />
-                            <ViewOrbitControls bounds={patio.bounds} />
-                            <IdleOrbit bounds={patio.bounds} />
-                        </CesiumViewerProvider>
+                        <PatioScene key={id} patio={patio} storageId={id} />
                     </div>
                 </div>
             </main>
