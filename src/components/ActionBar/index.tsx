@@ -44,6 +44,7 @@ export const ActionBar: React.FC = () => {
         // Reset the bar back to its default (collapsed) state and clear the
         // search value / `q` param before navigating to the picked patio.
         closeSearch();
+        setQuery('');
         navigate({
             to: '/patios/$id',
             params: {
