@@ -9,6 +9,7 @@ import {
     ScreenSpaceEventHandler,
     ScreenSpaceEventType,
 } from 'cesium';
+import { clearanceForDistance, sampleGroundHeight } from '@/lib/utils/groundFloor';
 import { DRAG_SENSITIVITY, MAX_PITCH } from '@/components/ViewCube/constants';
 import {
     bearingToHeading,
@@ -90,6 +91,16 @@ const WHEEL_ZOOM_FACTOR_PER_NOTCH = 0.9;
 
 /** Wheel delta (browser units) of one detent; the exponent base for the notch. */
 const WHEEL_NOTCH_DELTA = 120;
+
+/**
+ * Display-pitch step (deg) the ground clamp backs off by per iteration when the
+ * orbit pose would sink the camera below the surface. Small = tight to the floor;
+ * the loop is bounded by {@link GROUND_CLAMP_MAX_STEPS}.
+ */
+const GROUND_CLAMP_STEP = 0.5;
+
+/** Safety cap on ground-clamp back-off iterations per applied frame. */
+const GROUND_CLAMP_MAX_STEPS = 40;
 
 /**
  * Range multiplier per pixel of two-finger spread. A ~230px spread ≈ halves the
@@ -191,15 +202,52 @@ export const useViewOrbitControls = (bounds: PatioBounds) => {
                 };
             };
 
+            /** Aim the camera at centre with the applied `current` pose. */
+            const lookAtCurrent = (center: Cartesian3) => {
+                camera.lookAt(
+                    center,
+                    new HeadingPitchRange(
+                        bearingToHeading(current.bearing),
+                        displayPitchToCesium(current.pitch),
+                        current.range
+                    )
+                );
+            };
+
+            /**
+             * Keep the orbit above ground. Higher display-pitch tilts toward the
+             * horizon and lowers the camera on the orbit sphere, so on tall terrain
+             * a high pitch can sink it under the surface. Camera altitude rises
+             * monotonically as pitch drops, so back the pitch off in small steps
+             * until it clears `surface + clearance`, then pin the target's pitch to
+             * it so the drag can't push past — a hard ceiling, not a snap-back.
+             */
+            const clampToGround = (center: Cartesian3) => {
+                const surface = sampleGroundHeight(scene, camera.positionCartographic);
+                if (surface === undefined) {
+                    return;
+                }
+                const floor = surface + clearanceForDistance(current.range);
+                let steps = 0;
+                while (
+                    camera.positionCartographic.height < floor &&
+                    current.pitch > VIEW_PITCH_MIN &&
+                    steps < GROUND_CLAMP_MAX_STEPS
+                ) {
+                    current.pitch = Math.max(VIEW_PITCH_MIN, current.pitch - GROUND_CLAMP_STEP);
+                    lookAtCurrent(center);
+                    steps += 1;
+                }
+                if (current.pitch < target.pitch) {
+                    target.pitch = current.pitch;
+                }
+            };
+
             /** Point the camera at centre with the applied `current` pose. */
             const applyCurrent = (center: Cartesian3) => {
-                const offset = new HeadingPitchRange(
-                    bearingToHeading(current.bearing),
-                    displayPitchToCesium(current.pitch),
-                    current.range
-                );
                 camera.cancelFlight();
-                camera.lookAt(center, offset);
+                lookAtCurrent(center);
+                clampToGround(center);
                 // Release the lookAt reference frame so later reads/moves are global.
                 camera.lookAtTransform(Matrix4.IDENTITY);
                 scene.requestRender();

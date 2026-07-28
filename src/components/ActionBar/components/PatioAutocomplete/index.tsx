@@ -74,8 +74,14 @@ export const PatioAutocomplete: React.FC<PatioAutocompleteProps> = ({
         <BaseAutocomplete.Root
             mode="none"
             value={searchValue}
-            onValueChange={(next) => {
-                return onSearchValueChange(next);
+            onValueChange={(next, details) => {
+                // Item selection makes Base UI write the item's value into the
+                // input (reason `item-press`, plus a follow-up `none`). Skip
+                // those so the input keeps the controlled value we clear on select.
+                if (details.reason === 'item-press' || details.reason === 'none') {
+                    return;
+                }
+                onSearchValueChange(next);
             }}
             virtualized
             items={filteredOptions}
@@ -167,8 +173,8 @@ export const PatioAutocomplete: React.FC<PatioAutocompleteProps> = ({
                                                             value={option.id}
                                                             index={virtualRow.index}
                                                             onClick={() => {
-                                                                onOptionSelect(option);
                                                                 onSearchValueChange('');
+                                                                onOptionSelect(option);
                                                             }}
                                                         />
                                                     }

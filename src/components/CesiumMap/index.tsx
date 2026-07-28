@@ -4,6 +4,7 @@ import type { MapInteraction } from './utils/sceneBootstrap';
 import { useEffect, useRef } from 'react';
 import { useRegisterCesiumViewer, useSetCesiumMapReady } from '@/contexts/CesiumViewerContext';
 import { usePageTransition } from '@/contexts/PageTransitionContext';
+import { useGroundFloor } from '@/hooks/useGroundFloor';
 import { applyInteractionMode, bootstrapScene, configureViewer } from './utils/sceneBootstrap';
 import s from './styles.module.css';
 
@@ -33,6 +34,10 @@ export const CesiumMap: React.FC<CesiumMapProps> = ({ className, bounds, interac
     const registerViewer = useRegisterCesiumViewer();
     const setReady = useSetCesiumMapReady();
     const { finish } = usePageTransition();
+
+    // Keep the free (edit-mode) camera above the tileset surface; view mode does
+    // its own ground clamp inside the orbit controls.
+    useGroundFloor(bounds, interaction === 'edit');
 
     useEffect(() => {
         const container = containerRef.current;
