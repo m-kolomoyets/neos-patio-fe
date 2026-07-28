@@ -12,6 +12,7 @@
     /* Colors HSL partitions */
     --color-hsl-white: 0deg 0% 100%;
     --color-hsl-black: 0deg 0% 0%;
+    --color-hsl-red: 0deg 79% 63%;
 
     /* Font weights (variable-font weight axis) */
     --fw-regular: 400;

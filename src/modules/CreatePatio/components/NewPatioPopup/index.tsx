@@ -1,9 +1,11 @@
+import AlertCircleIcon from '@/icons/alert-circle_24.svg?react';
 import MapPinIcon from '@/icons/map-pin_24.svg?react';
 import SearchIcon from '@/icons/search_24.svg?react';
 import { useAccount } from 'wagmi';
 import { CONTINENT_LABELS } from '@/services/patios/constants';
 import { usePatioPoints } from '@/services/patios/queries';
 import { Button } from '@/components/ui/Button';
+import { Typography } from '@/components/ui/Typography';
 import {
     COORDINATE_PRECISION,
     NEW_PATIO_OWNER_FALLBACK,
@@ -19,6 +21,7 @@ import { truncateMiddle } from '../../utils/truncateMiddle';
 import { useCreatePatioMode } from '../../context/CreatePatioContext';
 import { useLiveMapText } from '../../hooks/useLiveMapText';
 import { useMintZoomGate } from '../../hooks/useMintZoomGate';
+import { useOverlapDetected } from '../../hooks/useOverlapDetected';
 import { MapPopup, MapPopupFooter, MapPopupHeader, MapPopupRow, MapPopupRows, MapPopupSeparator } from '../MapPopup';
 import s from './styles.module.css';
 
@@ -53,6 +56,7 @@ const NewPatioPopupCard: React.FC = () => {
     const { address } = useAccount();
     const { data: points } = usePatioPoints();
     const { isZoomedEnough, flyToMintableZoom } = useMintZoomGate();
+    const isOverlapping = useOverlapDetected();
 
     // Live camera values are written straight into their text nodes on every map
     // `render`; panning and rotating never re-render this tree.
@@ -92,6 +96,20 @@ const NewPatioPopupCard: React.FC = () => {
                 </MapPopupRow>
                 <MapPopupRow label="ID Estimate">#{idEstimate}</MapPopupRow>
             </MapPopupRows>
+
+            {isOverlapping ? (
+                <div className={s.warning} role="alert">
+                    <AlertCircleIcon className={s['warning-icon']} />
+                    <div className={s['warning-text']}>
+                        <Typography variant="text-sm" className={s['warning-title']} render={<p />}>
+                            Patio overlap detected
+                        </Typography>
+                        <Typography variant="text-sm" className={s['warning-message']} render={<span />}>
+                            Rendering area might be reduced
+                        </Typography>
+                    </div>
+                </div>
+            ) : null}
 
             <MapPopupFooter>
                 {/* Never disabled — below the gate it zooms, above it it mints. */}
