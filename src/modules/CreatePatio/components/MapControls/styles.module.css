@@ -8,6 +8,7 @@
     align-items: flex-start;
     gap: var(--gap-2);
 }
+
 .group {
     display: flex;
     flex-direction: column;
