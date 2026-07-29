@@ -6,6 +6,7 @@ import SearchIcon from '@/icons/search_24.svg?react';
 import { Autocomplete as BaseAutocomplete } from '@base-ui/react/autocomplete';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import clsx from 'clsx';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { Input } from '@/components/ui/Input';
 import { PopupWrapper } from '@/components/ui/PopupWrapper';
 import { ScrollArea } from '@/components/ui/ScrollArea';
@@ -28,6 +29,8 @@ export const PatioAutocomplete: React.FC<PatioAutocompleteProps> = ({
     onSearchValueChange,
     onOptionSelect,
 }) => {
+    const isMobile = useIsMobile();
+
     const scrollRef = React.useRef<HTMLDivElement>(null);
     const wrapperRef = React.useRef<HTMLDivElement>(null);
     const [open, setOpen] = React.useState(false);
@@ -71,8 +74,14 @@ export const PatioAutocomplete: React.FC<PatioAutocompleteProps> = ({
         <BaseAutocomplete.Root
             mode="none"
             value={searchValue}
-            onValueChange={(next) => {
-                return onSearchValueChange(next);
+            onValueChange={(next, details) => {
+                // Item selection makes Base UI write the item's value into the
+                // input (reason `item-press`, plus a follow-up `none`). Skip
+                // those so the input keeps the controlled value we clear on select.
+                if (details.reason === 'item-press' || details.reason === 'none') {
+                    return;
+                }
+                onSearchValueChange(next);
             }}
             virtualized
             items={filteredOptions}
@@ -108,7 +117,7 @@ export const PatioAutocomplete: React.FC<PatioAutocompleteProps> = ({
                 <BaseAutocomplete.Positioner
                     className={s.positioner}
                     sideOffset={8}
-                    align="start"
+                    align={isMobile ? 'center' : 'start'}
                     side="top"
                     anchor={wrapperRef}
                 >
@@ -164,8 +173,8 @@ export const PatioAutocomplete: React.FC<PatioAutocompleteProps> = ({
                                                             value={option.id}
                                                             index={virtualRow.index}
                                                             onClick={() => {
-                                                                onOptionSelect(option);
                                                                 onSearchValueChange('');
+                                                                onOptionSelect(option);
                                                             }}
                                                         />
                                                     }

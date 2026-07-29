@@ -1,5 +1,10 @@
-/** Circumference-derived Web Mercator ground resolution at zoom 0, latitude 0. */
-const EQUATOR_METERS_PER_PIXEL_AT_Z0 = 156543.03392;
+/**
+ * Web Mercator ground resolution at zoom 0, latitude 0: the equator's
+ * 40 075 016.686 m spread over Mapbox GL's **512px** tile. The 156543.034 figure
+ * quoted in most slippy-map docs is for 256px tiles and is twice this — using it
+ * here renders every footprint at half its true size.
+ */
+const EQUATOR_METERS_PER_PIXEL_AT_Z0 = 40075016.686 / 512;
 
 /**
  * Converts a ground distance in meters to screen pixels for a top-down Web

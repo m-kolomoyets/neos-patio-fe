@@ -7,7 +7,7 @@
     height: var(--card-height);
     margin: 2px;
     padding: var(--gap-3);
-    border-radius: 28px;
+    border-radius: 1.75rem;
     user-select: none;
     transition:
         box-shadow 250ms ease,
@@ -63,7 +63,7 @@
     overflow: hidden;
     width: 100%;
     height: 100%;
-    border-radius: 1.25rem;
+    border-radius: 1rem;
     z-index: 2;
     box-shadow: 0 0 2px 1px hsl(var(--color-hsl-white) / 0.2);
     outline: 1px hsl(var(--color-hsl-white) / 0.2) solid;
@@ -87,7 +87,7 @@
         linear-gradient(
             to bottom,
             hsl(var(--color-hsl-black) / 0) 0%,
-            hsl(var(--color-hsl-black) / 0) 70%,
+            hsl(var(--color-hsl-black) / 0) 60%,
             hsl(var(--color-hsl-black) / 1) 100%
         );
     background-blend-mode: overlay, multiply;
@@ -96,6 +96,37 @@
         1px 1.5px 2px hsl(var(--color-hsl-black) / 0.48) inset,
         0 1px 1px hsl(26deg 0.2% 8.8 / 0.8) inset,
         0 -1.5px 2px hsl(var(--color-hsl-black) / 0.3) inset;
+}
+
+@media (max-width: 767px) {
+    .media::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        isolation: isolate;
+        z-index: 3;
+        background:
+            linear-gradient(
+                to bottom,
+                hsl(var(--color-hsl-black) / 0.4) 0%,
+                hsl(var(--color-hsl-black) / 0) 20%,
+                hsl(var(--color-hsl-black) / 0) 100%
+            ),
+            linear-gradient(
+                to bottom,
+                hsl(var(--color-hsl-black) / 0) 0%,
+                hsl(var(--color-hsl-black) / 0) 30%,
+                hsl(var(--color-hsl-black) / 0.85) 90%,
+                hsl(var(--color-hsl-black) / 1) 100%
+            );
+        background-blend-mode: overlay, multiply;
+        box-shadow:
+            1px 1.5px 2px hsl(var(--color-hsl-black) / 0.16) inset,
+            1px 1.5px 2px hsl(var(--color-hsl-black) / 0.48) inset,
+            0 1px 1px hsl(26deg 0.2% 8.8 / 0.8) inset,
+            0 -1.5px 2px hsl(var(--color-hsl-black) / 0.3) inset;
+    }
 }
 
 .media::after {
@@ -191,7 +222,7 @@
 
 .id {
     margin-bottom: var(--gap-6);
-    color: hsl(var(--color-hsl-white) / 0.6);
+    color: hsl(var(--color-hsl-white) / 0.5);
     font-weight: var(--fw-regular);
 }
 
@@ -216,4 +247,45 @@
     height: 1rem;
     flex-shrink: 0;
     color: hsl(var(--color-hsl-white) / 0.6);
+}
+
+.tag .label {
+    font-weight: var(--fw-regular);
+    color: hsl(var(--color-hsl-white) / 0.8);
+}
+
+@media (max-width: 767px) {
+    .wrap {
+        --card-height: 278px;
+
+        padding: 0;
+        margin: 0;
+        border-radius: 1.5rem;
+    }
+
+    .media {
+        border-radius: 0.75rem;
+    }
+
+    .content {
+        padding: var(--gap-6);
+    }
+}
+
+@media (max-width: 1023px) and (orientation: landscape) {
+    .wrap {
+        --card-height: 195px;
+
+        padding: 0;
+        margin: 0;
+        border-radius: 1.5rem;
+    }
+
+    .media {
+        border-radius: 0.75rem;
+    }
+
+    .content {
+        padding: var(--gap-6);
+    }
 }

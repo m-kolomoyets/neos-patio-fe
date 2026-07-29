@@ -15,12 +15,11 @@ const isScrollStateSupported =
 /**
  * Tracks whether a `position: sticky` element is currently pinned to the top of its scroll container.
  * Auto-reads the element's computed `top` so it works for any sticky offset.
- * No-op when the browser supports `container-type: scroll-state` — use the native CSS feature instead.
  */
 export const useStickyStuck = ({ enabled = true, rootSelector = null }: Options = {}) => {
     const [node, setNode] = React.useState<Element | null>(null);
     const [stuck, setStuck] = React.useState(false);
-    const skip = !enabled || isScrollStateSupported;
+    const skip = !enabled;
 
     const ref = React.useCallback((next: Element | null) => {
         return setNode(next);

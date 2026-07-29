@@ -2,8 +2,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--color-brand-650);
-    color: var(--color-base-white);
+    background-color: var(--color-base-white);
+    color: var(--color-base-black);
     border-radius: var(--radius-full);
     flex-shrink: 0;
     width: fit-content;

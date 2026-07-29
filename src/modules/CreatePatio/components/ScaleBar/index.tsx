@@ -1,58 +1,51 @@
 import clsx from 'clsx';
 import { Typography } from '@/components/ui/Typography';
-import { SCALE_BAR_MIN_ZOOM, SCALE_BAR_SEGMENTS } from './constants';
+import { SCALE_BAR_KM_THRESHOLD_M, SCALE_BAR_MIN_ZOOM, SCALE_BAR_TRACK_INSET_PX } from './constants';
 import { useZoomAtLeast } from '../../hooks/useZoomAtLeast';
 import { useScaleBarDriver } from './hooks/useScaleBarDriver';
 import s from './styles.module.css';
 
 /**
- * Top-down scale bar for the create map. Fixed 4 segments; labels are the exact
- * meters of a 1-2-5 rung (`0 · step … 4 · step`) with an `m` unit, and the bar
- * width flexes so those labels stay honest. Width is driven per-frame via a CSS
- * var; only the labels/theme re-render, and only on a rung / base-map crossing.
+ * Top-down scale bar for the create map. The track pill is a fixed width and the
+ * baseline always spans it; what varies is the 1-2-5 step and how many ticks fit
+ * inside — so ticks reposition (and the run ends short of the right edge) instead
+ * of the wrapper resizing. Recomputed only when the camera settles.
+ *
+ * Ticks are keyed by their meter value, so the ones that survive a step change
+ * keep their DOM node and slide to the new position; the rest fade in / unmount.
  */
 const ScaleBarInner: React.FC = () => {
-    const { wrapRef, step, variant } = useScaleBarDriver();
-    const labels = Array.from({ length: SCALE_BAR_SEGMENTS + 1 }, (_, index) => {
-        return step * index;
-    });
+    const { barRef, ticks, pxPerMeter, unit, variant } = useScaleBarDriver();
+    const offsetOf = (meters: number) => {
+        return `${SCALE_BAR_TRACK_INSET_PX + meters * pxPerMeter}px`;
+    };
 
     return (
-        <div ref={wrapRef} className={clsx(s.wrap, step === 0 && s.hidden)} data-variant={variant} aria-hidden="true">
+        <div className={clsx(s.wrap, ticks.length === 0 && s.hidden)} data-variant={variant} aria-hidden="true">
             <div className={s.labels}>
-                {labels.map((value, index) => {
+                {ticks.map((meters) => {
                     return (
                         <Typography
-                            key={index}
+                            key={meters}
                             variant="text-xs"
                             render={<span />}
                             className={s.label}
-                            style={{ left: `${(index / SCALE_BAR_SEGMENTS) * 100}%` }}
+                            style={{ left: offsetOf(meters) }}
                         >
-                            {value}
+                            {unit === 'km' ? meters / SCALE_BAR_KM_THRESHOLD_M : meters}
                         </Typography>
                     );
                 })}
             </div>
-            <div>
-                <div className={s.bar}>
-                    <div className={s.baseline} />
-                    <div className={s.ticks}>
-                        {labels.map((_, index) => {
-                            return (
-                                <span
-                                    key={index}
-                                    className={s.tick}
-                                    style={{ left: `${(index / SCALE_BAR_SEGMENTS) * 100}%` }}
-                                />
-                            );
-                        })}
-                    </div>
-                </div>
-                <Typography render={<span />} variant="text-xs" className={s.unit}>
-                    m
-                </Typography>
+            <div ref={barRef} className={s.bar}>
+                <div className={s.baseline} />
+                {ticks.map((meters) => {
+                    return <span key={meters} className={s.tick} style={{ left: offsetOf(meters) }} />;
+                })}
             </div>
+            <Typography render={<span />} variant="text-xs" className={s.unit}>
+                {unit}
+            </Typography>
         </div>
     );
 };

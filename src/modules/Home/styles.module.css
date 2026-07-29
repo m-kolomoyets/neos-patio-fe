@@ -12,17 +12,36 @@
     padding-bottom: calc(var(--home-content-offset-y) + var(--home-content-bottom-offset));
 }
 
-.main {
+.main-frame {
     position: relative;
     flex: 1;
-    width: calc(100vw - var(--home-content-offset-x) * 2);
-    height: calc(100vh - (var(--home-content-offset-y) * 2) - var(--home-content-bottom-offset));
-    margin: 0 auto;
+    display: grid;
+    place-content: start center;
+}
+
+.main-frame > .main,
+.main-frame > .main-glass {
+    /* Same grid cell → identical box → mainSquircleStyle clip matches both. */
+    grid-area: 1 / 1;
+}
+
+.main-glass {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+
+    /* Page-blur lives here (sibling of main), NOT on .main — see index.tsx note. */
+    backdrop-filter: blur(50px);
+}
+
+.main {
+    position: relative;
+    width: calc(100svw - var(--home-content-offset-x) * 2);
+    height: calc(100svh - (var(--home-content-offset-y) * 2) - var(--home-content-bottom-offset));
     display: flex;
     flex-direction: column;
     border: 1px solid hsl(var(--color-hsl-white) / 0.24);
     gap: var(--gap-12);
-    backdrop-filter: blur(50px);
 }
 
 .main::after {
@@ -43,6 +62,7 @@
 }
 
 .main,
+.main-glass,
 .scroll .scroll-viewport,
 .main::after {
     /* Fallback rounding before JS measures the squircle clip-path (useSquircleClipPath). */
@@ -91,9 +111,57 @@
     }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1023px) {
     .main {
         padding: var(--gap-6);
         gap: var(--gap-8);
+    }
+}
+
+@media (max-width: 767px) {
+    .wrap {
+        --home-content-offset-y: 1rem;
+        --home-content-offset-x: 1rem;
+        --home-content-bottom-offset: 3.3125rem;
+    }
+
+    .main,
+    .main-glass,
+    .scroll .scroll-viewport,
+    .main::after {
+        /* Fallback rounding before JS measures the squircle clip-path (useSquircleClipPath). */
+        border-radius: 1.5rem;
+    }
+
+    .main {
+        padding: 0;
+    }
+
+    .scroll :global(.scroll-area-scrollbar-vertical) {
+        display: none;
+    }
+}
+
+@media (max-width: 1023px) and (orientation: landscape) {
+    .wrap {
+        --home-content-offset-y: 1rem;
+        --home-content-offset-x: 1rem;
+        --home-content-bottom-offset: 2.25rem;
+    }
+
+    .main,
+    .main-glass,
+    .scroll .scroll-viewport,
+    .main::after {
+        /* Fallback rounding before JS measures the squircle clip-path (useSquircleClipPath). */
+        border-radius: 1.5rem;
+    }
+
+    .main {
+        padding: 0;
+    }
+
+    .scroll :global(.scroll-area-scrollbar-vertical) {
+        display: none;
     }
 }

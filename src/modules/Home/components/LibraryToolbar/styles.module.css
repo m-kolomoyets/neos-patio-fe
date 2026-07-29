@@ -31,3 +31,10 @@
     width: 187px;
     flex-shrink: 0;
 }
+
+@media (max-width: 767px) {
+    .cta.create {
+        width: 2.75rem;
+        height: 2.75rem;
+    }
+}

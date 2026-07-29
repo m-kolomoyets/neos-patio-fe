@@ -92,3 +92,10 @@
 .row {
     box-sizing: border-box;
 }
+
+@media (max-width: 767px) {
+    .positioner {
+        min-width: calc(100vw - 2rem);
+        max-width: calc(100vw - 2rem);
+    }
+}

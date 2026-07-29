@@ -2,6 +2,7 @@ import type { PatioGeometry } from './usePatioGeometries';
 import { useCallback, useLayoutEffect, useRef } from 'react';
 import { useMap } from 'react-map-gl/mapbox';
 import { CREATE_PATIO_MAP_ID, PATIO_SIZE_M } from '../constants';
+import { getCornerRadius } from '../utils/getCornerRadius';
 import { getProjectedNorthDeg } from '../utils/getProjectedNorthDeg';
 import { metersToPixels } from '../utils/metersToPixels';
 import { getRectAttrs } from '../utils/squareGeometry';
@@ -47,11 +48,19 @@ export const useSquaresDriver = (patios: PatioGeometry[]): RegisterRect => {
     const applyRef = useRef<(() => void) | null>(null);
 
     const register = useCallback<RegisterRect>((key, geoId, el) => {
-        if (el) {
-            targetsRef.current.set(key, { geoId, el });
-        } else {
+        if (!el) {
             targetsRef.current.delete(key);
+
+            return;
         }
+
+        targetsRef.current.set(key, { geoId, el });
+        // Paint the newcomer immediately. Rects that mount without the patio list
+        // changing — the center square and the grid when create mode opens — would
+        // otherwise sit unpositioned at the origin until the map next emits
+        // `render`, i.e. until the user pans or zooms. No-ops before the driver's
+        // layout effect has run; that first mount is painted by the effect itself.
+        applyRef.current?.();
     }, []);
 
     useLayoutEffect(() => {
@@ -98,6 +107,8 @@ export const useSquaresDriver = (patios: PatioGeometry[]): RegisterRect => {
                 el.setAttribute('width', `${attrs.width}`);
                 el.setAttribute('height', `${attrs.height}`);
                 el.setAttribute('transform', attrs.transform);
+                // Roundness scales with the on-screen side, so `rx` is per-frame too.
+                el.setAttribute('rx', `${getCornerRadius(attrs.width)}`);
             }
         };
 

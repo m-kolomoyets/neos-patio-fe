@@ -3,6 +3,8 @@ import { memo, useCallback, useState } from 'react';
 import MapPin24Icon from '@/icons/map-pin_24.svg?react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { useIsMobileLandscape } from '@/hooks/useIsMobileLandscape';
 import { usePatioTransitionNavigate } from '@/hooks/usePatioTransitionNavigate';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import { useSquircleClipPath } from '@/hooks/useSquircleClipPath';
@@ -18,6 +20,10 @@ type Props = {
 };
 
 const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = false }) => {
+    const isMobilePortrait = useIsMobile();
+    const isMobileLandscape = useIsMobileLandscape();
+    const isMobile = isMobilePortrait || isMobileLandscape;
+
     const [highLoaded, setHighLoaded] = useState(false);
     const {
         rootRef,
@@ -38,12 +44,12 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
     const spotlightRef = useSpotlight<HTMLElement>();
 
     const [wrapSquircleRef, wrapSquircleStyle] = useSquircleClipPath<HTMLElement>({
-        cornerRadius: 28,
+        cornerRadius: isMobile ? 24 : 28,
         cornerSmoothing: 0.5,
         preserveSmoothing: false,
     });
     const [mediaSquircleRef, mediaSquircleStyle] = useSquircleClipPath<HTMLDivElement>({
-        cornerRadius: 20,
+        cornerRadius: isMobile ? 12 : 16,
         cornerSmoothing: 0.5,
         preserveSmoothing: false,
         as: 'mask',
@@ -125,9 +131,9 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
                         ID {patio.id}
                     </Typography>
                     <ul className={s.meta}>
-                        <Tag render={<li />}>
+                        <Tag className={s.tag} render={<li />}>
                             <MapPin24Icon className={s.icon} aria-hidden />
-                            <Typography variant="text-sm" render={<span />}>
+                            <Typography className={s.label} variant="text-sm" render={<span />}>
                                 <span className="sr-only">Continent: </span>
                                 {CONTINENT_LABELS?.[patio.continent] ?? 'N/A'}
                             </Typography>

@@ -1,8 +1,9 @@
 .shell {
     position: absolute;
     bottom: calc(var(--home-content-bottom-offset) + var(--home-content-offset-y) - 2rem);
-    left: calc(50% - 12.5rem);
-    width: 400px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(400px, 100% - 2rem);
     min-height: 64px;
     z-index: 10;
     isolation: isolate;
@@ -55,4 +56,10 @@
     display: inline-flex;
     align-items: center;
     gap: var(--gap-2);
+}
+
+@media (max-width: 767px) {
+    .shell {
+        width: 16.4375rem;
+    }
 }

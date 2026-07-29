@@ -3,6 +3,8 @@ import ChevronLeftIcon from '@/icons/chevrone-left_24.svg?react';
 import ChevronRightIcon from '@/icons/chevrone-right_24.svg?react';
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { useIsMobileLandscape } from '@/hooks/useIsMobileLandscape';
 import { getFeaturedPatiosQueryOptions } from '@/services/patios/queries';
 import { Button } from '@/components/ui/Button';
 import { useCarouselProximityAutoplay } from './hooks/useCarouselProximityAutoplay';
@@ -12,24 +14,23 @@ import { FeaturedPatioCard } from '../FeaturedPatioCard';
 import s from './styles.module.css';
 
 export const FeaturedPatios: React.FC = () => {
+    const isMobilePortrait = useIsMobile();
+    const isMobileLandscape = useIsMobileLandscape();
+    const isMobile = isMobilePortrait || isMobileLandscape;
+
     const { data, isLoading } = useQuery(getFeaturedPatiosQueryOptions());
     const viewportId = useId();
 
-    const {
-        emblaRef,
-        emblaApi,
-        snapList,
-        scrollPrev,
-        scrollNext,
-        reducedMotion,
-        videoCapable,
-        slidesInViewWithNeighbors,
-    } = useFeaturedCarousel({
-        dataKey: data,
-    });
+    const { emblaRef, emblaApi, snapList, scrollPrev, scrollNext, reducedMotion, slidesInViewWithNeighbors } =
+        useFeaturedCarousel({
+            dataKey: data,
+        });
 
-    useCarouselVideoScrub({ emblaApi, enabled: videoCapable });
-    const { boost, unboost } = useCarouselProximityAutoplay({ emblaApi, enabled: videoCapable && !reducedMotion });
+    useCarouselVideoScrub({ emblaApi, enabled: !isMobile });
+    const { boost, unboost } = useCarouselProximityAutoplay({
+        emblaApi,
+        enabled: !isMobile && !reducedMotion,
+    });
 
     const hasMultipleSlides = snapList.length > 1;
     const totalSlides = data?.length ?? 0;
@@ -85,7 +86,7 @@ export const FeaturedPatios: React.FC = () => {
                               })}
                     </div>
                 </div>
-                {hasMultipleSlides ? (
+                {!isMobile && hasMultipleSlides ? (
                     <>
                         <Button
                             isIcon

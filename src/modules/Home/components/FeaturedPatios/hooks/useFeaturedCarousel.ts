@@ -1,6 +1,8 @@
 import type { EmblaCarouselType, EmblaOptionsType } from 'embla-carousel';
 import { useCallback, useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { useIsMobileLandscape } from '@/hooks/useIsMobileLandscape';
 import { computeActiveSet } from '../utils/computeActiveSet';
 import { isWeakDevice } from '../utils/detectDeviceSeed';
 import { useVideoPerfGuard } from './useVideoPerfGuard';
@@ -56,31 +58,40 @@ const alignToGutter = (): number => {
     return SLIDE_GUTTER_REM * rootFontSize;
 };
 
-const buildOptions = (reducedMotion: boolean): EmblaOptionsType => {
+const buildOptions = (reducedMotion: boolean, isMobile: boolean): EmblaOptionsType => {
+    // One slide per view on mobile: snap each slide flush to the viewport start so no
+    // sliver of the previous slide peeks. The gutter align only matters for the peeking
+    // multi-slide desktop layout.
+    const align: EmblaOptionsType['align'] = isMobile ? 'start' : alignToGutter;
     if (reducedMotion) {
         return {
             loop: false,
-            align: alignToGutter,
+            align,
             dragFree: false,
             containScroll: 'trimSnaps',
             duration: 0,
             skipSnaps: true,
         };
     }
-    return { loop: false, align: alignToGutter, dragFree: false, containScroll: 'trimSnaps' };
+    return { loop: false, align, dragFree: false, containScroll: 'trimSnaps' };
 };
 
 export const useFeaturedCarousel = ({ dataKey }: Params): Result => {
+    const isMobilePortrait = useIsMobile();
+    const isMobileLandscape = useIsMobileLandscape();
+
+    const isMobile = isMobileLandscape || isMobilePortrait;
+
     const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotion);
     const [staticCapable] = useState<boolean>(() => {
         return supportsHover() && !isSlowConnection() && !isWeakDevice();
     });
     // Runtime FPS is the source of truth; the static seed above only culls obviously weak hardware.
     // Sample only while videos would actually be mounted/scrubbing.
-    const { degraded } = useVideoPerfGuard({ enabled: staticCapable && !reducedMotion });
-    const videoCapable = staticCapable && !reducedMotion && !degraded;
+    const { degraded } = useVideoPerfGuard({ enabled: !isMobile && staticCapable && !reducedMotion });
+    const videoCapable = !isMobile && staticCapable && !reducedMotion && !degraded;
 
-    const [emblaRef, emblaApi] = useEmblaCarousel(buildOptions(reducedMotion));
+    const [emblaRef, emblaApi] = useEmblaCarousel(buildOptions(reducedMotion, isMobile));
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [snapList, setSnapList] = useState<readonly number[]>([]);
     const [slidesInViewWithNeighbors, setSlidesInViewWithNeighbors] = useState<ReadonlySet<number>>(EMPTY_SET);
@@ -114,11 +125,11 @@ export const useFeaturedCarousel = ({ dataKey }: Params): Result => {
 
     useEffect(() => {
         if (!emblaApi) return;
-        emblaApi.reInit(buildOptions(reducedMotion));
-    }, [emblaApi, reducedMotion, dataKey]);
+        emblaApi.reInit(buildOptions(reducedMotion, isMobile));
+    }, [emblaApi, reducedMotion, isMobile, dataKey]);
 
     useEffect(() => {
-        if (!emblaApi || !videoCapable) return;
+        if (!emblaApi) return;
         const NEIGHBOR_RADIUS = 2;
         const EAGER_MOUNT_THRESHOLD = 8;
         const sync = () => {
@@ -151,7 +162,7 @@ export const useFeaturedCarousel = ({ dataKey }: Params): Result => {
             emblaApi.off('slidesInView', sync);
             emblaApi.off('reInit', sync);
         };
-    }, [emblaApi, videoCapable]);
+    }, [emblaApi]);
 
     const scrollPrev = useCallback(() => {
         return emblaApi?.scrollPrev();

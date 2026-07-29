@@ -1,4 +1,5 @@
 import ArrowLeftIcon from '@/icons/arrow-left_24.svg?react';
+import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
 import { usePatioViewNavigate } from '../../hooks/usePatioViewRouteApi';
@@ -6,6 +7,7 @@ import s from './styles.module.css';
 
 type HeaderProps = {
     name: string;
+    description: string;
 };
 
 /**
@@ -13,7 +15,7 @@ type HeaderProps = {
  * Left = back-to-home. Right slot is intentionally empty: no location search,
  * no mode/create controls on the view surface.
  */
-export const Header: React.FC<HeaderProps> = ({ name }) => {
+export const Header: React.FC<HeaderProps> = ({ name, description }) => {
     const navigate = usePatioViewNavigate();
 
     return (
@@ -32,12 +34,11 @@ export const Header: React.FC<HeaderProps> = ({ name }) => {
                 </Button>
             </div>
             <div className={s['titles-wrap']}>
-                <Typography className={s.title} variant="display-xs" render={<h1 />}>
+                <Typography className={clsx(s.title, 'truncate')} variant="display-xs" render={<h1 />}>
                     {name}
                 </Typography>
-                {/* TODO: retrieve quote from the API */}
-                <Typography className={s.description} variant="text-sm">
-                    Every good tree bears good fruit
+                <Typography className={clsx(s.description, 'truncate')} variant="text-sm">
+                    {description}
                 </Typography>
             </div>
             <div />

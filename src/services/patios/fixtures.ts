@@ -1,26 +1,41 @@
-import type { Patio, PatioBounds } from './types';
+import type { Patio, PatioBounds, PlacedObject } from './types';
 
 const DEFAULT_BOUNDS_HALF_DEG = 0.005;
 
+/**
+ * Wallet the "mine" fixtures are minted by, so the owned indicator colors (orange
+ * / yellow) are reachable while developing. Swap for your own test wallet — the
+ * comparison is case-insensitive. Hardhat's first dev account by default.
+ * TODO: drop once patios carry a real on-chain owner.
+ */
+export const DEV_OWNER_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+
+/** A second wallet, so "minted by someone else" is distinguishable from "unminted". */
+const OTHER_OWNER_ADDRESS = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+
 type PatioFixture = Omit<Patio, 'bounds' | 'objects'> & {
     bounds?: PatioBounds;
+    // Optional placed models. Defaults to `[]`, preserving current behavior for
+    // un-seeded patios.
+    objects?: PlacedObject[];
 };
 
 const definePatio = (fixture: PatioFixture): Patio => {
-    const { coords, bounds, ...rest } = fixture;
+    const { coords, bounds, objects, ...rest } = fixture;
     const derivedBounds: PatioBounds = bounds ?? [
         coords.lng - DEFAULT_BOUNDS_HALF_DEG,
         coords.lat - DEFAULT_BOUNDS_HALF_DEG,
         coords.lng + DEFAULT_BOUNDS_HALF_DEG,
         coords.lat + DEFAULT_BOUNDS_HALF_DEG,
     ];
-    return { ...rest, coords, bounds: derivedBounds, objects: [] };
+    return { ...rest, coords, bounds: derivedBounds, objects: objects ?? [] };
 };
 
 const RAW_PATIOS: PatioFixture[] = [
     {
         id: '1',
         name: 'Mont Saint Michel',
+        description: 'A tidal island abbey rising from silver sands.',
         videoUrl: '/videos/Mont_Saint_Michel_Parallax_optimized.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Mont%20Saint%20Michel-parallax.mp4',
         previewLowUrl: '/images/patios/mont-saint-michel/preview-low.jpg',
@@ -32,15 +47,73 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'europe',
         type: 'landmark',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2025-09-12T10:00:00Z',
         popularity: 980,
         coords: { lat: 48.6361, lng: -1.5115 },
+        // Multi-model seed: mixed catalog models inside the derived bounds, plus a
+        // repeated Lantern so same-URL fetch dedupe (ResourceCache) is exercised.
+        // Heights are placeholder absolute WGS84 altitudes — refine via editor pose
+        // readback (see PRD absolute-height note); may float until then.
+        objects: [
+            {
+                id: 'msm-lantern-1',
+                modelId: 'lantern',
+                name: 'Lantern',
+                lng: -1.5115,
+                lat: 48.6321,
+                height: 160,
+                heading: 0,
+                pitch: 0,
+                roll: 0,
+                scale: 5,
+            },
+            {
+                id: 'msm-lantern-2',
+                modelId: 'lantern',
+                name: 'Lantern',
+                lng: -1.5122,
+                lat: 48.6347,
+                height: 60,
+                heading: 180,
+                pitch: 0,
+                roll: 0,
+                scale: 5,
+            },
+            {
+                id: 'msm-duck-1',
+                modelId: 'duck',
+                name: 'Duck',
+                lng: -1.5108,
+                lat: 48.6364,
+                height: 205,
+                heading: 45,
+                pitch: 0,
+                roll: 0,
+                scale: 20,
+            },
+            {
+                id: 'msm-avocado-1',
+                modelId: 'avocado',
+                name: 'Avocado',
+                lng: -1.5119,
+                lat: 48.6366,
+                height: 155,
+                heading: 0,
+                pitch: 0,
+                roll: 0,
+                scale: 400,
+            },
+        ],
         isFeatured: true,
         isPublished: true,
+        blockchainLink: 'https://etherscan.io/token/0xD8dA6BF26964aF9D7eEd9e03E53415D37aA96045?a=417',
+        navigationLink: 'https://maps.google.com/?q=48.6361,-1.5115&mode=417',
     },
     {
         id: '2',
         name: 'National Gallery of Denmark',
+        description: 'Grand halls where centuries of Nordic art breathe.',
         videoUrl: '/videos/National_Gallery_of_Denmark-parallax_optimized_6_per_frame.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/National Gallery of Denmark-parallax.mp4',
         previewLowUrl: '/images/patios/national-gallery-of-denmark/preview-low.jpg',
@@ -52,15 +125,18 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'europe',
         type: 'historic-site',
         author: 'Neos',
+        ownerAddress: OTHER_OWNER_ADDRESS,
         createdAt: '2025-08-30T10:00:00Z',
         popularity: 1200,
         coords: { lat: 55.68889, lng: 12.57861 },
         isFeatured: true,
         isPublished: true,
+        blockchainLink: 'https://etherscan.io/token/0xD8dA6BF26964aF9D7eEd9e03E53415D37aA96045?a=118',
     },
     {
         id: '3',
         name: 'Elbe Philharmonic Hall',
+        description: 'A glass wave crowning the harbor, humming with sound.',
         videoUrl: '/videos/Elbe_Philharmonic_Hall-parallax_optimized_6_per_frame.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Elbe%20Philharmonic%20Hall-parallax.mp4',
         previewLowUrl: '/images/patios/elbe-philharmonic-hall/preview-low.jpg',
@@ -72,6 +148,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'europe',
         type: 'historic-site',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2025-10-02T10:00:00Z',
         popularity: 540,
         coords: { lat: 53.541328, lng: 9.984355 },
@@ -81,6 +158,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '4',
         name: 'Bethesda Terrace',
+        description: 'A stone heart of the park where strangers linger.',
         videoUrl: '/videos/Bethesda_New_York_Parallax_optimized.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Bethesda%20Terrace-parallax.mp4',
         previewLowUrl: '/images/patios/bethesda-terrace/preview-low.jpg',
@@ -92,15 +170,18 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'north-america',
         type: 'architecture',
         author: 'Neos',
+        ownerAddress: OTHER_OWNER_ADDRESS,
         createdAt: '2025-11-04T10:00:00Z',
         popularity: 1100,
         coords: { lat: 40.77432, lng: -73.97083 },
         isFeatured: true,
         isPublished: true,
+        navigationLink: 'https://maps.google.com/?q=40.7739,-73.9709&mode=204',
     },
     {
         id: '5',
         name: 'Castillo de Chambord',
+        description: 'A fairytale château lost in wild royal forests.',
         videoUrl: '/videos/Chateau_de_Chambord-parallax_optimized_6_per_frame.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Ch%C3%A2teau%20de%20Chambord-parallax.mp4',
         previewLowUrl: '/images/patios/castillo-de-chambord/preview-low.jpg',
@@ -112,6 +193,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'europe',
         type: 'historic-site',
         author: 'Neos',
+        ownerAddress: OTHER_OWNER_ADDRESS,
         createdAt: '2025-07-22T10:00:00Z',
         popularity: 410,
         coords: { lat: 47.616, lng: 1.5167 },
@@ -121,6 +203,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '6',
         name: 'Colosseo',
+        description: 'Ancient arena still echoing with roaring crowds.',
         videoUrl: '/videos/Colosseo-parallax_optimized_6_per_frame.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Colosseo-parallax.mp4',
         previewLowUrl: '/images/patios/colosseo/preview-low.jpg',
@@ -132,9 +215,49 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'europe',
         type: 'architecture',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2025-12-01T10:00:00Z',
         popularity: 380,
         coords: { lat: 41.890209, lng: 12.492231 },
+        // Multi-model seed: three distinct catalog models inside the derived bounds.
+        objects: [
+            {
+                id: 'colosseo-box-1',
+                modelId: 'box-textured',
+                name: 'Box Textured',
+                lng: 12.492231,
+                lat: 41.890209,
+                height: 160,
+                heading: 0,
+                pitch: 0,
+                roll: 0,
+                scale: 5,
+            },
+            {
+                id: 'colosseo-duck-1',
+                modelId: 'duck',
+                name: 'Duck',
+                lng: 12.49165,
+                lat: 41.89055,
+                height: 128,
+                heading: 90,
+                pitch: 0,
+                roll: 0,
+                scale: 15,
+            },
+            {
+                id: 'colosseo-lantern-1',
+                modelId: 'lantern',
+                name: 'Lantern',
+                lng: 12.4928,
+                lat: 41.88985,
+                height: 130,
+                heading: 0,
+                pitch: 0,
+                roll: 0,
+                scale: 4,
+            },
+        ],
         isFeatured: true,
         isPublished: true,
     },
@@ -142,6 +265,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '7',
         name: 'Eiffel Tower',
+        description: 'Iron lacework reaching high above romantic Paris.',
         videoUrl: '/videos/Eiffel_Tower-parallax_optimized_6_per_frame.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Eiffel%20Tower-parallax.mp4',
         previewLowUrl: '/images/patios/eiffel-tower/preview-low.jpg',
@@ -162,6 +286,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '8',
         name: 'Griffith Observatory',
+        description: 'Where the city glitters below and stars above.',
         videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Griffith%20Observatory-parallax.mp4',
         previewLowUrl: '/images/patios/griffith-observatory/preview-low.jpg',
         previewHighUrl: '/images/patios/griffith-observatory/preview.jpg',
@@ -172,6 +297,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'north-america',
         type: 'landmark',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2026-02-04T10:00:00Z',
         popularity: 220,
         // 34.118404° N and 118.300514° W.
@@ -182,6 +308,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '9',
         name: 'Guggenheim New York',
+        description: 'A white spiral where art curves toward the sky.',
         videoUrl: '/videos/Guggenheim_Bilbao_Parallax_optimized.mp4',
         // videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Guggenheim%20New%20York-parallax.mp4',
         previewLowUrl: '/images/patios/guggenheim-new-york/preview-low.jpg',
@@ -193,15 +320,19 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'north-america',
         type: 'architecture',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2026-03-01T10:00:00Z',
         popularity: 890,
         coords: { lat: 43.2687, lng: -2.934 },
         isFeatured: true,
-        isPublished: true,
+        // Unpublished on purpose: this one lands in the hub the camera starts on, so
+        // the owned-not-published (yellow) indicator is on screen from first paint.
+        isPublished: false,
     },
     {
         id: '10',
         name: 'Madison Square Garden',
+        description: 'The buzzing arena where legends and crowds collide.',
         videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Madison%20Square%20Garden-parallax.mp4',
         previewLowUrl: '/images/patios/madison-square-garden/preview-low.jpg',
         previewHighUrl: '/images/patios/madison-square-garden/preview.jpg',
@@ -212,6 +343,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'north-america',
         type: 'stadium',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2025-06-18T10:00:00Z',
         popularity: 670,
         coords: { lat: 40.750504, lng: -73.993439 },
@@ -221,6 +353,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '11',
         name: 'Prague Castle',
+        description: 'A hilltop crown watching over the golden city.',
         videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Prague%20Castle-parallax.mp4',
         previewLowUrl: '/images/patios/prague-castle/preview-low.jpg',
         previewHighUrl: '/images/patios/prague-castle/preview.jpg',
@@ -231,6 +364,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'europe',
         type: 'historic-site',
         author: 'Neos',
+        ownerAddress: OTHER_OWNER_ADDRESS,
         createdAt: '2025-05-09T10:00:00Z',
         popularity: 1320,
         coords: { lat: 50.0904, lng: 14.4018 },
@@ -240,6 +374,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '12',
         name: 'Sagrada Família',
+        description: 'Gaudí unfinished dream of stone reaching heaven.',
         videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Sagrada%20Fam%C3%ADlia-parallax.mp4',
         previewLowUrl: '/images/patios/sagrada-familia/preview-low.jpg',
         previewHighUrl: '/images/patios/sagrada-familia/preview.jpg',
@@ -259,6 +394,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '13',
         name: 'Tōdai-ji',
+        description: 'An ancient temple sheltering a giant serene Buddha.',
         videoUrl: 'https://patiostorage.blob.core.windows.net/assets/T%C5%8Ddai-ji-parallax.mp4',
         previewLowUrl: '/images/patios/todai-ji/preview-low.jpg',
         previewHighUrl: '/images/patios/todai-ji/preview.jpg',
@@ -269,6 +405,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'asia',
         type: 'historic-site',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2025-03-22T10:00:00Z',
         popularity: 1500,
         coords: { lat: 34.687748, lng: 135.83984 },
@@ -278,6 +415,7 @@ const RAW_PATIOS: PatioFixture[] = [
     {
         id: '14',
         name: 'Washington Monument',
+        description: 'A pale obelisk standing tall over the nation.',
         videoUrl: 'https://patiostorage.blob.core.windows.net/assets/Washington%20Monument-parallax.mp4',
         previewLowUrl: '/images/patios/washington-monument/preview-low.jpg',
         previewHighUrl: '/images/patios/washington-monument/preview.jpg',
@@ -288,6 +426,7 @@ const RAW_PATIOS: PatioFixture[] = [
         continent: 'north-america',
         type: 'historic-site',
         author: 'Neos',
+        ownerAddress: DEV_OWNER_ADDRESS,
         createdAt: '2025-02-11T10:00:00Z',
         popularity: 1700,
         coords: { lat: 38.889463, lng: -77.035237 },
