@@ -46,9 +46,9 @@ export const CesiumMap: React.FC<CesiumMapProps> = ({ className, bounds, height 
     const setGroundHeight = useSetCesiumGroundHeight();
     const { finish } = usePageTransition();
 
-    // Keep the free (edit-mode) camera above the tileset surface; view mode does
-    // its own ground clamp inside the orbit controls.
-    useGroundFloor(bounds, interaction === 'edit');
+    // Keep the camera above the tileset surface — both modes drive the native
+    // controller, which has no floor of its own with the globe hidden.
+    useGroundFloor(bounds, true);
 
     useEffect(() => {
         const container = containerRef.current;

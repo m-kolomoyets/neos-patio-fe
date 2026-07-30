@@ -4,12 +4,12 @@ import { CesiumViewerProvider, useCesiumMapReady } from '@/contexts/CesiumViewer
 import { usePageTransition } from '@/contexts/PageTransitionContext';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { getAppBackground } from '@/lib/appBackground';
+import { useCenteredOrbit } from '@/hooks/useCenteredOrbit';
 import { useIdleRotation } from '@/hooks/useIdleRotation';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useIsMobileLandscape } from '@/hooks/useIsMobileLandscape';
 import { usePatioCanonicalRef } from '@/hooks/usePatioCanonicalRef';
 import { useSquircleClipPath } from '@/hooks/useSquircleClipPath';
-import { useViewOrbitControls } from '@/hooks/useViewOrbitControls';
 import { getPatioQueryOptions } from '@/services/patios/queries';
 import { ActionBar } from '@/components/ActionBar';
 import { AppBackground } from '@/components/AppBackground';
@@ -72,15 +72,18 @@ const RevealGate: React.FC<{ objectsLoaded: boolean }> = ({ objectsLoaded }) => 
     return null;
 };
 
-/** Drives the ambient idle-orbit; renders nothing. Must live inside CesiumViewerProvider. */
-const IdleOrbit: React.FC<{ bounds: PatioBounds; height: number }> = ({ bounds, height }) => {
-    useIdleRotation(bounds, true, height);
+/**
+ * Locks the native controller's orbit/dolly to the patio centre; renders nothing.
+ * Must live inside CesiumViewerProvider.
+ */
+const CenteredOrbit: React.FC<{ bounds: PatioBounds; height: number }> = ({ bounds, height }) => {
+    useCenteredOrbit(bounds, height);
     return null;
 };
 
-/** Drives the center-locked drag-orbit for view mode; renders nothing. Must live inside CesiumViewerProvider. */
-const ViewOrbitControls: React.FC<{ bounds: PatioBounds; height: number }> = ({ bounds, height }) => {
-    useViewOrbitControls(bounds, height);
+/** Drives the ambient idle-orbit; renders nothing. Must live inside CesiumViewerProvider. */
+const IdleOrbit: React.FC<{ bounds: PatioBounds; height: number }> = ({ bounds, height }) => {
+    useIdleRotation(bounds, true, height);
     return null;
 };
 
@@ -111,7 +114,7 @@ const PatioScene: React.FC<{ patio: Patio; storageId: string }> = ({ patio, stor
             />
             <ViewObjectsLayer objects={patio.objects} bounds={patio.bounds} onLoaded={handleObjectsLoaded} />
             <RevealGate objectsLoaded={objectsLoaded} />
-            <ViewOrbitControls bounds={patio.bounds} height={patio.height} />
+            <CenteredOrbit bounds={patio.bounds} height={patio.height} />
             <IdleOrbit bounds={patio.bounds} height={patio.height} />
         </CesiumViewerProvider>
     );

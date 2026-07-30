@@ -78,8 +78,8 @@ export const useIdleRotation = (bounds: PatioBounds, centerLocked = false, heigh
 
         const resolvePivot = () => {
             // Center-locked routes (Patio View) orbit the fixed bounds-centre — the
-            // exact pivot useViewOrbitControls uses — so the idle→drag handoff reads
-            // back an identical pose with no reproject jump. Free-pan routes (editor)
+            // patio centre the ViewCube orbits — so the idle→drag handoff reads
+            // back a pose centred on the place, with no reproject jump. Free-pan routes (editor)
             // keep the live screen-centre pick so orbit resumes from wherever panned.
             if (centerLocked) return targetRef.current;
             const { camera, scene, canvas } = viewer;

@@ -25,9 +25,8 @@ type GoodPose = {
  * the controller's new pose dropped below `surface + clearance`. The bad pose is
  * never rasterised, so it reads as a hard wall, not a snap-back.
  *
- * View mode does its own ground clamp inside {@link useViewOrbitControls}
- * (deterministic `lookAt`, so it clamps pitch before applying — no revert); pass
- * `enabled` to run this only for the free controller.
+ * Both modes run the native controller now, so both need this floor; `enabled`
+ * stays as the opt-out for any future mode that clamps its own camera.
  */
 export const useGroundFloor = (bounds: PatioBounds, enabled: boolean) => {
     const viewer = useCesiumViewer();

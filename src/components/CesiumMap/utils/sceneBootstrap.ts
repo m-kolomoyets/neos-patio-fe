@@ -76,40 +76,56 @@ const VIEW_MIN_ZOOM_FACTOR = 0.6;
 const VIEW_MAX_ZOOM_FACTOR = 4;
 
 /**
- * Apply the camera-controller constraints for `interaction`. `'edit'` is a no-op
- * (default controller). `'view'` disables EVERY native camera input — the map
- * canvas is driven entirely by {@link useViewOrbitControls}, which orbits/zooms
- * strictly around the fixed patio centre via `lookAt`. Native rotate/tilt/zoom
- * would pivot around the cursor (walking the focus off the patio) and pan/look
- * would fly the camera away, so all five are off; inertia is zeroed so no input
- * coasts. The zoom band ({@link VIEW_MIN_ZOOM_FACTOR}/{@link VIEW_MAX_ZOOM_FACTOR}
- * off the patio's bounding-sphere radius) is still set on the controller: it is
- * the single source of truth for the range clamp, read by both the view-orbit
- * hook and the ViewCube's `clampRange`. Returns a no-op teardown — the hook owns
- * all listeners now.
+ * Per-frame velocity retention for Cesium's native camera coast (spin/translate/
+ * zoom). Cesium defaults to 0.9; 0.96 roughly triples the glide length, so a
+ * flick keeps moving after the pointer stops instead of halting on release.
+ */
+const CAMERA_INERTIA = 0.96;
+
+/**
+ * Apply the camera-controller constraints for `interaction`. `'edit'` keeps the
+ * default controller. `'view'` also drives the camera with Cesium's NATIVE
+ * screen-space controller — drag-orbit is stock Cesium, no custom `lookAt` layer
+ * on top (which is what stuttered: per-event/RAF pose writes fighting the
+ * controller). Only the two inputs that can lose the patio are off: `translate`
+ * (pan) and `look` (free-look) would fly the camera off the place, while
+ * rotate/zoom stay native (`tilt` is a no-op under a non-identity camera
+ * transform — the orbit drag carries pitch). Centre-locking survives, but via the
+ * controller's own reference-frame mode instead of an override — see
+ * {@link useCenteredOrbit}.
+ *
+ * Inertia is raised ({@link CAMERA_INERTIA}) for both modes so a flick coasts.
+ * The zoom band ({@link VIEW_MIN_ZOOM_FACTOR}/{@link VIEW_MAX_ZOOM_FACTOR} off the
+ * patio's bounding-sphere radius) bounds the native dolly and is the single
+ * source of truth for the range clamp the ViewCube's `clampRange` reads. Returns
+ * a no-op teardown — nothing is subscribed.
  */
 export const applyInteractionMode = (
     viewer: Viewer,
     interaction: MapInteraction,
     bounds: PatioBounds
 ): (() => void) => {
+    const controller = viewer.scene.screenSpaceCameraController;
+
+    // Raised inertia (Cesium default 0.9) so native camera input coasts longer and
+    // reads as a fluid glide instead of stopping dead with the pointer.
+    controller.inertiaSpin = CAMERA_INERTIA;
+    controller.inertiaTranslate = CAMERA_INERTIA;
+    controller.inertiaZoom = CAMERA_INERTIA;
+
     if (interaction === 'edit') return () => {};
 
-    const controller = viewer.scene.screenSpaceCameraController;
-    // All native inputs off — the view-orbit hook drives the camera around centre.
-    controller.enableRotate = false;
-    controller.enableTilt = false;
-    controller.enableZoom = false;
+    // Native orbit/zoom stay on — stock Cesium drag behaviour, centre-locked by
+    // the camera transform useCenteredOrbit sets. Pan and free-look are off: both
+    // translate the camera away from the patio.
+    controller.enableRotate = true;
+    controller.enableTilt = true;
+    controller.enableZoom = true;
     controller.enableTranslate = false;
     controller.enableLook = false;
 
-    // Zero inertia so nothing coasts (the hook applies discrete lookAt moves).
-    controller.inertiaSpin = 0;
-    controller.inertiaTranslate = 0;
-    controller.inertiaZoom = 0;
-
-    // Zoom band around the framed patio — kept as the single source of truth for
-    // the range clamp (view-orbit hook + ViewCube `clampRange` both read it).
+    // Zoom band around the framed patio — bounds the native dolly and is the
+    // single source of truth for the range clamp (ViewCube `clampRange` reads it).
     const [west, south, east, north] = bounds;
     const { radius } = BoundingSphere.fromRectangle3D(Rectangle.fromDegrees(west, south, east, north));
     controller.minimumZoomDistance = radius * VIEW_MIN_ZOOM_FACTOR;
