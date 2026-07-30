@@ -3,6 +3,9 @@
     --home-content-offset-x: 3.5rem;
     --home-content-bottom-offset: 2.0625rem;
 
+    /* Fallback rounding for every panel layer until useSquircleClipPath measures the real path. */
+    --panel-radius: 2.5rem;
+
     position: relative;
     min-height: 100svh;
     display: flex;
@@ -12,70 +15,139 @@
     padding-bottom: calc(var(--home-content-offset-y) + var(--home-content-bottom-offset));
 }
 
+/* z-index: 0 makes this a stacking context, keeping the panel's internal range (backdrop 12,
+   header 14, border 16) from competing with .wrap's own overlays — ActionBar (10) and
+   AlphabetIndex (20) sort against the frame as a whole, not against its layers.
+   A stacking context is NOT a backdrop root (Filter Effects 2 lists filter/opacity/mask/
+   clip-path/mix-blend-mode, not z-index), so .header-backdrop still blurs the page background. */
 .main-frame {
     position: relative;
+    z-index: 0;
     flex: 1;
     display: grid;
     place-content: start center;
 }
 
-.main-frame > .main,
-.main-frame > .main-glass {
-    /* Same grid cell → identical box → mainSquircleStyle clip matches both. */
+.main-frame > * {
+    /* Same grid cell → identical box → one --squircle-clip path fits every layer. */
     grid-area: 1 / 1;
 }
 
-.main-glass {
+/* Decorative layers: same box as .main, never interactive. */
+.main-glass,
+.main-surface,
+.main-border,
+.header-backdrop,
+.header-shadow {
     width: 100%;
     height: 100%;
+    clip-path: var(--squircle-clip, none);
     pointer-events: none;
+}
 
-    /* Page-blur lives here (sibling of main), NOT on .main — see index.tsx note. */
+.main-glass {
+    /* Page-blur behind the panel. */
     backdrop-filter: blur(50px);
 }
 
+.main-surface {
+    /* NOTE: surface-regular in index.css */
+
+    background: var(--surface-regular);
+    background-blend-mode: normal, luminosity;
+}
+
+.main-border {
+    border: 1px solid hsl(var(--color-hsl-white) / 0.24);
+
+    /* Above the header backdrop so the panel edge is never blurred over. */
+    z-index: 16;
+}
+
+/* No clip-path and no border here — both moved to the sibling layers above. clip-path would
+   make <main> a stacking context AND a backdrop root, trapping the sticky header below
+   .header-backdrop and confining that layer's blur to the panel's own content. */
 .main {
     position: relative;
     width: calc(100svw - var(--home-content-offset-x) * 2);
     height: calc(100svh - (var(--home-content-offset-y) * 2) - var(--home-content-bottom-offset));
     display: flex;
     flex-direction: column;
-    border: 1px solid hsl(var(--color-hsl-white) / 0.24);
     gap: var(--gap-12);
-}
-
-.main::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-
-    /* NOTE: surface-regular in index.css */
-
-    background: var(--surface-regular);
-    background-blend-mode: normal, luminosity;
-    pointer-events: none;
 }
 
 .scroll {
     height: 100%;
 }
 
-.main,
 .main-glass,
-.scroll .scroll-viewport,
-.main::after {
+.main-surface,
+.main-border,
+.scroll .scroll-viewport {
     /* Fallback rounding before JS measures the squircle clip-path (useSquircleClipPath). */
-    border-radius: 2.5rem;
+    border-radius: var(--panel-radius);
 }
 
 /* Plain border-radius only — NO squircle clip-path here. A `path()` clip on the scroll
    container drops it off Blink's composited-scroll path, so every frame repaints on the
    main thread and the scrollbar thumb (JS-positioned in Base UI's onScroll) stops
-   tracking. The squircle on .main already rounds this box visually. */
+   tracking. .main-surface / .main-border carry the squircle outline instead. */
+
+/* No `contain: paint` either: paint containment makes this a stacking context, which traps
+   PatioLibrary's sticky header below any overlay placed outside the scroll area, and makes the
+   viewport the containing block for fixed descendants (so `fixed` boxes scroll with content). */
 .scroll .scroll-viewport {
     overflow: hidden;
-    contain: paint;
+}
+
+/* Backdrop for PatioLibrary's stuck header. A dedicated element instead of a background on the
+   sticky header (seams / wrong blend backdrop), outside the scroll area so it never scrolls, and
+   outside <main> so its blur samples the page background rather than only the panel's content.
+   Height is the measured header band (--patio-library-header-height, published by PatioLibrary).
+   The shared --squircle-clip path is authored in the full panel's coordinate space, so on this
+   short box its top corners still land on the true squircle outline and the rest falls outside.
+   z-index 12 clears everything inside the scroll area (FeaturedPatioCard's .content tops out at
+   10, and <main> is no longer a stacking context so those now share this context) while staying
+   under the header's own 14. */
+.header-backdrop {
+    align-self: start;
+    height: var(--patio-library-header-height, 0);
+    z-index: 12;
+    opacity: 0;
+    background: var(--surface-regular);
+    background-blend-mode: normal, luminosity;
+    backdrop-filter: blur(50px);
+    transition: opacity 0.2s ease;
+}
+
+/* Drop shadow under the stuck header band. Full panel box so its clip-path trims the shadow to
+   the panel silhouette; the ::before is the band itself, casting downward. The shadow cannot sit
+   on .header-backdrop — a clip-path crops box-shadow — nor can that element be nested inside this
+   one, because a clipped ancestor is a backdrop root and would blank its blur. */
+.header-shadow {
+    position: relative;
+    z-index: 11;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.header-shadow::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--patio-library-header-height, 0);
+    box-shadow:
+        0 4px 8px 0 hsl(var(--color-hsl-black) / 0.06),
+        0 0 4px 0 hsl(var(--color-hsl-black) / 0.04);
+}
+
+/* Attribute selector, not a class: data-stuck is set by PatioLibrary's header across module
+   boundaries. Container queries cannot reach out of the header, so this rides the JS flag. */
+.main-frame:has([data-stuck="true"]) > .header-backdrop,
+.main-frame:has([data-stuck="true"]) > .header-shadow {
+    opacity: 1;
 }
 
 .scroll :global(.scroll-area-scrollbar-vertical) {
@@ -128,14 +200,7 @@
         --home-content-offset-y: 1rem;
         --home-content-offset-x: 1rem;
         --home-content-bottom-offset: 3.3125rem;
-    }
-
-    .main,
-    .main-glass,
-    .scroll .scroll-viewport,
-    .main::after {
-        /* Fallback rounding before JS measures the squircle clip-path (useSquircleClipPath). */
-        border-radius: 1.5rem;
+        --panel-radius: 1.5rem;
     }
 
     .main {
@@ -152,14 +217,7 @@
         --home-content-offset-y: 1rem;
         --home-content-offset-x: 1rem;
         --home-content-bottom-offset: 2.25rem;
-    }
-
-    .main,
-    .main-glass,
-    .scroll .scroll-viewport,
-    .main::after {
-        /* Fallback rounding before JS measures the squircle clip-path (useSquircleClipPath). */
-        border-radius: 1.5rem;
+        --panel-radius: 1.5rem;
     }
 
     .main {
