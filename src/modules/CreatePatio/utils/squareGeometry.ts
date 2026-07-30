@@ -52,6 +52,48 @@ export const isPointInSquare = (point: Point, rect: SquareRect): boolean => {
     return Math.abs(localX) <= half && Math.abs(localY) <= half;
 };
 
+/** Screen-space extent of a corner set projected onto an axis. */
+const projectOntoAxis = (corners: Point[], axis: Point): { min: number; max: number } => {
+    let min = Infinity;
+    let max = -Infinity;
+
+    for (const corner of corners) {
+        const projection = corner.x * axis.x + corner.y * axis.y;
+        min = Math.min(min, projection);
+        max = Math.max(max, projection);
+    }
+
+    return { min, max };
+};
+
+/** Outward normals of each edge — the candidate separating axes for a convex quad. */
+const edgeNormals = (corners: Point[]): Point[] => {
+    return corners.map((corner, index) => {
+        const next = corners[(index + 1) % corners.length];
+
+        return { x: -(next.y - corner.y), y: next.x - corner.x };
+    });
+};
+
+/**
+ * Whether two rotated squares overlap in screen-pixel space, via the Separating
+ * Axis Theorem: if any edge normal separates the two corner sets they are apart,
+ * otherwise they intersect. Pure — mirrors the `clipPath` collision the overlay
+ * paints, so the create card's warning and the red paint agree frame-for-frame.
+ */
+export const squaresOverlap = (a: SquareRect, b: SquareRect): boolean => {
+    const cornersA = getSquareCorners(a.center, a.size, a.azimuthDeg);
+    const cornersB = getSquareCorners(b.center, b.size, b.azimuthDeg);
+    const axes = [...edgeNormals(cornersA), ...edgeNormals(cornersB)];
+
+    return axes.every((axis) => {
+        const projectionA = projectOntoAxis(cornersA, axis);
+        const projectionB = projectOntoAxis(cornersB, axis);
+
+        return projectionA.max >= projectionB.min && projectionB.max >= projectionA.min;
+    });
+};
+
 /**
  * SVG transform that rotates a rect around the given center by the azimuth.
  * Lets a rounded `<rect>` (with `rx`) keep its corner radius under rotation,

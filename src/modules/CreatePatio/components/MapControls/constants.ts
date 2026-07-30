@@ -1,0 +1,1 @@
+export const COMPASS_ICON_ROTATION_ANGLE_OFFSET = -45;

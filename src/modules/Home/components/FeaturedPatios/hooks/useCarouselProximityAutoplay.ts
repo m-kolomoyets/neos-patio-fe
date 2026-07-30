@@ -1,5 +1,6 @@
 import type { EmblaCarouselType, ScrollBodyType } from 'embla-carousel';
 import { useCallback, useEffect, useRef } from 'react';
+import { HOME_SCROLL_ROOT_SELECTOR } from '../../../constants';
 import { computeHalfScrollSpeed } from '../utils/computeHalfScrollSpeed';
 import { createMarqueeScrollBody } from '../utils/createMarqueeScrollBody';
 
@@ -23,6 +24,9 @@ const EPSILON = 1e-4;
 const VERTICAL_TRIGGER_PADDING = 40;
 // One-time speed bump applied after the first navigation-arrow click.
 const BOOST_MULTIPLIER = 2;
+// Idle gap without a scroll event that counts as "scrolling stopped" (matches the
+// ~100ms convention browsers use for `scrollend`).
+const SCROLL_IDLE_MS = 120;
 
 type Rect = { left: number; top: number; width: number; height: number };
 
@@ -57,6 +61,11 @@ export const useCarouselProximityAutoplay = ({ emblaApi, enabled }: Params): Res
             let speed = 0;
             // True while the user drags the carousel; manual interaction wins over the marquee.
             let isPointerDown = false;
+            // True while the Home scroll container is being scrolled. The trigger area moves with
+            // the page during a scroll while no pointermove fires, so the cached cursor position
+            // maps to a stale zone — running the marquee then reads as throttling/glitching.
+            let isPageScrolling = false;
+            let scrollIdleTimer: ReturnType<typeof setTimeout> | null = null;
             let running = false;
 
             // Cache the engine + its default scroll body so the marquee can swap in/out and
@@ -109,7 +118,7 @@ export const useCarouselProximityAutoplay = ({ emblaApi, enabled }: Params): Res
             };
 
             const sync = () => {
-                if (isPointerDown || !isActive()) {
+                if (isPointerDown || isPageScrolling || !isActive()) {
                     stop();
                     return;
                 }
@@ -160,6 +169,21 @@ export const useCarouselProximityAutoplay = ({ emblaApi, enabled }: Params): Res
                 recompute();
             };
 
+            // Halt the marquee for the duration of a page scroll, then re-evaluate against the
+            // settled area rect so it only resumes if the cursor is still in an active half.
+            const onPageScroll = () => {
+                isPageScrolling = true;
+                stop();
+                if (scrollIdleTimer !== null) {
+                    clearTimeout(scrollIdleTimer);
+                }
+                scrollIdleTimer = setTimeout(() => {
+                    scrollIdleTimer = null;
+                    isPageScrolling = false;
+                    recompute();
+                }, SCROLL_IDLE_MS);
+            };
+
             const onPointerDown = () => {
                 isPointerDown = true;
                 // Yield to the drag handler immediately so manual dragging is unobstructed.
@@ -173,8 +197,10 @@ export const useCarouselProximityAutoplay = ({ emblaApi, enabled }: Params): Res
 
             recomputeRef.current = recompute;
             refreshArea();
+            const scrollRoot = document.querySelector<HTMLElement>(HOME_SCROLL_ROOT_SELECTOR);
             window.addEventListener('pointermove', onPointerMove);
             window.addEventListener('resize', onResize);
+            scrollRoot?.addEventListener('scroll', onPageScroll, { passive: true });
             emblaApi.on('reInit', onReInit);
             emblaApi.on('pointerDown', onPointerDown);
             emblaApi.on('pointerUp', onPointerUp);
@@ -183,6 +209,10 @@ export const useCarouselProximityAutoplay = ({ emblaApi, enabled }: Params): Res
             return () => {
                 window.removeEventListener('pointermove', onPointerMove);
                 window.removeEventListener('resize', onResize);
+                scrollRoot?.removeEventListener('scroll', onPageScroll);
+                if (scrollIdleTimer !== null) {
+                    clearTimeout(scrollIdleTimer);
+                }
                 emblaApi.off('reInit', onReInit);
                 emblaApi.off('pointerDown', onPointerDown);
                 emblaApi.off('pointerUp', onPointerUp);

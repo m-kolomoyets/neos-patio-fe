@@ -1,4 +1,5 @@
 import type { CubeTarget } from './types';
+import { NINETY_DEGREES } from '@/lib/constants';
 
 /** Duration (ms) for every programmatic camera move (snap, arrows, home, zoom presets). */
 export const CAMERA_EASE_MS = 400;
@@ -17,7 +18,7 @@ export const ZOOM_STEP_FACTOR = 2;
 export const ZOOM_PRESETS = [50, 100, 200] as const;
 
 /** Bearing change (deg) per rotate-button press — a quarter-turn matching the N/E/S/W faces. */
-export const ROTATE_STEP_DEG = 90;
+export const ROTATE_STEP_DEG = NINETY_DEGREES;
 
 /** localStorage key prefix for the per-patio Home view (`${prefix}${patioId}`). */
 export const HOME_STORAGE_PREFIX = 'patio-editor:home:';
@@ -77,7 +78,7 @@ export const CUBE_TARGETS: Record<CubeTarget, { bearing: number | null; pitch: n
     north: { bearing: 180, pitch: SIDE_PITCH },
     east: { bearing: 270, pitch: SIDE_PITCH },
     south: { bearing: 0, pitch: SIDE_PITCH },
-    west: { bearing: 90, pitch: SIDE_PITCH },
+    west: { bearing: NINETY_DEGREES, pitch: SIDE_PITCH },
     // Corners / edges use direct manipulation: the CLICKED corner/edge ends up
     // facing the viewer. The cube mirrors the camera heading, so the target
     // facing the viewer is opposite the heading — hence each bearing is its
@@ -96,5 +97,5 @@ export const CUBE_TARGETS: Record<CubeTarget, { bearing: number | null; pitch: n
     'edge-top-n': { bearing: 180, pitch: 30 },
     'edge-top-e': { bearing: 270, pitch: 30 },
     'edge-top-s': { bearing: 0, pitch: 30 },
-    'edge-top-w': { bearing: 90, pitch: 30 },
+    'edge-top-w': { bearing: NINETY_DEGREES, pitch: 30 },
 };

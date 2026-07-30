@@ -1,6 +1,8 @@
 import type { GroupingMode } from '../../hooks/useGroupedPatios';
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
+import { borderBoxMeasurer, useMeasure } from '@/hooks/useMeasure';
+import { useSetRootCustomProperty } from '@/hooks/useSetRootCustomProperty';
 import { useStickyStuck } from '@/hooks/useStickyStuck';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -22,9 +24,26 @@ export const PatioLibrary: React.FC = () => {
             // NOTE: Search should work for search autocomplete only
             q: '',
         });
-    const { ref: headerRef, flag: isHeaderStuck } = useStickyStuck({
+    const { ref: stickyRef, flag: isHeaderStuck } = useStickyStuck({
         rootSelector: HOME_SCROLL_ROOT_SELECTOR,
     });
+    const [headerMeasures, measureRef] = useMeasure<HTMLElement>(true, borderBoxMeasurer);
+
+    // Both hooks own a ref for the same node; merged callback must stay referentially
+    // stable, otherwise React detaches/reattaches (null → node) on every render.
+    const headerRef = React.useCallback(
+        (node: HTMLElement | null) => {
+            stickyRef(node);
+            measureRef.current = node;
+        },
+        [stickyRef, measureRef]
+    );
+
+    // Feeds `.header::before` — the fixed backdrop layer cannot inherit the header box.
+    useSetRootCustomProperty(
+        '--patio-library-header-height',
+        headerMeasures ? `${headerMeasures.height}px` : undefined
+    );
 
     const [sentinelRef, sentinelInView] = useInView({
         threshold: 0.75,

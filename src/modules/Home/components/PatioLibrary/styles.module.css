@@ -1,3 +1,6 @@
+/* The stuck header's backdrop and shadow are Home's .header-backdrop / .header-shadow layers
+   (see ../../styles.module.css); this component only publishes --patio-library-header-height
+   and the data-stuck flag they key off. */
 .wrap {
     position: relative;
     display: flex;
@@ -14,15 +17,10 @@
     padding-bottom: calc(var(--gap-5) - var(--gap-1) - var(--gap-0-5));
     gap: var(--gap-4);
     top: 0;
-    z-index: 10;
-    transition: background 0.2s ease;
-}
 
-.header[data-stuck="true"] {
-    background:
-        linear-gradient(0deg, hsl(var(--color-hsl-white) / 0.25) 0%, hsl(var(--color-hsl-white) / 0.25) 100%),
-        hsl(var(--color-hsl-black) / 0.76);
-    background-blend-mode: normal, luminosity;
+    /* Above Home's .header-backdrop (12). <main> is intentionally not a stacking context, so
+       this competes directly in .main-frame's context — see Home/styles.module.css. */
+    z-index: 14;
 }
 
 @media (max-width: 767px) {
@@ -38,23 +36,6 @@
         padding-bottom: var(--gap-3);
         padding-inline: calc(var(--gap-3) + var(--gap-0-5));
     }
-}
-
-.header::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    opacity: 0;
-    box-shadow:
-        0 4px 8px 0 hsl(var(--color-hsl-black) / 0.06),
-        0 0 4px 0 hsl(var(--color-hsl-black) / 0.04);
-    transition: opacity 0.2s ease;
-    pointer-events: none;
-}
-
-.header[data-stuck="true"]::after {
-    opacity: 1;
 }
 
 .title {
@@ -170,23 +151,4 @@
     width: 2rem;
     height: 2rem;
     flex-shrink: 0;
-}
-
-@supports (container-type: scroll-state) {
-    .header {
-        container-type: scroll-state;
-    }
-
-    @container scroll-state(stuck: top) {
-        .header.header {
-            background:
-                linear-gradient(0deg, hsl(var(--color-hsl-white) / 0.25) 0%, hsl(var(--color-hsl-white) / 0.25) 100%),
-                hsl(var(--color-hsl-black) / 0.76);
-            background-blend-mode: normal, luminosity;
-        }
-
-        .header::after {
-            opacity: 1;
-        }
-    }
 }

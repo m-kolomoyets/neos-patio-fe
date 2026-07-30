@@ -1,0 +1,9 @@
+<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(3 1.6)" stroke="currentColor" stroke-opacity="0.9">
+        <path
+            d="M1.12517 6.3158V12.1251C1.12517 16.4743 4.6509 20 9.00011 20C13.3493 20 16.875 16.4743 16.875 12.1251V6.3158"
+            stroke-width="1.6" stroke-linecap="round" />
+        <rect x="0.500129" y="0.5" width="1.24998" height="2.1579" rx="0.5" fill="currentColor" fill-opacity="0.9" />
+        <rect x="16.2501" y="0.5" width="1.24998" height="2.1579" rx="0.5" fill="currentColor" fill-opacity="0.9" />
+    </g>
+</svg>

@@ -18,6 +18,7 @@ import { useExitCreateModeOnEscape } from './hooks/useExitCreateModeOnEscape';
 import { useGlobeIdleRotation } from './hooks/useGlobeIdleRotation';
 import { ClusterMarkers } from './components/ClusterMarkers';
 import { Header } from './components/Header';
+import { MapControls } from './components/MapControls';
 import { MapViewTabs } from './components/MapViewTabs';
 import { NewPatioPopup } from './components/NewPatioPopup';
 import { PatioClusterSource } from './components/PatioClusterSource';
@@ -88,6 +89,7 @@ const CreatePatioSurface: React.FC = () => {
                             <SquaresOverlay />
                         </Map>
                         <ScaleBar />
+                        <MapControls />
                         {/* Bottom-right cards — the selected patio (view mode) and the
                             patio being placed (create mode). Siblings of the map (not
                             children) so they sit above the canvas and outside its pointer
