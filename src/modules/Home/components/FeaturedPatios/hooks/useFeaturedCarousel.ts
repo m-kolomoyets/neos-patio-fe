@@ -20,7 +20,10 @@ type Result = {
     scrollNext: () => void;
     scrollTo: (_index: number) => void;
     reducedMotion: boolean;
+    /** Cleared for weak/slow devices and once the perf guard degrades: no video may mount. */
     videoCapable: boolean;
+    /** Cursor-driven marquee autoplay: on wherever a cursor exists and motion is not opted out of. */
+    motionCapable: boolean;
     slidesInViewWithNeighbors: ReadonlySet<number>;
 };
 
@@ -86,15 +89,38 @@ export const useFeaturedCarousel = ({ dataKey }: Params): Result => {
     const [staticCapable] = useState<boolean>(() => {
         return supportsHover() && !isSlowConnection() && !isWeakDevice();
     });
-    // Runtime FPS is the source of truth; the static seed above only culls obviously weak hardware.
-    // Sample only while videos would actually be mounted/scrubbing.
-    const { degraded } = useVideoPerfGuard({ enabled: !isMobile && staticCapable && !reducedMotion });
-    const videoCapable = !isMobile && staticCapable && !reducedMotion && !degraded;
 
     const [emblaRef, emblaApi] = useEmblaCarousel(buildOptions(reducedMotion, isMobile));
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [snapList, setSnapList] = useState<readonly number[]>([]);
     const [slidesInViewWithNeighbors, setSlidesInViewWithNeighbors] = useState<ReadonlySet<number>>(EMPTY_SET);
+    // True between the first scroll and 'settle' — the only window where videos actually seek and
+    // decode, so the only window worth measuring. Sampling an idle carousel just measures idle FPS.
+    const [isScrubbing, setIsScrubbing] = useState(false);
+
+    // Any mounted video with metadata will do: they all decode the same way, and the guard only
+    // needs one element's decode/drop counters to judge the pipeline.
+    const getSampleVideo = useCallback((): HTMLVideoElement | null => {
+        if (!emblaApi) return null;
+        for (const node of emblaApi.slideNodes()) {
+            const video = node.querySelector<HTMLVideoElement>('video');
+            if (video && video.readyState >= HTMLMediaElement.HAVE_METADATA) return video;
+        }
+        return null;
+    }, [emblaApi]);
+
+    const staticGate = !isMobile && staticCapable && !reducedMotion;
+    // Runtime measurement is the source of truth; the static seed above only culls obviously weak
+    // hardware. Sample only while videos are mounted *and* scrubbing.
+    const { degraded } = useVideoPerfGuard({
+        enabled: staticGate && isScrubbing && slidesInViewWithNeighbors.size > 0,
+        getSampleVideo,
+    });
+    const videoCapable = staticGate && !degraded;
+    // Cursor-driven scrolling is the carousel's primary navigation, so device power never gates it:
+    // no weak-hardware seed, no perf degrade. Only the two cases where it cannot work at all —
+    // no cursor (mobile) and an explicit reduced-motion preference — turn it off.
+    const motionCapable = !isMobile && !reducedMotion;
 
     useEffect(() => {
         if (typeof window === 'undefined' || !window.matchMedia) return;
@@ -127,6 +153,31 @@ export const useFeaturedCarousel = ({ dataKey }: Params): Result => {
         if (!emblaApi) return;
         emblaApi.reInit(buildOptions(reducedMotion, isMobile));
     }, [emblaApi, reducedMotion, isMobile, dataKey]);
+
+    useEffect(
+        function trackScrubActivity() {
+            if (!emblaApi) return;
+            const onMove = () => {
+                setIsScrubbing(true);
+            };
+            const onStop = () => {
+                setIsScrubbing(false);
+            };
+            emblaApi.on('scroll', onMove);
+            emblaApi.on('pointerDown', onMove);
+            emblaApi.on('settle', onStop);
+            // reInit emits 'scroll' while measuring but never a matching 'settle', which would pin
+            // the flag on and leave the guard sampling an idle carousel.
+            emblaApi.on('reInit', onStop);
+            return () => {
+                emblaApi.off('scroll', onMove);
+                emblaApi.off('pointerDown', onMove);
+                emblaApi.off('settle', onStop);
+                emblaApi.off('reInit', onStop);
+            };
+        },
+        [emblaApi]
+    );
 
     useEffect(() => {
         if (!emblaApi) return;
@@ -189,6 +240,7 @@ export const useFeaturedCarousel = ({ dataKey }: Params): Result => {
         scrollTo,
         reducedMotion,
         videoCapable,
+        motionCapable,
         slidesInViewWithNeighbors: videoCapable ? slidesInViewWithNeighbors : EMPTY_SET,
     };
 };

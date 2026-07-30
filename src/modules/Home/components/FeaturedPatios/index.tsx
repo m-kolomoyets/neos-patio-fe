@@ -21,15 +21,26 @@ export const FeaturedPatios: React.FC = () => {
     const { data, isLoading } = useQuery(getFeaturedPatiosQueryOptions());
     const viewportId = useId();
 
-    const { emblaRef, emblaApi, snapList, scrollPrev, scrollNext, reducedMotion, slidesInViewWithNeighbors } =
-        useFeaturedCarousel({
-            dataKey: data,
-        });
+    const {
+        emblaRef,
+        emblaApi,
+        snapList,
+        scrollPrev,
+        scrollNext,
+        videoCapable,
+        motionCapable,
+        slidesInViewWithNeighbors,
+    } = useFeaturedCarousel({
+        dataKey: data,
+    });
 
-    useCarouselVideoScrub({ emblaApi, enabled: !isMobile });
+    // Scrub follows videoCapable: once the perf guard degrades the videos unmount, so a scrub
+    // listener driving nothing is pure overhead on the device least able to afford it. Autoplay
+    // stays on regardless — it is navigation, not decoration.
+    useCarouselVideoScrub({ emblaApi, enabled: videoCapable });
     const { boost, unboost } = useCarouselProximityAutoplay({
         emblaApi,
-        enabled: !isMobile && !reducedMotion,
+        enabled: motionCapable,
     });
 
     const hasMultipleSlides = snapList.length > 1;
