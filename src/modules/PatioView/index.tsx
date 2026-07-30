@@ -73,14 +73,14 @@ const RevealGate: React.FC<{ objectsLoaded: boolean }> = ({ objectsLoaded }) => 
 };
 
 /** Drives the ambient idle-orbit; renders nothing. Must live inside CesiumViewerProvider. */
-const IdleOrbit: React.FC<{ bounds: PatioBounds }> = ({ bounds }) => {
-    useIdleRotation(bounds, true);
+const IdleOrbit: React.FC<{ bounds: PatioBounds; height: number }> = ({ bounds, height }) => {
+    useIdleRotation(bounds, true, height);
     return null;
 };
 
 /** Drives the center-locked drag-orbit for view mode; renders nothing. Must live inside CesiumViewerProvider. */
-const ViewOrbitControls: React.FC<{ bounds: PatioBounds }> = ({ bounds }) => {
-    useViewOrbitControls(bounds);
+const ViewOrbitControls: React.FC<{ bounds: PatioBounds; height: number }> = ({ bounds, height }) => {
+    useViewOrbitControls(bounds, height);
     return null;
 };
 
@@ -101,12 +101,18 @@ const PatioScene: React.FC<{ patio: Patio; storageId: string }> = ({ patio, stor
 
     return (
         <CesiumViewerProvider>
-            <CesiumMap bounds={patio.bounds} interaction="view" />
-            <ViewCube className={s['view-cube']} bounds={patio.bounds} storageId={storageId} interaction="view" />
+            <CesiumMap bounds={patio.bounds} height={patio.height} interaction="view" />
+            <ViewCube
+                className={s['view-cube']}
+                bounds={patio.bounds}
+                height={patio.height}
+                storageId={storageId}
+                interaction="view"
+            />
             <ViewObjectsLayer objects={patio.objects} bounds={patio.bounds} onLoaded={handleObjectsLoaded} />
             <RevealGate objectsLoaded={objectsLoaded} />
-            <ViewOrbitControls bounds={patio.bounds} />
-            <IdleOrbit bounds={patio.bounds} />
+            <ViewOrbitControls bounds={patio.bounds} height={patio.height} />
+            <IdleOrbit bounds={patio.bounds} height={patio.height} />
         </CesiumViewerProvider>
     );
 };

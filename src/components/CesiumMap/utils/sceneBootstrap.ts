@@ -1,5 +1,6 @@
 import type { PatioBounds } from '@/services/patios/types';
 import { BoundingSphere, Cesium3DTileset, Math as CesiumMath, HeadingPitchRange, Ion, Rectangle, Viewer } from 'cesium';
+import { sampleSurfaceHeight } from '@/lib/utils/sampleSurfaceHeight';
 
 const ION_TOKEN = import.meta.env.VITE_CESIUM_ACCESS_TOKEN;
 
@@ -131,6 +132,18 @@ type BootstrapSceneOptions = {
      * safety net — whichever fires first.
      */
     onReady?: () => void;
+    /**
+     * The patio's authored look-at offset above ground (`Patio.height`), folded
+     * into the final framing so the camera aims at the patio's real focal point
+     * rather than a spot buried under the tileset mesh.
+     */
+    height?: number;
+    /**
+     * Called with the ground elevation sampled under the patio centre, so the
+     * camera orbit pivot can reuse this one sample instead of taking its own.
+     * Not called when the surface could not be sampled.
+     */
+    onGroundHeight?: (_height: number) => void;
 };
 
 /**
@@ -146,7 +159,7 @@ export const bootstrapScene = (
     bounds: PatioBounds,
     options: BootstrapSceneOptions = {}
 ): (() => void) => {
-    const { onReady } = options;
+    const { onReady, height = 0, onGroundHeight } = options;
 
     let cancelled = false;
     let readySignalled = false;
@@ -162,6 +175,30 @@ export const bootstrapScene = (
 
     // Safety net: report ready even if the tileset never finishes settling.
     const readyTimer = setTimeout(signalReady, READY_TIMEOUT_MS);
+
+    /**
+     * Third and final framing pass, once the first LOD has painted and the surface
+     * can actually be sampled: re-frame around the patio centre raised to
+     * `ground + height`, and publish that ground so the orbit pivot reuses it.
+     *
+     * The two earlier passes frame at ellipsoid height because no tile has
+     * streamed yet — on elevated terrain that aims the camera below the mesh. This
+     * corrects it while the loading overlay is still up, so the fix is never seen
+     * as a jump. Sampling must never gate the reveal: any failure here just leaves
+     * the earlier framing in place, and the caller signals ready regardless.
+     */
+    const groundFrame = async (): Promise<void> => {
+        if (cancelled || viewer.isDestroyed()) {
+            return;
+        }
+        const [west, south, east, north] = bounds;
+        const ground = await sampleSurfaceHeight(viewer.scene, (west + east) / 2, (south + north) / 2);
+        if (ground === undefined || cancelled || viewer.isDestroyed()) {
+            return;
+        }
+        onGroundHeight?.(ground);
+        frameBounds(viewer, bounds, ground + height);
+    };
 
     // Frame the camera on the patio SYNCHRONOUSLY, before the tileset load is even
     // awaited — the framing needs only the bounds (ellipsoid-height sphere), not
@@ -204,8 +241,11 @@ export const bootstrapScene = (
             frameBounds(viewer, bounds);
 
             // Fires once when all tiles requested for the framed view have loaded
-            // their first LOD — the moment the place is actually rendered.
-            removeTilesListener = tileset.initialTilesLoaded.addEventListener(signalReady);
+            // their first LOD — the moment the place is actually rendered, and the
+            // first moment the real surface can be sampled.
+            removeTilesListener = tileset.initialTilesLoaded.addEventListener(() => {
+                void groundFrame().finally(signalReady);
+            });
         } catch (error) {
             if (!cancelled) {
                 // eslint-disable-next-line no-console
@@ -236,7 +276,7 @@ export const bootstrapScene = (
  * This matches the `HeadingPitchRange`-around-centre model the ViewCube camera
  * adapter uses for every other move.
  */
-const frameBounds = (viewer: Viewer, bounds: PatioBounds) => {
+const frameBounds = (viewer: Viewer, bounds: PatioBounds, surfaceHeight = 0) => {
     // A 0-sized canvas (effect ran before layout settled) gives the frustum a
     // NaN aspect ratio, which `flyToBoundingSphere` turns into a NaN camera
     // position — the camera ends up nowhere. Skip; the post-tileset re-frame
@@ -244,7 +284,11 @@ const frameBounds = (viewer: Viewer, bounds: PatioBounds) => {
     if (viewer.canvas.clientHeight === 0 || viewer.canvas.clientWidth === 0) return;
 
     const [west, south, east, north] = bounds;
-    const sphere = BoundingSphere.fromRectangle3D(Rectangle.fromDegrees(west, south, east, north));
+    const sphere = BoundingSphere.fromRectangle3D(
+        Rectangle.fromDegrees(west, south, east, north),
+        undefined,
+        surfaceHeight
+    );
 
     // Distance at which the sphere just fills the frustum (what `range: 0` picks),
     // then divided by INITIAL_ZOOM to open closer. Use the narrower of the vertical

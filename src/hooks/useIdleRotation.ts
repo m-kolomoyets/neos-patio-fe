@@ -48,10 +48,10 @@ const DRAG_MOVE_EVENT = 'pointermove' as const;
  * (view cube, panels); the orbit's own `lookAt` emits no DOM events, so the loop
  * can never feed itself.
  */
-export const useIdleRotation = (bounds: PatioBounds, centerLocked = false) => {
+export const useIdleRotation = (bounds: PatioBounds, centerLocked = false, height = 0) => {
     const viewer = useCesiumViewer();
     const ready = useCesiumMapReady();
-    const targetRef = useOrbitTarget(viewer, bounds);
+    const targetRef = useOrbitTarget(viewer, bounds, height);
 
     useEffect(() => {
         // Wait until the scene has framed the patio and painted. Arming the idle

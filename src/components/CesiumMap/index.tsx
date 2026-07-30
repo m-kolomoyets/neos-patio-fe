@@ -2,7 +2,11 @@ import type { WithClassName } from '@/lib/types';
 import type { PatioBounds } from '@/services/patios/types';
 import type { MapInteraction } from './utils/sceneBootstrap';
 import { useEffect, useRef } from 'react';
-import { useRegisterCesiumViewer, useSetCesiumMapReady } from '@/contexts/CesiumViewerContext';
+import {
+    useRegisterCesiumViewer,
+    useSetCesiumGroundHeight,
+    useSetCesiumMapReady,
+} from '@/contexts/CesiumViewerContext';
 import { usePageTransition } from '@/contexts/PageTransitionContext';
 import { useGroundFloor } from '@/hooks/useGroundFloor';
 import { applyInteractionMode, bootstrapScene, configureViewer } from './utils/sceneBootstrap';
@@ -14,6 +18,12 @@ import clsx from 'clsx';
 
 type CesiumMapProps = WithClassName<{
     bounds: PatioBounds;
+    /**
+     * The patio's authored look-at offset above ground (`Patio.height`). Folded
+     * into the final framing so the camera aims at the patio's focal point
+     * instead of a spot under the tileset mesh. Defaults to `0` (ground plane).
+     */
+    height?: number;
     /**
      * How the camera may be driven. `'edit'` (default) preserves the editor's
      * free controller; `'view'` constrains it to orbit + zoom around the framed
@@ -29,10 +39,11 @@ type CesiumMapProps = WithClassName<{
  * applies the `interaction` camera constraints, and tears the Viewer down on
  * unmount. Shared by the editor and view routes.
  */
-export const CesiumMap: React.FC<CesiumMapProps> = ({ className, bounds, interaction = 'edit' }) => {
+export const CesiumMap: React.FC<CesiumMapProps> = ({ className, bounds, height = 0, interaction = 'edit' }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const registerViewer = useRegisterCesiumViewer();
     const setReady = useSetCesiumMapReady();
+    const setGroundHeight = useSetCesiumGroundHeight();
     const { finish } = usePageTransition();
 
     // Keep the free (edit-mode) camera above the tileset surface; view mode does
@@ -56,6 +67,8 @@ export const CesiumMap: React.FC<CesiumMapProps> = ({ className, bounds, interac
         // The view route does NOT — Patio View gates the reveal on map-ready AND
         // its placed models finishing, so the scene is complete on first paint.
         const teardownScene = bootstrapScene(viewer, bounds, {
+            height,
+            onGroundHeight: setGroundHeight,
             onReady: () => {
                 if (interaction !== 'view') {
                     finish();
@@ -68,12 +81,13 @@ export const CesiumMap: React.FC<CesiumMapProps> = ({ className, bounds, interac
             teardownInteraction();
             teardownScene();
             setReady(false);
+            setGroundHeight(null);
             registerViewer(null);
             if (!viewer.isDestroyed()) {
                 viewer.destroy();
             }
         };
-    }, [bounds, interaction, registerViewer, setReady, finish]);
+    }, [bounds, height, interaction, registerViewer, setReady, setGroundHeight, finish]);
 
     return (
         <div className={clsx(s.wrap, className)}>

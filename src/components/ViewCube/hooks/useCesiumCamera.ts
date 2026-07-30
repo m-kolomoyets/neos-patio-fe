@@ -66,10 +66,10 @@ const pumpRenderDuringFlight = (viewer: Viewer, durationMs: number) => {
  * re-renders per frame — the leaves own that via {@link useCameraState}. Every
  * writer ends in a render request, satisfying `requestRenderMode`.
  */
-export const useCesiumCamera = (bounds: PatioBounds, interaction: MapInteraction = 'edit') => {
+export const useCesiumCamera = (bounds: PatioBounds, height = 0, interaction: MapInteraction = 'edit') => {
     const viewer = useCesiumViewer();
     // Bounds centre at surface height — the lookAt pivot for every camera move.
-    const targetRef = useOrbitTarget(viewer, bounds);
+    const targetRef = useOrbitTarget(viewer, bounds, height);
     // View mode locks every ViewCube move to the fixed bounds centre so it can
     // never nudge the patio off-axis (agrees with the center-locked map drags);
     // edit mode keeps pivoting on what the camera currently looks at.

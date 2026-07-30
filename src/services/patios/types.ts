@@ -58,6 +58,8 @@ export type Patio = {
     createdAt: string;
     popularity: number;
     coords: { lat: number; lng: number };
+    /** Height of the patio subject above ground level, in meters. `0` when it sits on the surface. */
+    height: number;
     bounds: PatioBounds;
     objects: PlacedObject[];
     isFeatured: boolean;

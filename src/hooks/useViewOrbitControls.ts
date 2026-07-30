@@ -152,10 +152,10 @@ const capSpeed = (speed: number): number => {
  * loop + handler tears down on unmount / viewer change, so a destroyed Viewer is
  * never mutated.
  */
-export const useViewOrbitControls = (bounds: PatioBounds) => {
+export const useViewOrbitControls = (bounds: PatioBounds, height = 0) => {
     const viewer = useCesiumViewer();
     const ready = useCesiumMapReady();
-    const targetRef = useOrbitTarget(viewer, bounds);
+    const targetRef = useOrbitTarget(viewer, bounds, height);
 
     useEffect(
         function installViewOrbitControls() {

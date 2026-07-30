@@ -21,30 +21,37 @@ import s from './styles.module.css';
 type EditorShellProps = {
     patioId: string;
     bounds: [number, number, number, number];
+    /**
+     * The patio's look-at offset above ground (`Patio.height`). Passed here too,
+     * not just in Patio View, so both routes share one orbit pivot — the ViewCube
+     * Home view they persist is keyed by patio id and stores a `range` measured
+     * from that pivot.
+     */
+    height: number;
 };
 
 /** Drives the ambient idle-orbit; renders nothing. Must live inside CesiumViewerProvider. */
-const IdleOrbit: React.FC<{ bounds: EditorShellProps['bounds'] }> = ({ bounds }) => {
-    useIdleRotation(bounds);
+const IdleOrbit: React.FC<Pick<EditorShellProps, 'bounds' | 'height'>> = ({ bounds, height }) => {
+    useIdleRotation(bounds, false, height);
     return null;
 };
 
-const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds }) => {
+const EditorShell: React.FC<EditorShellProps> = ({ patioId, bounds, height }) => {
     const { status } = useAutosavePatio(patioId);
 
     useDeleteSelectedShortcut();
 
     return (
         <CesiumViewerProvider>
-            <CesiumMap className={s.map} bounds={bounds} interaction="edit" />
+            <CesiumMap className={s.map} bounds={bounds} height={height} interaction="edit" />
             <ObjectsLayer />
             <UploadModelProvider>
                 <Sidebar />
             </UploadModelProvider>
             <Toolbar saveStatus={status} />
             <PropertiesPanel />
-            <ViewCube bounds={bounds} storageId={patioId} />
-            <IdleOrbit bounds={bounds} />
+            <ViewCube bounds={bounds} height={height} storageId={patioId} />
+            <IdleOrbit bounds={bounds} height={height} />
         </CesiumViewerProvider>
     );
 };
@@ -85,7 +92,7 @@ const PatioEditor: React.FC = () => {
         <main className={s.wrap}>
             <section className={s.surface}>
                 <EditorProvider initialObjects={patio.objects} bounds={patio.bounds}>
-                    <EditorShell patioId={patio.id} bounds={patio.bounds} />
+                    <EditorShell patioId={patio.id} bounds={patio.bounds} height={patio.height} />
                 </EditorProvider>
             </section>
         </main>

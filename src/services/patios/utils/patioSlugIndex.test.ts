@@ -14,6 +14,7 @@ const makePatio = (overrides: Partial<Patio> & Pick<Patio, 'id' | 'name'>): Pati
         createdAt: '2025-01-01T10:00:00Z',
         popularity: 0,
         coords: { lat: 0, lng: 0 },
+        height: 0,
         bounds: [0, 0, 0, 0],
         objects: [],
         isFeatured: false,
