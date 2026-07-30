@@ -56,6 +56,17 @@ export const useOrbitTarget = (viewer: Viewer | null, bounds: PatioBounds, heigh
         // already resolved, else the ellipsoid fallback.
         apply(publishedGround ?? undefined);
 
+        // Bootstrap already resolved the authoritative most-detailed ground —
+        // the pivot is final, so skip the probe and the async sample entirely.
+        // `sampleHeightMostDetailed` force-loads tiles, and several instances of
+        // this hook are live per scene (drag orbit, idle orbit, ViewCube), so
+        // re-sampling here multiplies tile streaming during the load window for
+        // zero refinement. Also stops the effect re-run triggered by the ground
+        // being published (null → value) from firing yet another sample.
+        if (best !== undefined) {
+            return undefined;
+        }
+
         const { scene } = viewer;
         const centerCarto = Cartographic.fromDegrees(centerLng, centerLat);
 
