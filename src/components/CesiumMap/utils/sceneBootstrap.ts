@@ -1,5 +1,6 @@
 import type { PatioBounds } from '@/services/patios/types';
 import { BoundingSphere, Cesium3DTileset, Math as CesiumMath, HeadingPitchRange, Ion, Rectangle, Viewer } from 'cesium';
+import { sampleSurfaceHeight } from '@/lib/utils/sampleSurfaceHeight';
 
 const ION_TOKEN = import.meta.env.VITE_CESIUM_ACCESS_TOKEN;
 
@@ -75,40 +76,56 @@ const VIEW_MIN_ZOOM_FACTOR = 0.6;
 const VIEW_MAX_ZOOM_FACTOR = 4;
 
 /**
- * Apply the camera-controller constraints for `interaction`. `'edit'` is a no-op
- * (default controller). `'view'` disables EVERY native camera input — the map
- * canvas is driven entirely by {@link useViewOrbitControls}, which orbits/zooms
- * strictly around the fixed patio centre via `lookAt`. Native rotate/tilt/zoom
- * would pivot around the cursor (walking the focus off the patio) and pan/look
- * would fly the camera away, so all five are off; inertia is zeroed so no input
- * coasts. The zoom band ({@link VIEW_MIN_ZOOM_FACTOR}/{@link VIEW_MAX_ZOOM_FACTOR}
- * off the patio's bounding-sphere radius) is still set on the controller: it is
- * the single source of truth for the range clamp, read by both the view-orbit
- * hook and the ViewCube's `clampRange`. Returns a no-op teardown — the hook owns
- * all listeners now.
+ * Per-frame velocity retention for Cesium's native camera coast (spin/translate/
+ * zoom). Cesium defaults to 0.9; 0.96 roughly triples the glide length, so a
+ * flick keeps moving after the pointer stops instead of halting on release.
+ */
+const CAMERA_INERTIA = 0.96;
+
+/**
+ * Apply the camera-controller constraints for `interaction`. `'edit'` keeps the
+ * default controller. `'view'` also drives the camera with Cesium's NATIVE
+ * screen-space controller — drag-orbit is stock Cesium, no custom `lookAt` layer
+ * on top (which is what stuttered: per-event/RAF pose writes fighting the
+ * controller). Only the two inputs that can lose the patio are off: `translate`
+ * (pan) and `look` (free-look) would fly the camera off the place, while
+ * rotate/zoom stay native (`tilt` is a no-op under a non-identity camera
+ * transform — the orbit drag carries pitch). Centre-locking survives, but via the
+ * controller's own reference-frame mode instead of an override — see
+ * {@link useCenteredOrbit}.
+ *
+ * Inertia is raised ({@link CAMERA_INERTIA}) for both modes so a flick coasts.
+ * The zoom band ({@link VIEW_MIN_ZOOM_FACTOR}/{@link VIEW_MAX_ZOOM_FACTOR} off the
+ * patio's bounding-sphere radius) bounds the native dolly and is the single
+ * source of truth for the range clamp the ViewCube's `clampRange` reads. Returns
+ * a no-op teardown — nothing is subscribed.
  */
 export const applyInteractionMode = (
     viewer: Viewer,
     interaction: MapInteraction,
     bounds: PatioBounds
 ): (() => void) => {
+    const controller = viewer.scene.screenSpaceCameraController;
+
+    // Raised inertia (Cesium default 0.9) so native camera input coasts longer and
+    // reads as a fluid glide instead of stopping dead with the pointer.
+    controller.inertiaSpin = CAMERA_INERTIA;
+    controller.inertiaTranslate = CAMERA_INERTIA;
+    controller.inertiaZoom = CAMERA_INERTIA;
+
     if (interaction === 'edit') return () => {};
 
-    const controller = viewer.scene.screenSpaceCameraController;
-    // All native inputs off — the view-orbit hook drives the camera around centre.
-    controller.enableRotate = false;
-    controller.enableTilt = false;
-    controller.enableZoom = false;
+    // Native orbit/zoom stay on — stock Cesium drag behaviour, centre-locked by
+    // the camera transform useCenteredOrbit sets. Pan and free-look are off: both
+    // translate the camera away from the patio.
+    controller.enableRotate = true;
+    controller.enableTilt = true;
+    controller.enableZoom = true;
     controller.enableTranslate = false;
     controller.enableLook = false;
 
-    // Zero inertia so nothing coasts (the hook applies discrete lookAt moves).
-    controller.inertiaSpin = 0;
-    controller.inertiaTranslate = 0;
-    controller.inertiaZoom = 0;
-
-    // Zoom band around the framed patio — kept as the single source of truth for
-    // the range clamp (view-orbit hook + ViewCube `clampRange` both read it).
+    // Zoom band around the framed patio — bounds the native dolly and is the
+    // single source of truth for the range clamp (ViewCube `clampRange` reads it).
     const [west, south, east, north] = bounds;
     const { radius } = BoundingSphere.fromRectangle3D(Rectangle.fromDegrees(west, south, east, north));
     controller.minimumZoomDistance = radius * VIEW_MIN_ZOOM_FACTOR;
@@ -131,6 +148,18 @@ type BootstrapSceneOptions = {
      * safety net — whichever fires first.
      */
     onReady?: () => void;
+    /**
+     * The patio's authored look-at offset above ground (`Patio.height`), folded
+     * into the final framing so the camera aims at the patio's real focal point
+     * rather than a spot buried under the tileset mesh.
+     */
+    height?: number;
+    /**
+     * Called with the ground elevation sampled under the patio centre, so the
+     * camera orbit pivot can reuse this one sample instead of taking its own.
+     * Not called when the surface could not be sampled.
+     */
+    onGroundHeight?: (_height: number) => void;
 };
 
 /**
@@ -146,7 +175,7 @@ export const bootstrapScene = (
     bounds: PatioBounds,
     options: BootstrapSceneOptions = {}
 ): (() => void) => {
-    const { onReady } = options;
+    const { onReady, height = 0, onGroundHeight } = options;
 
     let cancelled = false;
     let readySignalled = false;
@@ -162,6 +191,30 @@ export const bootstrapScene = (
 
     // Safety net: report ready even if the tileset never finishes settling.
     const readyTimer = setTimeout(signalReady, READY_TIMEOUT_MS);
+
+    /**
+     * Third and final framing pass, once the first LOD has painted and the surface
+     * can actually be sampled: re-frame around the patio centre raised to
+     * `ground + height`, and publish that ground so the orbit pivot reuses it.
+     *
+     * The two earlier passes frame at ellipsoid height because no tile has
+     * streamed yet — on elevated terrain that aims the camera below the mesh. This
+     * corrects it while the loading overlay is still up, so the fix is never seen
+     * as a jump. Sampling must never gate the reveal: any failure here just leaves
+     * the earlier framing in place, and the caller signals ready regardless.
+     */
+    const groundFrame = async (): Promise<void> => {
+        if (cancelled || viewer.isDestroyed()) {
+            return;
+        }
+        const [west, south, east, north] = bounds;
+        const ground = await sampleSurfaceHeight(viewer.scene, (west + east) / 2, (south + north) / 2);
+        if (ground === undefined || cancelled || viewer.isDestroyed()) {
+            return;
+        }
+        onGroundHeight?.(ground);
+        frameBounds(viewer, bounds, ground + height);
+    };
 
     // Frame the camera on the patio SYNCHRONOUSLY, before the tileset load is even
     // awaited — the framing needs only the bounds (ellipsoid-height sphere), not
@@ -204,8 +257,11 @@ export const bootstrapScene = (
             frameBounds(viewer, bounds);
 
             // Fires once when all tiles requested for the framed view have loaded
-            // their first LOD — the moment the place is actually rendered.
-            removeTilesListener = tileset.initialTilesLoaded.addEventListener(signalReady);
+            // their first LOD — the moment the place is actually rendered, and the
+            // first moment the real surface can be sampled.
+            removeTilesListener = tileset.initialTilesLoaded.addEventListener(() => {
+                void groundFrame().finally(signalReady);
+            });
         } catch (error) {
             if (!cancelled) {
                 // eslint-disable-next-line no-console
@@ -236,7 +292,7 @@ export const bootstrapScene = (
  * This matches the `HeadingPitchRange`-around-centre model the ViewCube camera
  * adapter uses for every other move.
  */
-const frameBounds = (viewer: Viewer, bounds: PatioBounds) => {
+const frameBounds = (viewer: Viewer, bounds: PatioBounds, surfaceHeight = 0) => {
     // A 0-sized canvas (effect ran before layout settled) gives the frustum a
     // NaN aspect ratio, which `flyToBoundingSphere` turns into a NaN camera
     // position — the camera ends up nowhere. Skip; the post-tileset re-frame
@@ -244,7 +300,11 @@ const frameBounds = (viewer: Viewer, bounds: PatioBounds) => {
     if (viewer.canvas.clientHeight === 0 || viewer.canvas.clientWidth === 0) return;
 
     const [west, south, east, north] = bounds;
-    const sphere = BoundingSphere.fromRectangle3D(Rectangle.fromDegrees(west, south, east, north));
+    const sphere = BoundingSphere.fromRectangle3D(
+        Rectangle.fromDegrees(west, south, east, north),
+        undefined,
+        surfaceHeight
+    );
 
     // Distance at which the sphere just fills the frustum (what `range: 0` picks),
     // then divided by INITIAL_ZOOM to open closer. Use the narrower of the vertical

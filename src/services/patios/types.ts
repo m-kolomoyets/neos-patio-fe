@@ -41,6 +41,12 @@ export type PlacedObject = {
 export type Patio = {
     id: string;
     name: string;
+    /**
+     * Canonical URL ref: ASCII, lowercase, hyphen-separated, derived from the name.
+     * Required because the eventual API owns slug assignment. Falls back to `id<id>`
+     * when the name yields nothing usable.
+     */
+    slug: string;
     /** Short one-line tagline capturing the place or its vibe. Shown in Patio View header. */
     description: string;
     country: string;
@@ -52,6 +58,8 @@ export type Patio = {
     createdAt: string;
     popularity: number;
     coords: { lat: number; lng: number };
+    /** Height of the patio subject above ground level, in meters. `0` when it sits on the surface. */
+    height: number;
     bounds: PatioBounds;
     objects: PlacedObject[];
     isFeatured: boolean;

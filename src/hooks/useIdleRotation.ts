@@ -48,10 +48,10 @@ const DRAG_MOVE_EVENT = 'pointermove' as const;
  * (view cube, panels); the orbit's own `lookAt` emits no DOM events, so the loop
  * can never feed itself.
  */
-export const useIdleRotation = (bounds: PatioBounds, centerLocked = false) => {
+export const useIdleRotation = (bounds: PatioBounds, centerLocked = false, height = 0) => {
     const viewer = useCesiumViewer();
     const ready = useCesiumMapReady();
-    const targetRef = useOrbitTarget(viewer, bounds);
+    const targetRef = useOrbitTarget(viewer, bounds, height);
 
     useEffect(() => {
         // Wait until the scene has framed the patio and painted. Arming the idle
@@ -78,8 +78,8 @@ export const useIdleRotation = (bounds: PatioBounds, centerLocked = false) => {
 
         const resolvePivot = () => {
             // Center-locked routes (Patio View) orbit the fixed bounds-centre — the
-            // exact pivot useViewOrbitControls uses — so the idle→drag handoff reads
-            // back an identical pose with no reproject jump. Free-pan routes (editor)
+            // patio centre the ViewCube orbits — so the idle→drag handoff reads
+            // back a pose centred on the place, with no reproject jump. Free-pan routes (editor)
             // keep the live screen-centre pick so orbit resumes from wherever panned.
             if (centerLocked) return targetRef.current;
             const { camera, scene, canvas } = viewer;

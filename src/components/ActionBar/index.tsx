@@ -46,9 +46,9 @@ export const ActionBar: React.FC = () => {
         closeSearch();
         setQuery('');
         navigate({
-            to: '/patios/$id',
+            to: '/patios/$slug',
             params: {
-                id: option.id,
+                slug: option.slug,
             },
         });
     };

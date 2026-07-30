@@ -1,9 +1,28 @@
 import type { ListPatiosParams, ListPatiosResponse, Patio, PatioPointCollection, PlacedObject } from './types';
 import { sleep } from '@/lib/utils/sleep';
+import { buildPatioSlugIndex } from './utils/patioSlugIndex';
 import { patiosToPointCollection } from './utils/patiosToPointCollection';
 import { PATIOS_FIXTURES } from './fixtures';
 
 const MOCK_DELAY_MS = 200;
+
+/** Built once so resolution is constant-time rather than a scan per request. */
+const PATIO_SLUG_INDEX = buildPatioSlugIndex(PATIOS_FIXTURES);
+
+/**
+ * Id → patio, taken from the slug index rather than the raw fixtures so the patio
+ * always carries the slug it was actually indexed under. Reaching for the fixture
+ * directly would hand back a pre-dedupe slug and send the canonical redirect to a
+ * ref that resolves to a different patio.
+ */
+const PATIO_BY_ID = new Map(
+    Array.from(PATIO_SLUG_INDEX.values(), (patio) => {
+        return [patio.id, patio] as const;
+    })
+);
+
+/** The reserved `id<n>` ref used by patios whose name yields no usable slug. */
+const FALLBACK_REF_PATTERN = /^id(\d+)$/;
 
 const sortPatios = (items: Patio[], sort: ListPatiosParams['sort']): Patio[] => {
     const list = [...items];
@@ -160,11 +179,29 @@ export const listFeaturedPatios = async (): Promise<Patio[]> => {
     });
 };
 
-export const getPatio = async (id: string): Promise<Patio> => {
+/**
+ * Single resolution point for a patio ref as it appears in the URL. Case is the only
+ * tolerated variation — running arbitrary input back through `slugify` would let
+ * unrelated garbage resolve to a real patio, because the function is lossy.
+ *
+ * Order: the canonical slug, then the reserved `id<n>` form, then a bare id
+ * (legacy links shared before slugs existed).
+ */
+export const resolvePatioRef = (ref: string): Patio | null => {
+    const normalised = ref.toLowerCase();
+    const fallbackId = FALLBACK_REF_PATTERN.exec(normalised)?.[1];
+
+    return (
+        PATIO_SLUG_INDEX.get(normalised) ??
+        (fallbackId ? PATIO_BY_ID.get(fallbackId) : undefined) ??
+        PATIO_BY_ID.get(normalised) ??
+        null
+    );
+};
+
+export const getPatio = async (ref: string): Promise<Patio | null> => {
     await sleep(MOCK_DELAY_MS);
-    return PATIOS_FIXTURES.find((p) => {
-        return p.id === id;
-    })!;
+    return resolvePatioRef(ref);
 };
 
 export const updatePatioObjects = async (id: string, objects: PlacedObject[]): Promise<Patio | null> => {

@@ -37,6 +37,8 @@ const FACE_LABELS: Record<CubeFace, string> = { north: 'N', east: 'E', south: 'S
 type ViewCubeProps = WithClassName<{
     /** Patio bounds framed by the camera; the orbit target is its centre. */
     bounds: PatioBounds;
+    /** The patio's look-at offset above ground (`Patio.height`); raises the orbit pivot. */
+    height?: number;
     /** Stable id (the patio id) keying the per-patio Home-view localStorage entry. */
     storageId: string;
     /**
@@ -47,9 +49,15 @@ type ViewCubeProps = WithClassName<{
     interaction?: MapInteraction;
 }>;
 
-export const ViewCube: React.FC<ViewCubeProps> = ({ className, bounds, storageId, interaction = 'edit' }) => {
-    const { viewer, referenceRange, readOrientation, easeTo, zoomTo, orbitTo, beginDragOrbit, fitBounds } =
-        useCesiumCamera(bounds, interaction);
+export const ViewCube: React.FC<ViewCubeProps> = ({
+    className,
+    bounds,
+    height = 0,
+    storageId,
+    interaction = 'edit',
+}) => {
+    const { viewer, referenceRange, readOrientation, snapTo, zoomTo, orbitTo, beginDragOrbit, fitBounds } =
+        useCesiumCamera(bounds, height, interaction);
     const { selectedFace, onSnap, onOrbitStart, stepBy, goTop } = useFlattenedFace({
         viewer,
         readOrientation,
@@ -63,7 +71,7 @@ export const ViewCube: React.FC<ViewCubeProps> = ({ className, bounds, storageId
         onSnap,
         onOrbitStart,
     });
-    const { goHome, setHome, resetHome } = useHomeView({ storageId, easeTo, readOrientation, referenceRange });
+    const { goHome, setHome, resetHome } = useHomeView({ storageId, snapTo, readOrientation, referenceRange });
 
     if (!viewer) return null;
 
@@ -139,7 +147,7 @@ export const ViewCube: React.FC<ViewCubeProps> = ({ className, bounds, storageId
                 </div>
                 <LiveRotateControl
                     readOrientation={readOrientation}
-                    easeTo={easeTo}
+                    snapTo={snapTo}
                     isFlattened={selectedFace !== null}
                     stepBy={stepBy}
                 />

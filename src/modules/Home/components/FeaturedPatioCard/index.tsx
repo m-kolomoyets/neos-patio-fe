@@ -68,8 +68,8 @@ const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = fals
 
     return (
         <Link
-            to="/patios/$id"
-            params={{ id: patio.id }}
+            to="/patios/$slug"
+            params={{ slug: patio.slug }}
             ref={setRootRef}
             style={wrapSquircleStyle}
             onClick={() => {

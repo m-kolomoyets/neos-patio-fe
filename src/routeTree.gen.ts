@@ -12,8 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UiKitRouteImport } from './routes/ui-kit'
 import { Route as CreatePatioRouteImport } from './routes/create-patio'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PatiosIdIndexRouteImport } from './routes/patios.$id.index'
-import { Route as PatiosIdEditRouteImport } from './routes/patios.$id.edit'
+import { Route as PatiosSlugIndexRouteImport } from './routes/patios.$slug.index'
+import { Route as PatiosSlugEditRouteImport } from './routes/patios.$slug.edit'
 
 const UiKitRoute = UiKitRouteImport.update({
   id: '/ui-kit',
@@ -30,14 +30,14 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
-const PatiosIdIndexRoute = PatiosIdIndexRouteImport.update({
-  id: '/patios/$id/',
-  path: '/patios/$id/',
+const PatiosSlugIndexRoute = PatiosSlugIndexRouteImport.update({
+  id: '/patios/$slug/',
+  path: '/patios/$slug/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PatiosIdEditRoute = PatiosIdEditRouteImport.update({
-  id: '/patios/$id/edit',
-  path: '/patios/$id/edit',
+const PatiosSlugEditRoute = PatiosSlugEditRouteImport.update({
+  id: '/patios/$slug/edit',
+  path: '/patios/$slug/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -45,23 +45,23 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/create-patio': typeof CreatePatioRoute
   '/ui-kit': typeof UiKitRoute
-  '/patios/$id/edit': typeof PatiosIdEditRoute
-  '/patios/$id/': typeof PatiosIdIndexRoute
+  '/patios/$slug/edit': typeof PatiosSlugEditRoute
+  '/patios/$slug/': typeof PatiosSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/create-patio': typeof CreatePatioRoute
   '/ui-kit': typeof UiKitRoute
-  '/patios/$id/edit': typeof PatiosIdEditRoute
-  '/patios/$id': typeof PatiosIdIndexRoute
+  '/patios/$slug/edit': typeof PatiosSlugEditRoute
+  '/patios/$slug': typeof PatiosSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/create-patio': typeof CreatePatioRoute
   '/ui-kit': typeof UiKitRoute
-  '/patios/$id/edit': typeof PatiosIdEditRoute
-  '/patios/$id/': typeof PatiosIdIndexRoute
+  '/patios/$slug/edit': typeof PatiosSlugEditRoute
+  '/patios/$slug/': typeof PatiosSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -69,25 +69,25 @@ export interface FileRouteTypes {
     | '/'
     | '/create-patio'
     | '/ui-kit'
-    | '/patios/$id/edit'
-    | '/patios/$id/'
+    | '/patios/$slug/edit'
+    | '/patios/$slug/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/create-patio' | '/ui-kit' | '/patios/$id/edit' | '/patios/$id'
+  to: '/' | '/create-patio' | '/ui-kit' | '/patios/$slug/edit' | '/patios/$slug'
   id:
     | '__root__'
     | '/'
     | '/create-patio'
     | '/ui-kit'
-    | '/patios/$id/edit'
-    | '/patios/$id/'
+    | '/patios/$slug/edit'
+    | '/patios/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreatePatioRoute: typeof CreatePatioRoute
   UiKitRoute: typeof UiKitRoute
-  PatiosIdEditRoute: typeof PatiosIdEditRoute
-  PatiosIdIndexRoute: typeof PatiosIdIndexRoute
+  PatiosSlugEditRoute: typeof PatiosSlugEditRoute
+  PatiosSlugIndexRoute: typeof PatiosSlugIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -113,18 +113,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/patios/$id/': {
-      id: '/patios/$id/'
-      path: '/patios/$id'
-      fullPath: '/patios/$id/'
-      preLoaderRoute: typeof PatiosIdIndexRouteImport
+    '/patios/$slug/': {
+      id: '/patios/$slug/'
+      path: '/patios/$slug'
+      fullPath: '/patios/$slug/'
+      preLoaderRoute: typeof PatiosSlugIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/patios/$id/edit': {
-      id: '/patios/$id/edit'
-      path: '/patios/$id/edit'
-      fullPath: '/patios/$id/edit'
-      preLoaderRoute: typeof PatiosIdEditRouteImport
+    '/patios/$slug/edit': {
+      id: '/patios/$slug/edit'
+      path: '/patios/$slug/edit'
+      fullPath: '/patios/$slug/edit'
+      preLoaderRoute: typeof PatiosSlugEditRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -134,8 +134,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreatePatioRoute: CreatePatioRoute,
   UiKitRoute: UiKitRoute,
-  PatiosIdEditRoute: PatiosIdEditRoute,
-  PatiosIdIndexRoute: PatiosIdIndexRoute,
+  PatiosSlugEditRoute: PatiosSlugEditRoute,
+  PatiosSlugIndexRoute: PatiosSlugIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

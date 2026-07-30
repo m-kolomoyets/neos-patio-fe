@@ -15,6 +15,18 @@ type CesiumViewerContextValue = {
     ready: boolean;
     /** Called by the canvas to flag the scene ready / reset on teardown. */
     setReady: (_ready: boolean) => void;
+    /**
+     * Ground elevation (m above the WGS84 ellipsoid) under the patio centre,
+     * sampled once during bootstrap against the streamed tileset. `null` until
+     * resolved, and on devices where height sampling is unsupported.
+     *
+     * Published here so the bootstrap framing and the camera orbit pivot are the
+     * same number: `sampleHeightMostDetailed` force-loads tiles, so sampling it
+     * twice is both wasteful and free to disagree across LODs.
+     */
+    groundHeight: number | null;
+    /** Called by the canvas once bootstrap resolves the ground / resets on teardown. */
+    setGroundHeight: (_height: number | null) => void;
 };
 
 const CesiumViewerContext = createContext<CesiumViewerContextValue | null>(null);
@@ -30,10 +42,11 @@ const CesiumViewerContext = createContext<CesiumViewerContextValue | null>(null)
 export const CesiumViewerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [viewer, setViewer] = useState<Viewer | null>(null);
     const [ready, setReady] = useState(false);
+    const [groundHeight, setGroundHeight] = useState<number | null>(null);
 
     const value = useMemo<CesiumViewerContextValue>(() => {
-        return { viewer, registerViewer: setViewer, ready, setReady };
-    }, [viewer, ready]);
+        return { viewer, registerViewer: setViewer, ready, setReady, groundHeight, setGroundHeight };
+    }, [viewer, ready, groundHeight]);
 
     return <CesiumViewerContext value={value}>{children}</CesiumViewerContext>;
 };
@@ -57,6 +70,25 @@ export const useSetCesiumMapReady = () => {
     }
 
     return ctx.setReady;
+};
+
+/**
+ * Ground elevation under the patio centre once bootstrap resolved it, else `null`
+ * — see {@link CesiumViewerContextValue.groundHeight}.
+ */
+export const useCesiumGroundHeight = (): number | null => {
+    return useContext(CesiumViewerContext)?.groundHeight ?? null;
+};
+
+/** Internal: lets the canvas publish the bootstrap-resolved ground / reset it on teardown. */
+export const useSetCesiumGroundHeight = () => {
+    const ctx = useContext(CesiumViewerContext);
+
+    if (!ctx) {
+        throw new Error('useSetCesiumGroundHeight must be used within a CesiumViewerProvider');
+    }
+
+    return ctx.setGroundHeight;
 };
 
 /** Internal: lets the canvas register/unregister the Viewer it owns. */

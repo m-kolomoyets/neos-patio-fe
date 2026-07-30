@@ -66,10 +66,10 @@ const pumpRenderDuringFlight = (viewer: Viewer, durationMs: number) => {
  * re-renders per frame — the leaves own that via {@link useCameraState}. Every
  * writer ends in a render request, satisfying `requestRenderMode`.
  */
-export const useCesiumCamera = (bounds: PatioBounds, interaction: MapInteraction = 'edit') => {
+export const useCesiumCamera = (bounds: PatioBounds, height = 0, interaction: MapInteraction = 'edit') => {
     const viewer = useCesiumViewer();
     // Bounds centre at surface height — the lookAt pivot for every camera move.
-    const targetRef = useOrbitTarget(viewer, bounds);
+    const targetRef = useOrbitTarget(viewer, bounds, height);
     // View mode locks every ViewCube move to the fixed bounds centre so it can
     // never nudge the patio off-axis (agrees with the center-locked map drags);
     // edit mode keeps pivoting on what the camera currently looks at.
@@ -248,8 +248,12 @@ export const useCesiumCamera = (bounds: PatioBounds, interaction: MapInteraction
     );
 
     /**
-     * Animated snap to a cube face/corner that also guarantees the patio fills
-     * the viewport — no out-of-bounds ground/sea creeping into frame.
+     * Smooth in-place snap to a cube face/corner that also guarantees the patio
+     * fills the viewport — no out-of-bounds ground/sea creeping into frame.
+     *
+     * Runs through {@link orbitTo}, so the camera rotates around the patio on its
+     * orbit sphere (same motion as a cube face click) instead of arcing
+     * up-and-over the way `flyToBoundingSphere` does.
      *
      * The orbit target is the patio bounds centre, so framing the patio is a
      * matter of range: the footprint radius is half the patio diagonal
@@ -268,9 +272,9 @@ export const useCesiumCamera = (bounds: PatioBounds, interaction: MapInteraction
                 const fitRange = referenceRange / 2 / Math.tan(fovy / 2);
                 resolved.range = Math.min(resolved.range, fitRange);
             }
-            moveCamera(resolved, true);
+            orbitTo(resolved);
         },
-        [viewer, resolve, moveCamera, referenceRange]
+        [viewer, resolve, orbitTo, referenceRange]
     );
 
     /**
