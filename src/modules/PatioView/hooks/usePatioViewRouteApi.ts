@@ -1,6 +1,6 @@
 import { getRouteApi } from '@tanstack/react-router';
 
-const route = getRouteApi('/patios/$id/');
+const route = getRouteApi('/patios/$slug/');
 
 export const usePatioViewParams = route.useParams;
 export const usePatioViewNavigate = route.useNavigate;

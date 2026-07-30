@@ -33,7 +33,7 @@ const MIN_DISPLAY_MS = 600;
 
 /**
  * Matches the patio routes that get the loading transition: the read-only view
- * index `/patios/$id/` and the editor `/patios/$id/edit`.
+ * index `/patios/$slug/` and the editor `/patios/$slug/edit`.
  */
 const PATIO_PATH_RE = /^\/patios\/[^/]+(?:\/edit)?\/?$/;
 

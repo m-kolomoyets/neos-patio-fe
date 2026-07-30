@@ -1,5 +1,5 @@
 import type { Patio, PatioBounds } from '@/services/patios/types';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CesiumViewerProvider, useCesiumMapReady } from '@/contexts/CesiumViewerContext';
 import { usePageTransition } from '@/contexts/PageTransitionContext';
 import { useSuspenseQuery } from '@tanstack/react-query';
@@ -7,6 +7,7 @@ import { getAppBackground } from '@/lib/appBackground';
 import { useIdleRotation } from '@/hooks/useIdleRotation';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useIsMobileLandscape } from '@/hooks/useIsMobileLandscape';
+import { usePatioCanonicalRef } from '@/hooks/usePatioCanonicalRef';
 import { useSquircleClipPath } from '@/hooks/useSquircleClipPath';
 import { useViewOrbitControls } from '@/hooks/useViewOrbitControls';
 import { getPatioQueryOptions } from '@/services/patios/queries';
@@ -14,7 +15,7 @@ import { ActionBar } from '@/components/ActionBar';
 import { AppBackground } from '@/components/AppBackground';
 import { CesiumMap } from '@/components/CesiumMap';
 import { ViewCube } from '@/components/ViewCube';
-import { usePatioViewParams } from './hooks/usePatioViewRouteApi';
+import { usePatioViewNavigate, usePatioViewParams } from './hooks/usePatioViewRouteApi';
 import { Header } from './components/Header';
 import { ViewObjectsLayer } from './components/ViewObjectsLayer';
 import s from './styles.module.css';
@@ -116,10 +117,22 @@ const PatioScene: React.FC<{ patio: Patio; storageId: string }> = ({ patio, stor
  * limited pan, no free-fly) with ambient idle rotation.
  */
 export const PatioView: React.FC = () => {
-    const { id } = usePatioViewParams();
-    const { data: patio } = useSuspenseQuery(getPatioQueryOptions(id));
+    const { slug } = usePatioViewParams();
+    const { data: resolvedPatio } = useSuspenseQuery(getPatioQueryOptions(slug));
     const { start, update } = usePageTransition();
-    const prevIdRef = useRef(id);
+    const prevSlugRef = useRef(slug);
+    const navigate = usePatioViewNavigate();
+
+    // Replacing so the back button skips the non-canonical URL; route-scoped so search and hash survive.
+    const navigateToSlug = useCallback(
+        (canonicalSlug: string) => {
+            void navigate({ params: { slug: canonicalSlug }, replace: true });
+        },
+        [navigate]
+    );
+
+    // Throws the router's not-found on an unresolvable ref, so `patio` is non-nullable below.
+    const patio = usePatioCanonicalRef({ ref: slug, patio: resolvedPatio, navigateToSlug });
 
     const isMobilePortrait = useIsMobile();
     const isMobileLandscape = useIsMobileLandscape();
@@ -138,9 +151,9 @@ export const PatioView: React.FC = () => {
             // re-raises the loading overlay so the new scene streams in behind
             // it, mirroring a fresh open. First mount is already covered by the
             // deep-link self-activation / Home-navigate seed, so only re-raise on
-            // an actual id change; `start` also seeds the new background + name.
-            if (prevIdRef.current !== id) {
-                prevIdRef.current = id;
+            // an actual ref change; `start` also seeds the new background + name.
+            if (prevSlugRef.current !== slug) {
+                prevSlugRef.current = slug;
                 start({
                     backgroundUrl: patio.previewBackgroundUrl,
                     backgroundLowUrl: patio.previewBackgroundLowUrl,
@@ -154,7 +167,7 @@ export const PatioView: React.FC = () => {
                 name: patio.name,
             });
         },
-        [id, patio, start, update]
+        [slug, patio, start, update]
     );
 
     return (
@@ -164,7 +177,7 @@ export const PatioView: React.FC = () => {
                 <Header name={patio.name} description={patio.description} />
                 <div className={s.map}>
                     <div ref={mapRef} className={s['map-clip']} style={mapSquircleStyle}>
-                        <PatioScene key={id} patio={patio} storageId={id} />
+                        <PatioScene key={patio.id} patio={patio} storageId={patio.id} />
                     </div>
                 </div>
             </main>

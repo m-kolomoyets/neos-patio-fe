@@ -77,11 +77,16 @@ export const getGroupedPatiosQueryOptions = <TGroup>(
     });
 };
 
-export const getPatioQueryOptions = (id: string) => {
+/**
+ * Keyed by the ref exactly as it appears in the URL, mirroring a real
+ * `GET /patios/:slug` endpoint — no pre-resolution step in the loader. Non-canonical
+ * refs are redirected on arrival, so only canonical slugs persist as keys.
+ */
+export const getPatioQueryOptions = (ref: string) => {
     return queryOptions({
-        queryKey: patiosKeys.detail(id),
+        queryKey: patiosKeys.detail(ref),
         queryFn() {
-            return getPatio(id);
+            return getPatio(ref);
         },
     });
 };

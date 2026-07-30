@@ -1,4 +1,6 @@
 import type { Patio, PatioBounds, PlacedObject } from './types';
+import { slugify } from '@/lib/utils/slugify';
+import { buildPatioSlugIndex, patioFallbackSlug } from './utils/patioSlugIndex';
 
 const DEFAULT_BOUNDS_HALF_DEG = 0.005;
 
@@ -13,22 +15,31 @@ export const DEV_OWNER_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 /** A second wallet, so "minted by someone else" is distinguishable from "unminted". */
 const OTHER_OWNER_ADDRESS = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
 
-type PatioFixture = Omit<Patio, 'bounds' | 'objects'> & {
+type PatioFixture = Omit<Patio, 'bounds' | 'objects' | 'slug'> & {
     bounds?: PatioBounds;
     // Optional placed models. Defaults to `[]`, preserving current behavior for
     // un-seeded patios.
     objects?: PlacedObject[];
+    // Optional URL slug. Derived from the name unless pinned here — set it when the
+    // derived one reads badly or a legacy URL has to keep working.
+    slug?: string;
 };
 
 const definePatio = (fixture: PatioFixture): Patio => {
-    const { coords, bounds, objects, ...rest } = fixture;
+    const { coords, bounds, objects, slug, ...rest } = fixture;
     const derivedBounds: PatioBounds = bounds ?? [
         coords.lng - DEFAULT_BOUNDS_HALF_DEG,
         coords.lat - DEFAULT_BOUNDS_HALF_DEG,
         coords.lng + DEFAULT_BOUNDS_HALF_DEG,
         coords.lat + DEFAULT_BOUNDS_HALF_DEG,
     ];
-    return { ...rest, coords, bounds: derivedBounds, objects: objects ?? [] };
+    return {
+        ...rest,
+        coords,
+        bounds: derivedBounds,
+        objects: objects ?? [],
+        slug: slug || slugify(rest.name) || patioFallbackSlug(rest.id),
+    };
 };
 
 const RAW_PATIOS: PatioFixture[] = [
@@ -563,4 +574,12 @@ const RAW_PATIOS: PatioFixture[] = [
     // },
 ];
 
-export const PATIOS_FIXTURES: Patio[] = RAW_PATIOS.map(definePatio);
+/**
+ * Slug index over the fixture set. Built once; owns collision resolution, so its values
+ * carry the canonical slug each patio ended up with.
+ */
+export const PATIOS_SLUG_INDEX: Map<string, Patio> = buildPatioSlugIndex(RAW_PATIOS.map(definePatio));
+
+// Sourced from the index rather than the raw list so a deduped slug can never diverge
+// between what a list renders and what the URL resolves. Map preserves definition order.
+export const PATIOS_FIXTURES: Patio[] = [...PATIOS_SLUG_INDEX.values()];

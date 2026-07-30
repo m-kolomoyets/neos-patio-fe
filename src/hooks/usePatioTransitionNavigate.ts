@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { usePageTransition } from '@/contexts/PageTransitionContext';
 import { useNavigate } from '@tanstack/react-router';
 
-type PatioSeed = Pick<Patio, 'id' | 'name' | 'previewBackgroundUrl' | 'previewBackgroundLowUrl'>;
+type PatioSeed = Pick<Patio, 'id' | 'slug' | 'name' | 'previewBackgroundUrl' | 'previewBackgroundLowUrl'>;
 
 /**
  * Triggers the patio loading overlay for both Home entry points, so the trigger
@@ -32,7 +32,7 @@ export const usePatioTransitionNavigate = () => {
     const navigateToPatio = useCallback(
         (patio: PatioSeed) => {
             seed(patio);
-            void navigate({ to: '/patios/$id', params: { id: patio.id } });
+            void navigate({ to: '/patios/$slug', params: { slug: patio.slug } });
         },
         [seed, navigate]
     );

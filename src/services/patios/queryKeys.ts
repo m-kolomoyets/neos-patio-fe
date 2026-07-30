@@ -25,8 +25,9 @@ export const patiosKeys = {
     fullListWithParams(filters: PatiosListFilters) {
         return [...patiosKeys.fullList(), filters] as const;
     },
-    detail(id: string) {
-        return [...patiosKeys.root(), 'detail', id] as const;
+    /** `ref` is the patio ref as it appears in the URL (slug), not necessarily the id. */
+    detail(ref: string) {
+        return [...patiosKeys.root(), 'detail', ref] as const;
     },
     letters(filters: PatioLettersFilters) {
         return [...patiosKeys.root(), 'letters', filters] as const;

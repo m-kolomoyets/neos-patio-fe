@@ -23,8 +23,8 @@ import s from './styles.module.css';
 type SidebarTab = 'scene' | 'assets';
 
 export const Sidebar: React.FC = () => {
-    const { id } = usePatioEditorParams();
-    const { data: patio } = useSuspenseQuery(getPatioQueryOptions(id));
+    const { slug } = usePatioEditorParams();
+    const { data: patio } = useSuspenseQuery(getPatioQueryOptions(slug));
     const [tab, setTab] = useState<SidebarTab>('assets');
     const [collapsed, setCollapsed] = useState(false);
     const { width, isResizing, handleProps } = useSidebarResize();
@@ -51,7 +51,7 @@ export const Sidebar: React.FC = () => {
                     <span className="sr-only">Back</span>
                 </Button>
                 <Typography className={clsx(s.title, 'truncate')} variant="text-sm">
-                    {patio.name}
+                    {patio?.name}
                 </Typography>
                 <Button
                     className={s.collapse}
