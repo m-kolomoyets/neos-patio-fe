@@ -24,7 +24,6 @@ const Home: React.FC = () => {
     // Squircle corners matching Figma's 60% iOS smoothing (border-radius: 2.5rem = 40px).
     const cornerRadius = isMobile ? 24 : 40;
     const [mainRef, mainSquircleStyle] = useSquircleClipPath<HTMLElement>({ cornerRadius });
-    const [viewportRef, viewportSquircleStyle] = useSquircleClipPath<HTMLDivElement>({ cornerRadius });
 
     return (
         <div className={s.wrap}>
@@ -39,8 +38,6 @@ const Home: React.FC = () => {
                         <ScrollArea
                             className={s.scroll}
                             viewportClassName={clsx(s['scroll-viewport'], HOME_SCROLL_ROOT_CLASS)}
-                            viewportRef={viewportRef}
-                            viewportStyle={viewportSquircleStyle}
                         >
                             <FeaturedPatios />
                             <PatioLibrary />

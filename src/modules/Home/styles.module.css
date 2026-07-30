@@ -69,8 +69,13 @@
     border-radius: 2.5rem;
 }
 
+/* Plain border-radius only — NO squircle clip-path here. A `path()` clip on the scroll
+   container drops it off Blink's composited-scroll path, so every frame repaints on the
+   main thread and the scrollbar thumb (JS-positioned in Base UI's onScroll) stops
+   tracking. The squircle on .main already rounds this box visually. */
 .scroll .scroll-viewport {
     overflow: hidden;
+    contain: paint;
 }
 
 .scroll :global(.scroll-area-scrollbar-vertical) {
