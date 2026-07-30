@@ -56,7 +56,7 @@ export const ViewCube: React.FC<ViewCubeProps> = ({
     storageId,
     interaction = 'edit',
 }) => {
-    const { viewer, referenceRange, readOrientation, easeTo, zoomTo, orbitTo, beginDragOrbit, fitBounds } =
+    const { viewer, referenceRange, readOrientation, snapTo, zoomTo, orbitTo, beginDragOrbit, fitBounds } =
         useCesiumCamera(bounds, height, interaction);
     const { selectedFace, onSnap, onOrbitStart, stepBy, goTop } = useFlattenedFace({
         viewer,
@@ -71,7 +71,7 @@ export const ViewCube: React.FC<ViewCubeProps> = ({
         onSnap,
         onOrbitStart,
     });
-    const { goHome, setHome, resetHome } = useHomeView({ storageId, easeTo, readOrientation, referenceRange });
+    const { goHome, setHome, resetHome } = useHomeView({ storageId, snapTo, readOrientation, referenceRange });
 
     if (!viewer) return null;
 
@@ -147,7 +147,7 @@ export const ViewCube: React.FC<ViewCubeProps> = ({
                 </div>
                 <LiveRotateControl
                     readOrientation={readOrientation}
-                    easeTo={easeTo}
+                    snapTo={snapTo}
                     isFlattened={selectedFace !== null}
                     stepBy={stepBy}
                 />
