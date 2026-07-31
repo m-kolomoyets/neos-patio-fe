@@ -1,0 +1,134 @@
+/*
+ * Deliberately hardcoded: no design tokens, no `--fw-*`, no Inter. The panel must stay a
+ * stable reference while the weights it edits are being dragged around.
+ */
+
+.root {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 320px;
+    max-height: calc(100svh - 32px);
+    padding: 12px;
+    overflow-y: auto;
+    border: 1px solid #3d3d3d;
+    border-radius: 10px;
+    background: #171717;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+    color: #ededed;
+    font-family: system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.title {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #2e2e2e;
+    color: #b4b4b4;
+    font-size: 11px;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 10px;
+    border-top: 1px solid #2b2b2b;
+}
+
+.controls {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 4px 8px;
+}
+
+.label {
+    grid-column: 1 / -1;
+    color: #a1a1a1;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+}
+
+.range {
+    width: 100%;
+    accent-color: #e8873a;
+}
+
+.number {
+    width: 64px;
+    padding: 3px 6px;
+    border: 1px solid #3d3d3d;
+    border-radius: 4px;
+    background: #202020;
+    color: inherit;
+    font-family: inherit;
+    font-size: 12px;
+}
+
+.specimen {
+    margin: 0;
+    color: #ffffff;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+}
+
+.footer {
+    display: flex;
+    gap: 8px;
+}
+
+.button,
+.icon-button {
+    padding: 4px 8px;
+    border: 1px solid #3d3d3d;
+    border-radius: 4px;
+    background: #262626;
+    color: inherit;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.button {
+    flex: 1;
+}
+
+.button:hover,
+.icon-button:hover {
+    background: #333333;
+}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { PageTransitionProvider } from '@/contexts/PageTransitionContext';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
+import { FONT_DEBUG_SEARCH_PARAM } from '@/modules/FontDebug/constants';
 import { NotFound } from '@/modules/NotFound';
 import { PageTransitionOverlay } from '@/components/PageTransitionOverlay';
 
@@ -40,6 +41,17 @@ const ReactQueryDevtoolsPanel = import.meta.env.DEV
           return null;
       };
 
+// Temporary font-weight tuning tool — enabled with `?font-debug`. Delete these three
+// blocks and `src/modules/FontDebug/` to remove it.
+const isFontDebugEnabled = new URLSearchParams(window.location.search).has(FONT_DEBUG_SEARCH_PARAM);
+const FontDebugPanel = React.lazy(async () => {
+    const res = await import('@/modules/FontDebug');
+
+    return {
+        default: res.FontDebugPanel,
+    };
+});
+
 export const Route = createRootRoute({
     notFoundComponent: NotFound,
     component() {
@@ -47,6 +59,11 @@ export const Route = createRootRoute({
             <PageTransitionProvider>
                 <Outlet />
                 <PageTransitionOverlay />
+                {isFontDebugEnabled && (
+                    <React.Suspense>
+                        <FontDebugPanel />
+                    </React.Suspense>
+                )}
                 <React.Suspense>
                     <TanStackDevtools
                         config={{
