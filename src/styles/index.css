@@ -209,9 +209,9 @@
  */
 :root[data-os="windows"] {
     --fw-regular: 330;
-    --fw-medium: 400;
-    --fw-semibold: 460;
-    --fw-bold: 600;
+    --fw-medium: 370;
+    --fw-semibold: 420;
+    --fw-bold: 580;
 }
 
 body {
