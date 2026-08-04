@@ -1,6 +1,5 @@
-import type { WithClassName } from '@/lib/types';
+import type { MapInteraction, WithClassName } from '@/lib/types';
 import type { PatioBounds } from '@/services/patios/types';
-import type { MapInteraction } from './utils/sceneBootstrap';
 
 export type CesiumMapProps = WithClassName<{
     bounds: PatioBounds;
