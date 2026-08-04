@@ -15,6 +15,16 @@ const PATIO_SLUG_INDEX = buildPatioSlugIndex(PATIOS_FIXTURES);
  * directly would hand back a pre-dedupe slug and send the canonical redirect to a
  * ref that resolves to a different patio.
  */
+/**
+ * Lower-cased slug → patio. Slugs keep the name's casing, so refs from the URL are matched
+ * case-insensitively here rather than by mutating the canonical key.
+ */
+const PATIO_BY_LOWER_SLUG = new Map(
+    Array.from(PATIO_SLUG_INDEX, ([slug, patio]) => {
+        return [slug.toLowerCase(), patio] as const;
+    })
+);
+
 const PATIO_BY_ID = new Map(
     Array.from(PATIO_SLUG_INDEX.values(), (patio) => {
         return [patio.id, patio] as const;
@@ -192,7 +202,7 @@ export const resolvePatioRef = (ref: string): Patio | null => {
     const fallbackId = FALLBACK_REF_PATTERN.exec(normalised)?.[1];
 
     return (
-        PATIO_SLUG_INDEX.get(normalised) ??
+        PATIO_BY_LOWER_SLUG.get(normalised) ??
         (fallbackId ? PATIO_BY_ID.get(fallbackId) : undefined) ??
         PATIO_BY_ID.get(normalised) ??
         null
