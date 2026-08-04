@@ -33,4 +33,5 @@ dist-ssr
 articles
 tech-articles
 
-/references
+references/*
+prototypes/*
