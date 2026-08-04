@@ -1,0 +1,1226 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Option B — squircle patios as a Mapbox custom WebGL layer</title>
+        <link rel="stylesheet" href="../node_modules/mapbox-gl/dist/mapbox-gl.css" />
+        <style>
+            html,
+            body {
+                margin: 0;
+                height: 100%;
+                background: #111;
+                color: #eee;
+                font-family:
+                    -apple-system,
+                    Segoe UI,
+                    Arial,
+                    sans-serif;
+                overflow: hidden;
+            }
+            #map {
+                position: absolute;
+                inset: 0;
+            }
+            #overlay {
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                width: 100%;
+                height: 100%;
+            }
+            .panel {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                width: 296px;
+                max-height: calc(100vh - 24px);
+                overflow: auto;
+                background: rgba(17, 17, 17, 0.92);
+                padding: 12px;
+                border-radius: 12px;
+                z-index: 10;
+                font-size: 12px;
+            }
+            .stats {
+                position: absolute;
+                top: 12px;
+                left: 12px;
+                background: rgba(17, 17, 17, 0.9);
+                padding: 12px 14px;
+                border-radius: 12px;
+                z-index: 10;
+                font:
+                    11px/1.5 ui-monospace,
+                    SFMono-Regular,
+                    Menlo,
+                    monospace;
+                white-space: pre;
+            }
+            details {
+                border: 1px solid #2a2a2a;
+                border-radius: 8px;
+                margin-bottom: 8px;
+                background: #171717;
+            }
+            summary {
+                cursor: pointer;
+                padding: 7px 10px;
+                font-weight: 600;
+                color: #ddd;
+                user-select: none;
+            }
+            details[open] summary {
+                border-bottom: 1px solid #2a2a2a;
+            }
+            .body {
+                padding: 10px;
+            }
+            .row {
+                margin-bottom: 9px;
+            }
+            .row .head {
+                display: flex;
+                justify-content: space-between;
+                color: #999;
+                margin-bottom: 2px;
+            }
+            .row .head b {
+                color: #eee;
+                font-weight: 600;
+                font-variant-numeric: tabular-nums;
+            }
+            input[type="range"] {
+                width: 100%;
+                margin: 0;
+            }
+            input[type="color"] {
+                width: 100%;
+                height: 26px;
+                border: none;
+                border-radius: 5px;
+                background: none;
+                padding: 0;
+            }
+            select {
+                width: 100%;
+                background: #222;
+                color: #eee;
+                border: 1px solid #333;
+                border-radius: 6px;
+                padding: 5px;
+            }
+            label {
+                color: #999;
+            }
+            button {
+                background: #222;
+                color: #eee;
+                border: 1px solid #333;
+                border-radius: 6px;
+                padding: 6px 10px;
+                cursor: pointer;
+                font-size: 12px;
+            }
+            button:hover {
+                border-color: #555;
+            }
+            button[data-on="1"] {
+                background: #2e90fa;
+                border-color: #2e90fa;
+            }
+            .chk {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                margin-bottom: 8px;
+            }
+            .chk input {
+                width: auto;
+                margin: 0;
+            }
+            .grid2 {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .btnrow {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            textarea {
+                width: 100%;
+                height: 150px;
+                background: #0e0e0e;
+                color: #9ecbff;
+                border: 1px solid #333;
+                border-radius: 6px;
+                font:
+                    10px/1.4 ui-monospace,
+                    Menlo,
+                    monospace;
+                padding: 6px;
+            }
+            #gate {
+                position: absolute;
+                inset: 0;
+                display: grid;
+                place-items: center;
+                background: #111;
+                z-index: 50;
+            }
+            #gate input {
+                width: 420px;
+                max-width: 80vw;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid #333;
+                background: #1a1a1a;
+                color: #eee;
+            }
+            .hint {
+                color: #888;
+                font-size: 12px;
+                margin-top: 8px;
+                max-width: 420px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <svg id="overlay"></svg>
+        <div class="stats" id="stats">booting…</div>
+        <div class="panel" id="panel"></div>
+
+        <div id="gate">
+            <div>
+                <div style="margin-bottom: 10px">Paste a Mapbox access token (stored in localStorage only):</div>
+                <input id="token" placeholder="pk.…" autocomplete="off" />
+                <div class="hint">
+                    From <code>.env.local</code> → <code>VITE_MAPBOX_TOKEN</code>, or open with
+                    <code>?token=pk.…</code>.
+                </div>
+            </div>
+        </div>
+
+        <script src="../node_modules/mapbox-gl/dist/mapbox-gl.js"></script>
+        <!-- Optional local-only token file (gitignored); absent by default. -->
+        <script src="token.local.js"></script>
+        <script>
+            /* ================================================================== *
+             * CONFIG — every tunable, mirroring src/modules/CreatePatio/constants.ts
+             * ================================================================== */
+            const CONFIG = {
+                metrics: {
+                    patioSizeM: 100, // PATIO_SIZE_M
+                    cornerRadius: 28, // SQUARE_CORNER_RADIUS
+                    radiusBasis: 247, // SQUARE_CORNER_RADIUS_BASIS
+                    borderWidth: 4, // SQUARE_BORDER_WIDTH
+                    nMax: 4, // squircle exponent at the design roundness
+                    glowWidth: 0.1,
+                    fillMidOffset: 0.6, // INDICATOR_FILL_MID.offset
+                    fillMidRatio: 0.3, // INDICATOR_FILL_MID.opacityRatio
+                    sheenRest: 0.04, // INDICATOR_SHEEN.restOpacity
+                    sheenA: 0.25,
+                    sheenB: 0.005,
+                    sheenC: 0.25,
+                    sheenPosA: 0.17734,
+                    sheenPosB: 0.46843,
+                    sheenPosC: 0.82838,
+                    hl1A: 0.9,
+                    hl1X: 2,
+                    hl1Y: 3, // INDICATOR_HIGHLIGHTS[0]
+                    hl2A: 0.8,
+                    hl2X: -3,
+                    hl2Y: -2, // INDICATOR_HIGHLIGHTS[1]
+                    dither: true,
+                    okRamp: false,
+                    pressedRing: false,
+                },
+                variants: {
+                    owned: {
+                        gradientEdge: "#0eb838",
+                        gradientOpacity: 0.55,
+                        insetShadow: "#0eb838",
+                        insetOpacity: 0.8,
+                        pressedBorder: "#01de37",
+                    },
+                    "not-published": {
+                        gradientEdge: "#007aff",
+                        gradientOpacity: 0.55,
+                        insetShadow: "#007aff",
+                        insetOpacity: 0.7,
+                        pressedBorder: "#4ca2ff",
+                    },
+                    "owned-and-published": {
+                        gradientEdge: "#ff9d00",
+                        gradientOpacity: 0.55,
+                        insetShadow: "#ff9d00",
+                        insetOpacity: 0.8,
+                        pressedBorder: "#ff9d00",
+                    },
+                    "owned-and-not-published": {
+                        gradientEdge: "#ffe100",
+                        gradientOpacity: 0.55,
+                        insetShadow: "#ffe100",
+                        insetOpacity: 0.8,
+                        pressedBorder: "#ffe100",
+                    },
+                    target: {
+                        gradientEdge: "#ff7100",
+                        gradientOpacity: 0.55,
+                        insetShadow: "#a15e05",
+                        insetOpacity: 0.44,
+                        pressedBorder: "#ff6a00",
+                    },
+                },
+                intersection: { fill: "#ff0000", fillOpacity: 0.8, border: "#ff0404" },
+            };
+            const TYPES = Object.keys(CONFIG.variants);
+            const PATIO_TYPES = TYPES.filter((t) => t !== "target");
+            const TARGET_INDEX = TYPES.indexOf("target");
+            const EQUATOR_M = 40075016.686;
+
+            const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+            const debounce = (fn, ms) => {
+                let h;
+                return (...a) => {
+                    clearTimeout(h);
+                    h = setTimeout(() => fn(...a), ms);
+                };
+            };
+            const hexToRgb01 = (h) => {
+                const v = parseInt(h.slice(1), 16);
+                return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255];
+            };
+
+            const M = () => CONFIG.metrics;
+            const ratioMin = () => M().cornerRadius / M().radiusBasis;
+            /**
+             * Mirrors the app's getCornerRadius: a constant *ratio* once the square is at
+             * least `radiusBasis` wide, a constant 28px in the middle band, and a circle
+             * below 2*cornerRadius. The middle band is why sprites could not work — the
+             * radius is fixed in absolute pixels while the square scales, so the relative
+             * roundness changes continuously with zoom.
+             */
+            const cornerRadiusPx = (sizePx) => clamp(sizePx * ratioMin(), M().cornerRadius, sizePx / 2);
+            const cornerRadiusRatio = (sizePx) => cornerRadiusPx(sizePx) / Math.max(sizePx, 1e-6);
+            /** Superellipse exponent for a corner-radius ratio: 0.5 -> circle, design -> nMax. */
+            function ratioToN(ratio) {
+                const k = Math.log(M().nMax / 2) / Math.log(0.5 / ratioMin());
+                return clamp(2 * Math.pow(0.5 / clamp(ratio, 1e-3, 0.5), k), 2, 16);
+            }
+            const metersToPixels = (m, lat, zoom) =>
+                (m * 512 * 2 ** zoom) / (EQUATOR_M * Math.cos((lat * Math.PI) / 180));
+
+            /* ================================================================== *
+             * Shaders — the whole bake, per pixel, per frame
+             * ================================================================== */
+            const VERT = `#version 300 es
+precision highp float;
+layout(location=0) in vec2 a_quad;     // unit quad corner, -1..1
+layout(location=1) in vec2 a_center;   // mercator position
+layout(location=2) in float a_half;    // half extent, mercator units
+layout(location=3) in float a_rot;     // world azimuth, radians
+layout(location=4) in float a_type;    // variant index
+
+uniform mat4 u_matrix;
+uniform float u_worldSize;     // pixels per mercator unit
+uniform float u_cornerRadius;
+uniform float u_radiusBasis;
+uniform float u_nMax;
+
+out vec2 v_p;
+flat out float v_n;
+flat out float v_sizePx;
+flat out int v_type;
+
+void main() {
+  float sizePx = a_half * 2.0 * u_worldSize;
+  // Pad the quad by ~2px so the antialiased edge is never clipped by the quad.
+  float pad = 2.0 / max(sizePx * 0.5, 1.0);
+  vec2 q = a_quad * (1.0 + pad);
+
+  float c = cos(a_rot), s = sin(a_rot);
+  vec2 local = q * a_half;
+  // Mercator y grows southward, same handedness as screen y, so a plain
+  // clockwise rotation matches an azimuth measured clockwise from north.
+  vec2 rot = vec2(local.x * c - local.y * s, local.x * s + local.y * c);
+  gl_Position = u_matrix * vec4(a_center + rot, 0.0, 1.0);
+
+  v_p = q;
+  v_sizePx = sizePx;
+  v_type = int(a_type + 0.5);
+
+  // Corner radius resolved per frame from the live on-screen size — this is
+  // the whole point of the shader: it is exact at any zoom, never quantised.
+  float rMin = u_cornerRadius / u_radiusBasis;
+  float r = clamp(sizePx * rMin, u_cornerRadius, sizePx * 0.5);
+  float ratio = clamp(r / max(sizePx, 1e-3), 1e-3, 0.5);
+  float k = log(u_nMax / 2.0) / log(0.5 / rMin);
+  v_n = clamp(2.0 * pow(0.5 / ratio, k), 2.0, 16.0);
+}`;
+
+            const FRAG = `#version 300 es
+precision highp float;
+in vec2 v_p;
+flat in float v_n;
+flat in float v_sizePx;
+flat in int v_type;
+
+uniform vec3  u_edge[5];
+uniform float u_gradOpacity[5];
+uniform vec3  u_inset[5];
+uniform float u_insetOpacity[5];
+uniform vec3  u_ring[5];
+
+uniform float u_glowWidth, u_fillMidOffset, u_fillMidRatio;
+uniform float u_sheenRest;
+uniform vec3  u_sheenOpacity;   // a, b, c
+uniform vec3  u_sheenPos;       // positions of a, b, c
+uniform vec3  u_hl1;            // alpha, dx, dy
+uniform vec3  u_hl2;
+uniform float u_dither, u_pressedRing, u_borderWidth, u_dpr, u_okRamp;
+uniform vec3  u_ramp[4];        // OKLab demo ramp stops
+
+out vec4 fragColor;
+
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+
+vec3 oklabToRgb(vec3 lab) {
+  float l_ = lab.x + 0.3963377774*lab.y + 0.2158037573*lab.z;
+  float m_ = lab.x - 0.1055613458*lab.y - 0.0638541728*lab.z;
+  float s_ = lab.x - 0.0894841775*lab.y - 1.2914855480*lab.z;
+  vec3 lms = vec3(l_*l_*l_, m_*m_*m_, s_*s_*s_);
+  vec3 lin = vec3(
+     4.0767416621*lms.x - 3.3077115913*lms.y + 0.2309699292*lms.z,
+    -1.2684380046*lms.x + 2.6097574011*lms.y - 0.3413193965*lms.z,
+    -0.0041960863*lms.x - 0.7034186147*lms.y + 1.7076147010*lms.z);
+  vec3 hi = 1.055 * pow(max(lin, vec3(0.0)), vec3(1.0/2.4)) - 0.055;
+  return mix(lin * 12.92, hi, step(vec3(0.0031308), lin));
+}
+vec3 rampAt(float t) {
+  float seg = t * 3.0;
+  float i = min(floor(seg), 2.0);
+  return oklabToRgb(mix(u_ramp[int(i)], u_ramp[int(i) + 1], seg - i));
+}
+
+/* src-over of a straight-alpha layer onto a straight-alpha accumulator. */
+void over(inout vec3 col, inout float a, vec3 sc, float sa) {
+  float na = a + sa * (1.0 - a);
+  col = (sc * sa + col * a * (1.0 - sa)) / max(na, 1e-4);
+  a = na;
+}
+
+void main() {
+  vec2 p = abs(v_p);
+  float n = v_n;
+  float d = pow(pow(p.x, n) + pow(p.y, n), 1.0 / n);
+
+  // ~1.5 device px of edge feather, expressed in normalised units.
+  float aa = 3.0 / max(v_sizePx * u_dpr, 1.0);
+  float cover = 1.0 - smoothstep(1.0 - aa, 1.0 + aa, d);
+  if (cover <= 0.0) discard;
+
+  float t = min(d, 1.0);
+  int ti = v_type;
+  vec3 edge = u_edge[ti];
+  float gOp = u_gradOpacity[ti];
+
+  // --- radial fill: single hue, alpha ramping 0 -> mid -> gradientOpacity
+  vec3 col;
+  float a;
+  if (u_okRamp > 0.5) {
+    col = rampAt(t);
+    a = gOp;
+  } else {
+    col = edge;
+    a = t <= u_fillMidOffset
+      ? mix(0.0, gOp * u_fillMidRatio, t / max(u_fillMidOffset, 1e-4))
+      : mix(gOp * u_fillMidRatio, gOp, (t - u_fillMidOffset) / max(1.0 - u_fillMidOffset, 1e-4));
+  }
+
+  float eDist = max(0.0, 1.0 - t);
+
+  // --- inner glow (replaces feMorphology + feGaussianBlur + feFlood + composites)
+  float glow = exp(-pow(eDist / max(u_glowWidth, 1e-4), 2.0)) * u_insetOpacity[ti];
+  if (glow > 0.001) over(col, a, u_inset[ti], glow);
+
+  // --- white highlights, gated by the outward normal so each lights one side
+  vec2 nrm = normalize(v_p + vec2(1e-6));
+  float fall = exp(-pow(eDist / max(u_glowWidth * 0.6, 1e-4), 2.0));
+  vec2 h1 = normalize(-vec2(u_hl1.y, u_hl1.z));
+  float w1 = fall * max(0.0, dot(nrm, h1)) * u_hl1.x;
+  if (w1 > 0.001) over(col, a, vec3(1.0), w1);
+  vec2 h2 = normalize(-vec2(u_hl2.y, u_hl2.z));
+  float w2 = fall * max(0.0, dot(nrm, h2)) * u_hl2.x;
+  if (w2 > 0.001) over(col, a, vec3(1.0), w2);
+
+  // --- diagonal sheen (222.5deg): bright at top-right and bottom-left
+  float u = clamp(((-v_p.x + v_p.y) * 0.5 + 1.0) * 0.5, 0.0, 1.0);
+  float sheen;
+  if (u <= u_sheenPos.x) sheen = u_sheenOpacity.x;
+  else if (u >= u_sheenPos.z) sheen = u_sheenOpacity.z;
+  else if (u <= u_sheenPos.y) sheen = mix(u_sheenOpacity.x, u_sheenOpacity.y, (u - u_sheenPos.x) / max(u_sheenPos.y - u_sheenPos.x, 1e-4));
+  else sheen = mix(u_sheenOpacity.y, u_sheenOpacity.z, (u - u_sheenPos.y) / max(u_sheenPos.z - u_sheenPos.y, 1e-4));
+  sheen *= u_sheenRest;
+  if (sheen > 0.001) over(col, a, edge, sheen);
+
+  // --- pressed ring. Unlike a baked sprite this is a true constant-width
+  // stroke, because the width is converted from px every frame.
+  if (u_pressedRing > 0.5) {
+    float ringW = u_borderWidth * 2.0 / max(v_sizePx, 1.0);
+    if (eDist < ringW) over(col, a, u_ring[ti], clamp((ringW - eDist) / max(ringW * 0.35, 1e-4), 0.0, 1.0));
+  }
+
+  col += (hash(gl_FragCoord.xy) - 0.5) * (1.4 / 255.0) * u_dither;
+
+  // Mapbox presets blendFunc(ONE, ONE_MINUS_SRC_ALPHA) => premultiplied out.
+  float outA = a * cover;
+  fragColor = vec4(col * outA, outA);
+}`;
+
+            /* Screen-space superellipse ring, for the intersection clip paths. */
+            function squirclePath(cx, cy, half, n, azimuthDeg, steps = 72) {
+                const rad = (azimuthDeg * Math.PI) / 180;
+                const ca = Math.cos(rad),
+                    sa = Math.sin(rad);
+                let out = "";
+                for (let i = 0; i < steps; i++) {
+                    const th = (i / steps) * Math.PI * 2;
+                    const c = Math.cos(th),
+                        s = Math.sin(th);
+                    const den = Math.pow(Math.pow(Math.abs(c), n) + Math.pow(Math.abs(s), n), 1 / n);
+                    const lx = (half * c) / den,
+                        ly = (half * s) / den;
+                    out +=
+                        (i ? "L" : "M") +
+                        (cx + lx * ca - ly * sa).toFixed(1) +
+                        " " +
+                        (cy + lx * sa + ly * ca).toFixed(1);
+                }
+                return out + "Z";
+            }
+
+            /* SAT overlap on the bounding squares — broadphase for the intersection paint. */
+            function squaresOverlap(a, b) {
+                const corners = (q) => {
+                    const h = q.size / 2,
+                        rad = (q.az * Math.PI) / 180,
+                        c = Math.cos(rad),
+                        s = Math.sin(rad);
+                    return [
+                        [-h, -h],
+                        [h, -h],
+                        [h, h],
+                        [-h, h],
+                    ].map(([x, y]) => [q.cx + x * c - y * s, q.cy + x * s + y * c]);
+                };
+                const A = corners(a),
+                    B = corners(b),
+                    axes = [];
+                for (const P of [A, B])
+                    for (let i = 0; i < 4; i++) {
+                        const p = P[i],
+                            q = P[(i + 1) % 4];
+                        axes.push([-(q[1] - p[1]), q[0] - p[0]]);
+                    }
+                return axes.every((ax) => {
+                    const proj = (P) => {
+                        let mn = Infinity,
+                            mx = -Infinity;
+                        for (const p of P) {
+                            const v = p[0] * ax[0] + p[1] * ax[1];
+                            if (v < mn) mn = v;
+                            if (v > mx) mx = v;
+                        }
+                        return [mn, mx];
+                    };
+                    const [a0, a1] = proj(A),
+                        [b0, b1] = proj(B);
+                    return a1 >= b0 && b1 >= a0;
+                });
+            }
+
+            /* ================================================================== *
+             * Boot
+             * ================================================================== */
+            const qsToken = new URLSearchParams(location.search).get("token");
+            const token = qsToken || window.__MBX_TOKEN || localStorage.getItem("mbx-token");
+            if (token) {
+                localStorage.setItem("mbx-token", token);
+                start(token);
+            } else {
+                document.getElementById("token").addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" && e.target.value.startsWith("pk.")) {
+                        localStorage.setItem("mbx-token", e.target.value.trim());
+                        location.reload();
+                    }
+                });
+            }
+
+            function start(tok) {
+                document.getElementById("gate").remove();
+                mapboxgl.accessToken = tok;
+
+                const ORIGIN = [-73.9857, 40.7484];
+                const map = new mapboxgl.Map({
+                    container: "map",
+                    style: "mapbox://styles/mapbox/satellite-v9",
+                    center: ORIGIN,
+                    zoom: 17.2,
+                    pitch: 0,
+                    pitchWithRotate: false,
+                    antialias: true,
+                });
+                window.__map = map;
+
+                const overlay = document.getElementById("overlay");
+                let patios = [];
+                let patioCount = 300;
+                let gpu = null; // { gl, prog, vao, instBuf, centerBuf, u:{...} }
+
+                /* ---------------- data ---------------- */
+                function makePatios(n) {
+                    let seed = 1337;
+                    const rnd = () => {
+                        seed = (seed * 1664525 + 1013904223) >>> 0;
+                        return seed / 4294967296;
+                    };
+                    const out = [],
+                        side = Math.ceil(Math.sqrt(n));
+                    const stepDeg = (M().patioSizeM * 1.4) / 111320;
+                    for (let i = 0; i < n; i++) {
+                        const gx = (i % side) - side / 2,
+                            gy = Math.floor(i / side) - side / 2;
+                        out.push({
+                            id: "p" + i,
+                            lng:
+                                ORIGIN[0] +
+                                (gx * stepDeg + (rnd() - 0.5) * stepDeg * 0.5) / Math.cos((ORIGIN[1] * Math.PI) / 180),
+                            lat: ORIGIN[1] + gy * stepDeg + (rnd() - 0.5) * stepDeg * 0.5,
+                            az: rnd() * 90,
+                            type: PATIO_TYPES[Math.floor(rnd() * PATIO_TYPES.length)],
+                        });
+                    }
+                    return out;
+                }
+
+                /** Packs patios into the per-instance buffer: center, half-extent, rotation, type. */
+                function instanceData(list) {
+                    const out = new Float32Array(list.length * 5);
+                    const halfM = M().patioSizeM / 2;
+                    for (let i = 0; i < list.length; i++) {
+                        const p = list[i];
+                        const mc = mapboxgl.MercatorCoordinate.fromLngLat([p.lng, p.lat]);
+                        out[i * 5 + 0] = mc.x;
+                        out[i * 5 + 1] = mc.y;
+                        out[i * 5 + 2] = halfM * mc.meterInMercatorCoordinateUnits();
+                        out[i * 5 + 3] = (p.az * Math.PI) / 180;
+                        out[i * 5 + 4] = TYPES.indexOf(p.type);
+                    }
+                    return out;
+                }
+                function uploadInstances() {
+                    if (!gpu) return;
+                    const { gl } = gpu;
+                    const data = instanceData(patios);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, gpu.instBuf);
+                    gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+                    gpu.instCount = patios.length;
+                }
+
+                /* ---------------- custom layer ---------------- */
+                function compile(gl, type, src) {
+                    const sh = gl.createShader(type);
+                    gl.shaderSource(sh, src);
+                    gl.compileShader(sh);
+                    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+                    return sh;
+                }
+
+                const squareLayer = {
+                    id: "patio-squares",
+                    type: "custom",
+                    renderingMode: "2d",
+
+                    onAdd(_map, gl) {
+                        const prog = gl.createProgram();
+                        gl.attachShader(prog, compile(gl, gl.VERTEX_SHADER, VERT));
+                        gl.attachShader(prog, compile(gl, gl.FRAGMENT_SHADER, FRAG));
+                        gl.linkProgram(prog);
+                        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+
+                        const quad = gl.createBuffer();
+                        gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+
+                        const mkVao = (instBuf) => {
+                            const vao = gl.createVertexArray();
+                            gl.bindVertexArray(vao);
+                            gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+                            gl.enableVertexAttribArray(0);
+                            gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+                            gl.bindBuffer(gl.ARRAY_BUFFER, instBuf);
+                            const stride = 5 * 4;
+                            // center(2), half(1), rot(1), type(1) — one set per instance
+                            const spec = [
+                                [1, 2, 0],
+                                [2, 1, 8],
+                                [3, 1, 12],
+                                [4, 1, 16],
+                            ];
+                            for (const [loc, size, off] of spec) {
+                                gl.enableVertexAttribArray(loc);
+                                gl.vertexAttribPointer(loc, size, gl.FLOAT, false, stride, off);
+                                gl.vertexAttribDivisor(loc, 1);
+                            }
+                            gl.bindVertexArray(null);
+                            return vao;
+                        };
+
+                        const instBuf = gl.createBuffer();
+                        const centerBuf = gl.createBuffer();
+                        gl.bindBuffer(gl.ARRAY_BUFFER, centerBuf);
+                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(5), gl.DYNAMIC_DRAW);
+
+                        const names = [
+                            "u_matrix",
+                            "u_worldSize",
+                            "u_cornerRadius",
+                            "u_radiusBasis",
+                            "u_nMax",
+                            "u_edge",
+                            "u_gradOpacity",
+                            "u_inset",
+                            "u_insetOpacity",
+                            "u_ring",
+                            "u_glowWidth",
+                            "u_fillMidOffset",
+                            "u_fillMidRatio",
+                            "u_sheenRest",
+                            "u_sheenOpacity",
+                            "u_sheenPos",
+                            "u_hl1",
+                            "u_hl2",
+                            "u_dither",
+                            "u_pressedRing",
+                            "u_borderWidth",
+                            "u_dpr",
+                            "u_okRamp",
+                            "u_ramp",
+                        ];
+                        const u = {};
+                        for (const nm of names) u[nm] = gl.getUniformLocation(prog, nm);
+
+                        gpu = {
+                            gl,
+                            prog,
+                            u,
+                            instBuf,
+                            centerBuf,
+                            vao: mkVao(instBuf),
+                            centerVao: mkVao(centerBuf),
+                            instCount: 0,
+                        };
+                        uploadInstances();
+                    },
+
+                    render(gl, matrix) {
+                        if (!gpu) return;
+                        const m = M();
+                        gl.useProgram(gpu.prog);
+                        gl.enable(gl.BLEND);
+                        // Mapbox's documented preset; our fragment output is premultiplied.
+                        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+                        gl.disable(gl.DEPTH_TEST);
+
+                        const u = gpu.u;
+                        gl.uniformMatrix4fv(u.u_matrix, false, matrix);
+                        gl.uniform1f(u.u_worldSize, 512 * 2 ** map.getZoom());
+                        gl.uniform1f(u.u_cornerRadius, m.cornerRadius);
+                        gl.uniform1f(u.u_radiusBasis, m.radiusBasis);
+                        gl.uniform1f(u.u_nMax, m.nMax);
+                        gl.uniform1f(u.u_glowWidth, m.glowWidth);
+                        gl.uniform1f(u.u_fillMidOffset, m.fillMidOffset);
+                        gl.uniform1f(u.u_fillMidRatio, m.fillMidRatio);
+                        gl.uniform1f(u.u_sheenRest, m.sheenRest);
+                        gl.uniform3f(u.u_sheenOpacity, m.sheenA, m.sheenB, m.sheenC);
+                        gl.uniform3f(u.u_sheenPos, m.sheenPosA, m.sheenPosB, m.sheenPosC);
+                        gl.uniform3f(u.u_hl1, m.hl1A, m.hl1X, m.hl1Y);
+                        gl.uniform3f(u.u_hl2, m.hl2A, m.hl2X, m.hl2Y);
+                        gl.uniform1f(u.u_dither, m.dither ? 1 : 0);
+                        gl.uniform1f(u.u_pressedRing, m.pressedRing ? 1 : 0);
+                        gl.uniform1f(u.u_borderWidth, m.borderWidth);
+                        gl.uniform1f(u.u_dpr, window.devicePixelRatio || 1);
+                        gl.uniform1f(u.u_okRamp, m.okRamp ? 1 : 0);
+                        gl.uniform3fv(u.u_ramp, RAMP_OKLAB);
+
+                        // Variant palette, straight from CONFIG — no bake, so edits are instant.
+                        const edge = [],
+                            gop = [],
+                            inset = [],
+                            iop = [],
+                            ring = [];
+                        for (const t of TYPES) {
+                            const v = CONFIG.variants[t];
+                            edge.push(...hexToRgb01(v.gradientEdge));
+                            gop.push(v.gradientOpacity);
+                            inset.push(...hexToRgb01(v.insetShadow));
+                            iop.push(v.insetOpacity);
+                            ring.push(...hexToRgb01(v.pressedBorder));
+                        }
+                        gl.uniform3fv(u.u_edge, edge);
+                        gl.uniform1fv(u.u_gradOpacity, gop);
+                        gl.uniform3fv(u.u_inset, inset);
+                        gl.uniform1fv(u.u_insetOpacity, iop);
+                        gl.uniform3fv(u.u_ring, ring);
+
+                        if (gpu.instCount) {
+                            gl.bindVertexArray(gpu.vao);
+                            gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, gpu.instCount);
+                        }
+                        // Center cursor: one instance pinned to the map centre, counter-rotated
+                        // by the bearing so it stays screen-upright like the app's version.
+                        if (ui.showCenter?.checked) {
+                            const c = map.getCenter();
+                            const mc = mapboxgl.MercatorCoordinate.fromLngLat([c.lng, c.lat]);
+                            const data = new Float32Array([
+                                mc.x,
+                                mc.y,
+                                (M().patioSizeM / 2) * mc.meterInMercatorCoordinateUnits(),
+                                (-map.getBearing() * Math.PI) / 180,
+                                TARGET_INDEX,
+                            ]);
+                            gl.bindBuffer(gl.ARRAY_BUFFER, gpu.centerBuf);
+                            gl.bufferSubData(gl.ARRAY_BUFFER, 0, data);
+                            gl.bindVertexArray(gpu.centerVao);
+                            gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, 1);
+                        }
+                        gl.bindVertexArray(null);
+                    },
+                };
+
+                // OKLab demo ramp, converted once on the CPU.
+                const RAMP_OKLAB = (() => {
+                    const srgbToLinear = (c) => {
+                        c /= 255;
+                        return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+                    };
+                    const toLab = (rgb) => {
+                        const r = srgbToLinear(rgb[0]),
+                            g = srgbToLinear(rgb[1]),
+                            b = srgbToLinear(rgb[2]);
+                        const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+                        const m2 = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+                        const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+                        return [
+                            0.2104542553 * l + 0.793617785 * m2 - 0.0040720468 * s,
+                            1.9779984951 * l - 2.428592205 * m2 + 0.4505937099 * s,
+                            0.0259040371 * l + 0.7827717662 * m2 - 0.808675766 * s,
+                        ];
+                    };
+                    return new Float32Array(
+                        [
+                            [46, 144, 250],
+                            [18, 183, 106],
+                            [247, 144, 9],
+                            [122, 90, 248],
+                        ].flatMap(toLab)
+                    );
+                })();
+
+                /* ---------------- per-frame overlay (intersection paint) ---------------- */
+                let overlapCount = 0;
+                const pool = [];
+                const NS = "http://www.w3.org/2000/svg";
+                const svgDefs = document.createElementNS(NS, "defs");
+                overlay.appendChild(svgDefs);
+                function poolNode(i) {
+                    if (pool[i]) return pool[i];
+                    const clip = document.createElementNS(NS, "clipPath");
+                    clip.id = "xclip-" + i;
+                    const clipPath = document.createElementNS(NS, "path");
+                    clip.appendChild(clipPath);
+                    svgDefs.appendChild(clip);
+                    const g = document.createElementNS(NS, "g");
+                    g.setAttribute("clip-path", `url(#xclip-${i})`);
+                    const fill = document.createElementNS(NS, "path");
+                    const stroke = document.createElementNS(NS, "path");
+                    stroke.setAttribute("fill", "none");
+                    g.append(fill, stroke);
+                    overlay.appendChild(g);
+                    return (pool[i] = { clipPath, g, fill, stroke });
+                }
+
+                function drawFrame() {
+                    if (!ui.showX?.checked || !ui.showCenter?.checked) {
+                        if (overlapCount) {
+                            pool.forEach((p) => {
+                                p.g.style.display = "none";
+                            });
+                            overlapCount = 0;
+                        }
+                        return;
+                    }
+                    const cont = map.getContainer(),
+                        W = cont.clientWidth,
+                        H = cont.clientHeight;
+                    const lat = map.getCenter().lat,
+                        z = map.getZoom();
+                    const cSize = metersToPixels(M().patioSizeM, lat, z);
+                    // Exactly the same continuous radius the shader resolves — no bucketing,
+                    // so the red overlap always matches the squares it clips.
+                    const centerD = squirclePath(W / 2, H / 2, cSize / 2, ratioToN(cornerRadiusRatio(cSize)), 0);
+                    const centerRect = { cx: W / 2, cy: H / 2, size: cSize, az: 0 };
+                    const bearing = map.getBearing(),
+                        center = map.getCenter();
+                    const latPad = (M().patioSizeM * 2) / 111320;
+                    const lngPad = latPad / Math.max(0.05, Math.cos((lat * Math.PI) / 180));
+
+                    let i = 0;
+                    for (const p of patios) {
+                        if (Math.abs(p.lat - center.lat) > latPad || Math.abs(p.lng - center.lng) > lngPad) continue;
+                        const pt = map.project([p.lng, p.lat]);
+                        const pSize = metersToPixels(M().patioSizeM, p.lat, z);
+                        const pAz = p.az - bearing;
+                        if (!squaresOverlap(centerRect, { cx: pt.x, cy: pt.y, size: pSize, az: pAz })) continue;
+                        const node = poolNode(i++);
+                        node.clipPath.setAttribute(
+                            "d",
+                            squirclePath(pt.x, pt.y, pSize / 2, ratioToN(cornerRadiusRatio(pSize)), pAz)
+                        );
+                        node.fill.setAttribute("d", centerD);
+                        node.fill.setAttribute("fill", CONFIG.intersection.fill);
+                        node.fill.setAttribute("fill-opacity", CONFIG.intersection.fillOpacity);
+                        node.stroke.setAttribute("d", centerD);
+                        node.stroke.setAttribute("stroke", CONFIG.intersection.border);
+                        node.stroke.setAttribute("stroke-width", M().borderWidth);
+                        node.g.style.display = "";
+                    }
+                    for (let k = i; k < pool.length; k++) pool[k].g.style.display = "none";
+                    overlapCount = i;
+                }
+
+                /* ---------------- stats ---------------- */
+                const statsEl = document.getElementById("stats");
+                let frames = 0,
+                    lastT = performance.now(),
+                    fps = 0;
+                let frameAcc = 0,
+                    frameN = 0,
+                    worst = 0;
+                (function tick() {
+                    frames++;
+                    const now = performance.now();
+                    if (now - lastT >= 500) {
+                        fps = (frames * 1000) / (now - lastT);
+                        frames = 0;
+                        lastT = now;
+                        const size = metersToPixels(M().patioSizeM, map.getCenter().lat, map.getZoom());
+                        statsEl.textContent =
+                            `fps          ${fps.toFixed(1)}\n` +
+                            `overlay ms   ${(frameN ? frameAcc / frameN : 0).toFixed(2)}  worst ${worst.toFixed(1)}\n` +
+                            `patios       ${patios.length}\n` +
+                            `square px    ${size.toFixed(1)}\n` +
+                            `corner r     ${cornerRadiusPx(size).toFixed(2)} px\n` +
+                            `squircle n   ${ratioToN(cornerRadiusRatio(size)).toFixed(3)}\n` +
+                            `zoom         ${map.getZoom().toFixed(3)}\n` +
+                            `overlaps     ${overlapCount}\n` +
+                            `draw calls   ${1 + (ui.showCenter?.checked ? 1 : 0)}\n` +
+                            `atlas        0 MB (no sprites)`;
+                        frameAcc = 0;
+                        frameN = 0;
+                        worst = 0;
+                    }
+                    requestAnimationFrame(tick);
+                })();
+
+                /* ---------------- control panel ---------------- */
+                const ui = {};
+                const repaint = () => map.triggerRepaint();
+                const rebuildData = debounce(() => {
+                    patios = makePatios(patioCount);
+                    uploadInstances();
+                    repaint();
+                }, 120);
+                const reupload = debounce(() => {
+                    uploadInstances();
+                    repaint();
+                }, 120);
+
+                function slider(host, key, label, min, max, step, onChange, obj) {
+                    const row = document.createElement("div");
+                    row.className = "row";
+                    row.innerHTML = `<div class="head"><label>${label}</label><b></b></div>`;
+                    const inp = document.createElement("input");
+                    inp.type = "range";
+                    inp.min = min;
+                    inp.max = max;
+                    inp.step = step;
+                    inp.value = obj[key];
+                    const out = row.querySelector("b");
+                    const sync = () => {
+                        out.textContent = (+obj[key]).toFixed(step < 1 ? (step < 0.01 ? 3 : 2) : 0);
+                    };
+                    sync();
+                    inp.addEventListener("input", () => {
+                        obj[key] = +inp.value;
+                        sync();
+                        onChange();
+                    });
+                    row.appendChild(inp);
+                    host.appendChild(row);
+                    return inp;
+                }
+                function color(host, key, label, onChange, obj) {
+                    const row = document.createElement("div");
+                    row.className = "row";
+                    row.innerHTML = `<div class="head"><label>${label}</label></div>`;
+                    const inp = document.createElement("input");
+                    inp.type = "color";
+                    inp.value = obj[key];
+                    inp.addEventListener("input", () => {
+                        obj[key] = inp.value;
+                        onChange();
+                    });
+                    row.appendChild(inp);
+                    host.appendChild(row);
+                    return inp;
+                }
+                function check(host, key, label, onChange, obj) {
+                    const row = document.createElement("div");
+                    row.className = "chk";
+                    const inp = document.createElement("input");
+                    inp.type = "checkbox";
+                    inp.checked = !!obj[key];
+                    const lab = document.createElement("label");
+                    lab.textContent = label;
+                    inp.addEventListener("change", () => {
+                        obj[key] = inp.checked;
+                        onChange();
+                    });
+                    row.append(inp, lab);
+                    host.appendChild(row);
+                    return inp;
+                }
+                function section(title, open) {
+                    const d = document.createElement("details");
+                    d.open = !!open;
+                    d.innerHTML = `<summary>${title}</summary>`;
+                    const body = document.createElement("div");
+                    body.className = "body";
+                    d.appendChild(body);
+                    document.getElementById("panel").appendChild(d);
+                    return body;
+                }
+
+                // --- Scene
+                {
+                    const s = section("Scene", true);
+                    const row = document.createElement("div");
+                    row.className = "row";
+                    row.innerHTML = `<div class="head"><label>Patios</label><b>${patioCount}</b></div>`;
+                    const inp = document.createElement("input");
+                    inp.type = "range";
+                    inp.min = 10;
+                    inp.max = 20000;
+                    inp.step = 10;
+                    inp.value = patioCount;
+                    inp.addEventListener("input", () => {
+                        patioCount = +inp.value;
+                        row.querySelector("b").textContent = patioCount;
+                        rebuildData();
+                    });
+                    row.appendChild(inp);
+                    s.appendChild(row);
+                    ui.showX = check(s, "showX", "Intersection paint", repaint, { showX: true });
+                    ui.showCenter = check(s, "showCenter", "Center square", repaint, { showCenter: true });
+                    const br = document.createElement("div");
+                    br.className = "btnrow";
+                    const spin = document.createElement("button");
+                    spin.textContent = "Stress: spin camera";
+                    spin.dataset.on = "0";
+                    const zoomStress = document.createElement("button");
+                    zoomStress.textContent = "Stress: zoom";
+                    zoomStress.dataset.on = "0";
+                    br.append(spin, zoomStress);
+                    s.appendChild(br);
+                    ui.spin = spin;
+                    ui.zoomStress = zoomStress;
+                }
+
+                // --- Square metrics (all live: uniforms, no rebake)
+                {
+                    const s = section("Square metrics", true);
+                    slider(
+                        s,
+                        "patioSizeM",
+                        "Patio size (m)",
+                        10,
+                        400,
+                        1,
+                        () => {
+                            reupload();
+                        },
+                        M()
+                    );
+                    slider(s, "cornerRadius", "Corner radius (px)", 0, 128, 1, repaint, M());
+                    slider(s, "radiusBasis", "Radius basis (px)", 64, 800, 1, repaint, M());
+                    slider(s, "borderWidth", "Border width (px)", 0, 16, 0.5, repaint, M());
+                    slider(s, "nMax", "Squircle n @ design", 2, 16, 0.1, repaint, M());
+                }
+
+                // --- Shading
+                {
+                    const s = section("Shading");
+                    slider(s, "glowWidth", "Inner glow width", 0.01, 0.5, 0.01, repaint, M());
+                    slider(s, "fillMidOffset", "Fill mid offset", 0.05, 0.95, 0.01, repaint, M());
+                    slider(s, "fillMidRatio", "Fill mid ratio", 0, 1, 0.01, repaint, M());
+                    slider(s, "sheenRest", "Sheen rest opacity", 0, 1, 0.01, repaint, M());
+                    const g = document.createElement("div");
+                    g.className = "grid2";
+                    s.appendChild(g);
+                    const gl2 = document.createElement("div"),
+                        gr = document.createElement("div");
+                    g.append(gl2, gr);
+                    slider(gl2, "sheenA", "Sheen a", 0, 1, 0.005, repaint, M());
+                    slider(gr, "sheenPosA", "at", 0, 1, 0.01, repaint, M());
+                    slider(gl2, "sheenB", "Sheen b", 0, 1, 0.005, repaint, M());
+                    slider(gr, "sheenPosB", "at", 0, 1, 0.01, repaint, M());
+                    slider(gl2, "sheenC", "Sheen c", 0, 1, 0.005, repaint, M());
+                    slider(gr, "sheenPosC", "at", 0, 1, 0.01, repaint, M());
+                    slider(s, "hl1A", "Highlight 1 alpha", 0, 1, 0.01, repaint, M());
+                    const g2 = document.createElement("div");
+                    g2.className = "grid2";
+                    s.appendChild(g2);
+                    const g2l = document.createElement("div"),
+                        g2r = document.createElement("div");
+                    g2.append(g2l, g2r);
+                    slider(g2l, "hl1X", "H1 dx", -12, 12, 0.5, repaint, M());
+                    slider(g2r, "hl1Y", "H1 dy", -12, 12, 0.5, repaint, M());
+                    slider(s, "hl2A", "Highlight 2 alpha", 0, 1, 0.01, repaint, M());
+                    const g3 = document.createElement("div");
+                    g3.className = "grid2";
+                    s.appendChild(g3);
+                    const g3l = document.createElement("div"),
+                        g3r = document.createElement("div");
+                    g3.append(g3l, g3r);
+                    slider(g3l, "hl2X", "H2 dx", -12, 12, 0.5, repaint, M());
+                    slider(g3r, "hl2Y", "H2 dy", -12, 12, 0.5, repaint, M());
+                    check(s, "dither", "Dither", repaint, M());
+                    check(s, "okRamp", "OKLab 4-stop demo ramp", repaint, M());
+                    check(s, "pressedRing", "Preview pressed ring", repaint, M());
+                }
+
+                // --- Variant colors
+                {
+                    const s = section("Variant", true);
+                    const sel = document.createElement("select");
+                    for (const t of TYPES) sel.add(new Option(t, t));
+                    s.appendChild(sel);
+                    const host = document.createElement("div");
+                    s.appendChild(host);
+                    let current = TYPES[0];
+                    function renderVariant() {
+                        host.innerHTML = "";
+                        const v = CONFIG.variants[current];
+                        color(host, "gradientEdge", "Gradient edge", repaint, v);
+                        slider(host, "gradientOpacity", "Gradient opacity", 0, 1, 0.01, repaint, v);
+                        color(host, "insetShadow", "Inner glow color", repaint, v);
+                        slider(host, "insetOpacity", "Inner glow opacity", 0, 1, 0.01, repaint, v);
+                        color(host, "pressedBorder", "Pressed border", repaint, v);
+                    }
+                    sel.addEventListener("change", () => {
+                        current = sel.value;
+                        renderVariant();
+                    });
+                    renderVariant();
+                }
+
+                // --- Intersection
+                {
+                    const s = section("Intersection");
+                    color(s, "fill", "Fill", repaint, CONFIG.intersection);
+                    slider(s, "fillOpacity", "Fill opacity", 0, 1, 0.01, repaint, CONFIG.intersection);
+                    color(s, "border", "Border", repaint, CONFIG.intersection);
+                }
+
+                // --- Export
+                {
+                    const s = section("Export");
+                    const ta = document.createElement("textarea");
+                    ta.readOnly = true;
+                    const br = document.createElement("div");
+                    br.className = "btnrow";
+                    const dump = document.createElement("button");
+                    dump.textContent = "Dump config";
+                    const copy = document.createElement("button");
+                    copy.textContent = "Copy";
+                    br.append(dump, copy);
+                    s.append(br, ta);
+                    dump.addEventListener("click", () => {
+                        ta.value = JSON.stringify(CONFIG, null, 2);
+                    });
+                    copy.addEventListener("click", async () => {
+                        ta.value = ta.value || JSON.stringify(CONFIG, null, 2);
+                        try {
+                            await navigator.clipboard.writeText(ta.value);
+                            copy.textContent = "Copied";
+                            setTimeout(() => {
+                                copy.textContent = "Copy";
+                            }, 1200);
+                        } catch {
+                            ta.select();
+                        }
+                    });
+                }
+
+                /* ---------------- wiring ---------------- */
+                map.on("load", () => {
+                    patios = makePatios(patioCount);
+                    map.addLayer(squareLayer);
+                    map.on("render", () => {
+                        const t0 = performance.now();
+                        drawFrame();
+                        const dt = performance.now() - t0;
+                        frameAcc += dt;
+                        frameN++;
+                        if (dt > worst) worst = dt;
+                    });
+                });
+
+                /* ---------------- stress ---------------- */
+                let spinning = false,
+                    spinRaf = 0;
+                ui.spin.addEventListener("click", () => {
+                    spinning = !spinning;
+                    ui.spin.dataset.on = spinning ? "1" : "0";
+                    if (!spinning) return cancelAnimationFrame(spinRaf);
+                    const t0 = performance.now();
+                    (function loop() {
+                        if (!spinning) return;
+                        map.jumpTo({ bearing: (((performance.now() - t0) / 1000) * 20) % 360 });
+                        spinRaf = requestAnimationFrame(loop);
+                    })();
+                });
+                let zooming = false,
+                    zoomRaf = 0;
+                ui.zoomStress.addEventListener("click", () => {
+                    zooming = !zooming;
+                    ui.zoomStress.dataset.on = zooming ? "1" : "0";
+                    if (!zooming) return cancelAnimationFrame(zoomRaf);
+                    const t0 = performance.now();
+                    (function loop() {
+                        if (!zooming) return;
+                        const dt = (performance.now() - t0) / 1000;
+                        // Sweeps the whole radius range continuously — watch `corner r` in the HUD.
+                        map.jumpTo({ zoom: 16 + Math.sin(dt * 0.8) * 2.2 });
+                        zoomRaf = requestAnimationFrame(loop);
+                    })();
+                });
+            }
+        </script>
+    </body>
+</html>
