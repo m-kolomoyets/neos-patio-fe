@@ -1,13 +1,11 @@
-import type { MapInteraction } from '@/components/CesiumMap/utils/sceneBootstrap';
-import type { PatioBounds } from '@/services/patios/types';
-import type { CubeFace } from './types';
+import type { ViewCubeProps } from './types';
 import ArrowLeftFilledIcon from '@/icons/arrow-left-filled_24.svg?react';
 import ArrowRightFilledIcon from '@/icons/arrow-right-filled_24.svg?react';
 import ArrowBottomFilledIcon from '@/icons/arrow-top-filled_24.svg?react';
 import HomeIcon from '@/icons/home_24.svg?react';
 import clsx from 'clsx';
-import { WithClassName } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
+import { FACE_LABELS } from './constants';
 import { useCesiumCamera } from './hooks/useCesiumCamera';
 import { useCubeInteraction } from './hooks/useCubeInteraction';
 import { useFlattenedFace } from './hooks/useFlattenedFace';
@@ -16,38 +14,6 @@ import { CubeView } from './components/CubeView';
 import { LiveRotateControl } from './components/LiveRotateControl';
 import { LiveZoomControl } from './components/LiveZoomControl';
 import s from './styles.module.css';
-
-/** Single-letter labels for the flattened head-on face. */
-const FACE_LABELS: Record<CubeFace, string> = { north: 'N', east: 'E', south: 'S', west: 'W' };
-
-/**
- * ViewCube navigation widget (bottom-right overlay).
- *
- * A CSS 3D cube whose perspective mirrors the live Cesium camera, acting as a
- * combined compass + pitch indicator (#02). Faces/corners carry `data-face` for
- * hover and, via {@link useCubeInteraction}, click-to-snap + drag-to-orbit
- * (#03). Clicking a side face flattens the cube to that face with step arrows
- * (#04). No three.js / GL — pure DOM + CSS transforms.
- *
- * The camera adapter ({@link useCesiumCamera}) models every move as a
- * `lookAt(target, HeadingPitchRange)` around the patio bounds centre. The live
- * camera subscription is pushed down into the {@link CubeView} and
- * {@link LiveZoomControl} leaves, so this shell does not re-render per frame.
- */
-type ViewCubeProps = WithClassName<{
-    /** Patio bounds framed by the camera; the orbit target is its centre. */
-    bounds: PatioBounds;
-    /** The patio's look-at offset above ground (`Patio.height`); raises the orbit pivot. */
-    height?: number;
-    /** Stable id (the patio id) keying the per-patio Home-view localStorage entry. */
-    storageId: string;
-    /**
-     * Camera mode. In `'view'` the cube's orbit/zoom pivot on the fixed bounds
-     * centre (center-locked, agrees with the map drags); `'edit'` (default)
-     * pivots on the viewport-centre ground pick.
-     */
-    interaction?: MapInteraction;
-}>;
 
 export const ViewCube: React.FC<ViewCubeProps> = ({
     className,

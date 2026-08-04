@@ -1,23 +1,10 @@
-import type { CircleLayerSpecification } from 'mapbox-gl';
 import type { PatioPointCollection } from '@/services/patios/types';
 import { useMemo } from 'react';
 import { Layer, Source } from 'react-map-gl/mapbox';
 import { CLUSTER_MAX_ZOOM, CLUSTER_RADIUS, PATIO_CLUSTER_SOURCE_ID, START_COORDINATE } from '../../constants';
+import { probeLayer } from './constants';
 import { derivePatioMapGeometry } from '../../utils/derivePatioMapGeometry';
 import { usePatioPointsWithOwnership } from '../../hooks/usePatioPointsWithOwnership';
-
-/**
- * Invisible probe layer. Mapbox only tiles (and clusters) a GeoJSON source when
- * a layer references it — with none, `querySourceFeatures` returns nothing and no
- * badges appear. This zero-opacity circle forces the source to load without
- * drawing anything; the visible markers are DOM `<Marker>`s in `ClusterMarkers`.
- */
-const probeLayer: CircleLayerSpecification = {
-    id: `${PATIO_CLUSTER_SOURCE_ID}-probe`,
-    type: 'circle',
-    source: PATIO_CLUSTER_SOURCE_ID,
-    paint: { 'circle-opacity': 0, 'circle-radius': 0 },
-};
 
 /**
  * Native Mapbox clustering source feeding the browse/globe view. `cluster: true`

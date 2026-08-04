@@ -1,29 +1,5 @@
-import type { CubeCorner, CubeFace, CubeTarget, CubeTopEdge, CubeVerticalEdge } from '../types';
-
-/** A face that carries a 3×3 hit grid (the cube's underside is never rendered). */
-export type FaceId = 'top' | CubeFace;
-
-/** Row/col indices of a face's 3×3 grid, top-left = (0,0). */
-export const GRID_INDICES = [0, 1, 2] as const;
-
-/** A cube-body direction; each component ∈ {-1, 0, 1}. */
-type Axis3 = readonly [number, number, number];
-
-/**
- * Body-frame basis of each face's local 3×3 grid.
- *
- * Cube-body axes (derived from the CSS face transforms): `x` E+ / W−, `y` S+ /
- * N−, `z` Top+ / Bottom−. `fixed` is the face's outward normal; `ax`/`ay` are
- * the body directions its grid columns / rows advance along. A cell's body
- * vector is `fixed + ax·(col−1) + ay·(row−1)` — see {@link cellVector}.
- */
-const FACE_BASIS: Record<FaceId, { fixed: Axis3; ax: Axis3; ay: Axis3 }> = {
-    top: { fixed: [0, 0, 1], ax: [1, 0, 0], ay: [0, 1, 0] },
-    north: { fixed: [0, -1, 0], ax: [1, 0, 0], ay: [0, 0, 1] },
-    south: { fixed: [0, 1, 0], ax: [1, 0, 0], ay: [0, 0, -1] },
-    east: { fixed: [1, 0, 0], ax: [0, -1, 0], ay: [0, 0, -1] },
-    west: { fixed: [-1, 0, 0], ax: [0, 1, 0], ay: [0, 0, -1] },
-};
+import type { Axis3, CubeCorner, CubeTarget, CubeTopEdge, CubeVerticalEdge, FaceId } from '../types';
+import { FACE_BASIS } from '../constants';
 
 /** Compose the compass corner from a vertex's E/W and N/S body signs. */
 const vertexName = (x: number, y: number): CubeCorner => {

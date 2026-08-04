@@ -1,4 +1,5 @@
-import type { AnimationClip, Object3D, PerspectiveCamera } from 'three';
+import type { PerspectiveCamera } from 'three';
+import type { CaptureBridgeProps, FitCameraProps, ModelAnimatorProps, ModelPreviewSceneProps } from './types';
 import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import PauseIcon from '@/icons/pause-square_24.svg?react';
 import PlayIcon from '@/icons/play_24.svg?react';
@@ -8,39 +9,6 @@ import { Box3, LoopOnce, Vector3 } from 'three';
 import { captureCanvasThumbnail } from '@/lib/utils/captureCanvasThumbnail';
 import { Button } from '@/components/ui/Button';
 import s from './styles.module.css';
-
-/**
- * Structural subset of a parsed glTF the preview needs — decoupled from any
- * specific loader's `GLTF` type (three-stdlib vs drei differ on optional fields).
- */
-export type PreviewableModel = {
-    scene: Object3D;
-    animations: AnimationClip[];
-};
-
-type ModelPreviewSceneProps = {
-    /** Already-parsed model to display. */
-    gltf: PreviewableModel;
-    /** Receives a freshly-captured thumbnail blob when the canvas is snapshotted. */
-    onCapture?: (_blob: Blob) => void;
-    /** Fired when a capture fails (decoding/context errors). Consumer owns the UX. */
-    onCaptureError?: (_error: unknown) => void;
-    /** Hands the capture handler to the parent so an external control can snapshot the canvas. */
-    onRegisterCapture?: (_capture: () => void) => void;
-    /** Auto-snapshot a default thumbnail once the scene settles. @default true */
-    autoCapture?: boolean;
-    /** Show the in-scene play/pause overlay. @default true */
-    showControls?: boolean;
-    /** Allow orbit/zoom interaction. @default true */
-    interactive?: boolean;
-};
-
-type CaptureBridgeProps = {
-    /** Receives a getter that renders a fresh frame and hands back the live canvas. */
-    register: (_getCanvas: () => HTMLCanvasElement) => void;
-    /** Fired once after the scene has settled, so a default thumbnail can be captured. */
-    onReady: () => void;
-};
 
 /**
  * Lives inside the Canvas so it can reach the WebGL renderer. Exposes a capture
@@ -78,11 +46,6 @@ const CaptureBridge: React.FC<CaptureBridgeProps> = ({ register, onReady }) => {
     return null;
 };
 
-type FitCameraProps = {
-    /** The (already centered) model to frame. Only its size is used. */
-    object: Object3D;
-};
-
 /**
  * One-shot camera fit. Runs in a layout effect — before the first rendered frame —
  * so the model appears correctly framed with no settle/animation glitch, and the
@@ -112,17 +75,6 @@ const FitCamera: React.FC<FitCameraProps> = ({ object }) => {
     }, [object, camera]);
 
     return null;
-};
-
-type ModelAnimatorProps = {
-    /** Clips embedded in the glb (first clip is the one played). */
-    clips: AnimationClip[];
-    /** Root object the clips animate against. */
-    root: Object3D;
-    /** Whether the first clip should be running. */
-    playing: boolean;
-    /** Fired when the clip reaches its end so the parent can reset to Play. */
-    onFinished: () => void;
 };
 
 /**

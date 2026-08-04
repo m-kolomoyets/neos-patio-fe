@@ -1,12 +1,11 @@
 import type { WithClassName } from '@/lib/types';
+import type { MapPopupProps } from './types';
 import CloseIcon from '@/icons/close_24.svg?react';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { Separator } from '@/components/ui/Separator';
 import { Typography } from '@/components/ui/Typography';
 import s from './styles.module.css';
-
-type MapPopupProps = WithClassName & React.PropsWithChildren;
 
 /**
  * Bottom-right card shared by the two map popups — patio details (view mode) and

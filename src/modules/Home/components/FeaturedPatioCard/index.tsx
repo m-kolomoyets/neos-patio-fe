@@ -1,4 +1,4 @@
-import type { Patio } from '@/services/patios/types';
+import type { FeaturedPatioCardProps } from './types';
 import { memo, useCallback, useState } from 'react';
 import MapPin24Icon from '@/icons/map-pin_24.svg?react';
 import { Link } from '@tanstack/react-router';
@@ -14,12 +14,7 @@ import { CONTINENT_LABELS } from '../../constants';
 import { useHoverVideoScrub } from './hooks/useHoverVideoScrub';
 import s from './styles.module.css';
 
-type Props = {
-    patio: Patio;
-    shouldMountVideo?: boolean;
-};
-
-const FeaturedPatioCardImpl: React.FC<Props> = ({ patio, shouldMountVideo = false }) => {
+const FeaturedPatioCardImpl: React.FC<FeaturedPatioCardProps> = ({ patio, shouldMountVideo = false }) => {
     const isMobilePortrait = useIsMobile();
     const isMobileLandscape = useIsMobileLandscape();
     const isMobile = isMobilePortrait || isMobileLandscape;

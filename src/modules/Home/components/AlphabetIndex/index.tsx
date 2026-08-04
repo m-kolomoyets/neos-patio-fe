@@ -1,13 +1,10 @@
 import type { AlphabetIndexProps } from './types';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
+import { isAlphaMode } from './utils/isAlphaMode';
 import { usePatioFilters } from '../../hooks/usePatioFilters';
 import { useAlphabetIndex } from './hooks/useAlphabetIndex';
 import s from './styles.module.css';
-
-const isAlphaMode = (filters: ReturnType<typeof usePatioFilters>['filters']) => {
-    return filters.sort === 'name' && !filters.continents?.length;
-};
 
 export const AlphabetIndex: React.FC<AlphabetIndexProps> = ({ className }) => {
     const { filters } = usePatioFilters();

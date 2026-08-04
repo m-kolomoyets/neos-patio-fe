@@ -1,19 +1,12 @@
+import type { CopyLinkRowProps } from './types';
 import { useEffect, useRef, useState } from 'react';
 import CheckmarkIcon from '@/icons/checkmark_24.svg?react';
 import CopyIcon from '@/icons/copy_18.svg?react';
 import clsx from 'clsx';
+import { COPIED_FEEDBACK_MS } from './constants';
 import { truncateMiddle } from '../../../../utils/truncateMiddle';
 import { MapPopupRow } from '../../../MapPopup';
 import s from './styles.module.css';
-
-/** How long the chip shows the checkmark after a successful copy. */
-const COPIED_FEEDBACK_MS = 1500;
-
-type CopyLinkRowProps = {
-    label: string;
-    /** Full value copied to the clipboard; the chip shows it middle-truncated. */
-    value: string;
-};
 
 /**
  * A link row whose value is a copy-to-clipboard chip with middle truncation —
