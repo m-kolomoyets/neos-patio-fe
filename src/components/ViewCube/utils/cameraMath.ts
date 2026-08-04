@@ -135,17 +135,23 @@ export const angularDistance = (a: number, b: number): number => {
  *
  * True while both bearing (wrap-aware) and pitch sit within `toleranceDeg` of
  * the face's snapped orientation. The flattened state exits once this goes
- * false (the user orbited away). Pure + testable.
+ * false (the user orbited away).
+ *
+ * `appliedPitch` overrides the face's nominal pitch with the one the snap
+ * actually landed on — the ground back-off (`groundSafePitch`) can tilt the
+ * level elevation down well past `toleranceDeg` on raised terrain, and without
+ * this the flattened state would exit the moment it was entered. Pure + testable.
  */
 export const isSnappedToFace = (
     { bearing, pitch }: Pick<CameraState, 'bearing' | 'pitch'>,
     face: CubeFace,
-    toleranceDeg: number
+    toleranceDeg: number,
+    appliedPitch?: number
 ): boolean => {
     const target = CUBE_TARGETS[face];
     return (
         target.bearing !== null &&
         angularDistance(bearing, target.bearing) <= toleranceDeg &&
-        Math.abs(pitch - target.pitch) <= toleranceDeg
+        Math.abs(pitch - (appliedPitch ?? target.pitch)) <= toleranceDeg
     );
 };
