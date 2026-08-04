@@ -32,3 +32,6 @@ dist-ssr
 .zed
 articles
 tech-articles
+
+references/*
+prototypes/*

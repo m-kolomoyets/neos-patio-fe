@@ -8,7 +8,15 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config({
-    ignores: ['**/dist/**', '**/tmp/**', '/src/routeTree.gen.ts', '.claude/**', '**/skills/**'],
+    ignores: [
+        '**/dist/**',
+        '**/tmp/**',
+        '/src/routeTree.gen.ts',
+        '.claude/**',
+        '**/skills/**',
+        '**/references/**',
+        '**/prototypes/**',
+    ],
     files: ['**/*.{js,ts,tsx,cjs,mjs}'],
     extends: [
         eslint.configs.recommended,
