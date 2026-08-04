@@ -23,18 +23,23 @@ export const ROTATE_STEP_DEG = NINETY_DEGREES;
 /** localStorage key prefix for the per-patio Home view (`${prefix}${patioId}`). */
 export const HOME_STORAGE_PREFIX = 'patio-editor:home:';
 
-/** Maximum map pitch (deg). Mirrors the `maxPitch` set on the `<Map>`. */
-export const MAX_PITCH = 85;
+/**
+ * Maximum pitch (deg) — a level, horizontal look (Cesium pitch 0). The camera
+ * then sits at the orbit target's own altitude, so this is only reachable where
+ * the terrain allows it; `groundSafePitch` backs it off wherever the camera
+ * would end up inside/under the mesh.
+ */
+export const MAX_PITCH = 90;
 
 /**
- * Pitch (deg) the side faces (N/E/S/W) snap to: an angled-down "elevation"
- * rather than a near-horizon look. At true horizon (≈{@link MAX_PITCH}) the
- * camera stares across the patio and the bottom half of the frame fills with the
- * flat out-of-bounds ground/sea in front of it; angling down keeps the framed
- * patio filling the screen instead. Paired with the snap framing in
- * `useCesiumCamera` (range clamped so the patio bounds always fill the view).
+ * Pitch (deg) the side faces (N/E/S/W) snap to: a true CAD-style elevation —
+ * the camera level with the patio, looking horizontally, with no extra tilt.
+ * Reached only when the surface under that camera position leaves room for it
+ * (see `groundSafePitch`), otherwise the snap tilts down by the minimum needed
+ * to stay above ground. Paired with the snap framing in `useCesiumCamera`
+ * (range clamped so the patio bounds always fill the view).
  */
-export const SIDE_PITCH = 60;
+export const SIDE_PITCH = MAX_PITCH;
 
 /** Drag-orbit sensitivity (degrees of camera rotation per pixel dragged). */
 export const DRAG_SENSITIVITY = 0.5;
@@ -54,10 +59,11 @@ export const CLICK_THRESHOLD_PX = 4;
 /**
  * Face / corner → camera orientation table.
  *
- * Values are display units (pitch 0 = top-down, {@link MAX_PITCH} ≈ horizon),
- * converted to Cesium heading/pitch radians by the camera adapter. Side
- * "elevations" sit at {@link SIDE_PITCH} (angled down, not near-horizon, so the
- * framed patio fills the view); the 4 corners are true top-vertex isometric 3/4
+ * Values are display units (pitch 0 = top-down, {@link MAX_PITCH} = level with
+ * the target), converted to Cesium heading/pitch radians by the camera adapter.
+ * Side "elevations" sit at {@link SIDE_PITCH} — a level, CAD-style head-on view
+ * with no extra tilt, backed off only where the terrain would swallow the
+ * camera; the 4 corners are true top-vertex isometric 3/4
  * views (pitch 35, a balanced top + two sides). The 4 vertical edges (corner-on,
  * pitch 60) and 4 top edges (top tilted to one side, pitch 30) complete the 17
  * targets the 3×3 hit model exposes.

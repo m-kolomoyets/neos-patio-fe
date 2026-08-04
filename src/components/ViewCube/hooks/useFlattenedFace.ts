@@ -8,7 +8,7 @@ type UseFlattenedFaceArgs = {
     viewer: Viewer | null;
     readOrientation: () => CameraState;
     /** Eased in-place orbit (rotate only, no fly-arc) for the step + top arrows. */
-    orbitTo: (_target: CameraTarget) => void;
+    orbitTo: (_target: CameraTarget) => Required<CameraTarget> | null;
 };
 
 /**
@@ -30,6 +30,9 @@ export const useFlattenedFace = ({ viewer, readOrientation, orbitTo }: UseFlatte
     const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     // Mirrors selectedFace for the imperative postRender handler (avoids re-subscribing).
     const faceRef = useRef<CubeFace | null>(null);
+    // Pitch the last snap actually applied — the ground back-off can land below
+    // the face's nominal pitch, and the drift check measures against reality.
+    const appliedPitch = useRef<number | undefined>(undefined);
     useEffect(() => {
         faceRef.current = selectedFace;
     }, [selectedFace]);
@@ -52,7 +55,7 @@ export const useFlattenedFace = ({ viewer, readOrientation, orbitTo }: UseFlatte
             const face = faceRef.current;
             if (!face || snapping.current) return;
             const { bearing, pitch } = readOrientation();
-            if (!isSnappedToFace({ bearing, pitch }, face, FLATTEN_EXIT_THRESHOLD_DEG)) {
+            if (!isSnappedToFace({ bearing, pitch }, face, FLATTEN_EXIT_THRESHOLD_DEG, appliedPitch.current)) {
                 setSelectedFace(null);
             }
         };
@@ -67,8 +70,9 @@ export const useFlattenedFace = ({ viewer, readOrientation, orbitTo }: UseFlatte
 
     /** Click-snap result: flatten on a side face, stay 3D on a corner/top. */
     const onSnap = useCallback(
-        (target: CubeTarget) => {
+        (target: CubeTarget, pitch?: number) => {
             beginSnapping();
+            appliedPitch.current = pitch;
             setSelectedFace(isCubeFace(target) ? target : null);
         },
         [beginSnapping]
@@ -88,10 +92,11 @@ export const useFlattenedFace = ({ viewer, readOrientation, orbitTo }: UseFlatte
                 beginSnapping();
                 // In-place orbit (rotate only) — the neighbor face shares pitch/range,
                 // so this is a pure quarter-turn with no fly-arc up-and-over.
-                orbitTo({
+                const applied = orbitTo({
                     bearing: CUBE_TARGETS[next].bearing ?? readOrientation().bearing,
                     pitch: CUBE_TARGETS[next].pitch,
                 });
+                appliedPitch.current = applied?.pitch;
                 return next;
             });
         },

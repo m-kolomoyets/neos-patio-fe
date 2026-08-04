@@ -24,6 +24,7 @@ import {
     normalizeBearing,
     orbitCamera,
 } from '../utils/cameraMath';
+import { groundSafePitch } from '../utils/groundSafePitch';
 
 /** Fallback range (m) used before the patio bounds resolve a real reference distance. */
 const FALLBACK_RANGE = 250;
@@ -143,17 +144,31 @@ export const useCesiumCamera = (bounds: PatioBounds, height = 0, interaction: Ma
         [viewer]
     );
 
-    /** Fill a partial target from the live camera, clamping pitch and zoom range. */
+    /**
+     * Fill a partial target from the live camera, clamping pitch and zoom range.
+     *
+     * Pitch is additionally backed off by {@link groundSafePitch} whenever the
+     * resulting camera position would sit inside/under the surface — the level
+     * elevation the side faces ask for (pitch 90) puts the camera at the orbit
+     * target's own altitude, which only clears the mesh on flat, unobstructed
+     * ground. Backing off here lands the move where `useGroundFloor`'s live wall
+     * would allow it, instead of it being reverted a frame after it arrives.
+     */
     const resolve = useCallback(
         (target: CameraTarget): Required<CameraTarget> => {
             const current = readOrientation();
-            return {
+            const resolved = {
                 bearing: normalizeBearing(target.bearing ?? current.bearing),
                 pitch: clampPitch(target.pitch ?? current.pitch),
                 range: clampRange(target.range ?? current.range),
             };
+            const orbitTarget = targetRef.current;
+            if (viewer && orbitTarget) {
+                resolved.pitch = groundSafePitch(viewer.scene, orbitTarget, resolved);
+            }
+            return resolved;
         },
-        [readOrientation, clampRange]
+        [viewer, targetRef, readOrientation, clampRange]
     );
 
     // Handle of the in-flight orbit tween (see `orbitTo`), so a new step cancels
@@ -175,9 +190,9 @@ export const useCesiumCamera = (bounds: PatioBounds, height = 0, interaction: Ma
      * rotates -90° instead of the long way round.
      */
     const orbitTo = useCallback(
-        (target: CameraTarget) => {
+        (target: CameraTarget): Required<CameraTarget> | null => {
             const orbitTarget = targetRef.current;
-            if (!viewer || !orbitTarget) return;
+            if (!viewer || !orbitTarget) return null;
             const { camera, scene } = viewer;
             const from = readOrientation();
             const to = resolve(target);
@@ -208,6 +223,7 @@ export const useCesiumCamera = (bounds: PatioBounds, height = 0, interaction: Ma
                 orbitRaf.current = t < 1 ? requestAnimationFrame(tick) : null;
             };
             orbitRaf.current = requestAnimationFrame(tick);
+            return to;
         },
         [viewer, targetRef, readOrientation, resolve]
     );
@@ -272,7 +288,9 @@ export const useCesiumCamera = (bounds: PatioBounds, height = 0, interaction: Ma
                 const fitRange = referenceRange / 2 / Math.tan(fovy / 2);
                 resolved.range = Math.min(resolved.range, fitRange);
             }
-            orbitTo(resolved);
+            // Pulling the range in lowers the camera at a given pitch, so the
+            // ground back-off has to be re-judged against the framing range.
+            return orbitTo(resolved);
         },
         [viewer, resolve, orbitTo, referenceRange]
     );

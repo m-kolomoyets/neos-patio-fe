@@ -10,11 +10,15 @@ type UseCubeInteractionArgs = {
     /** Reads the live camera orientation in display units (used for click-snap). */
     readOrientation: () => CameraState;
     /** Eased in-place orbit (rotate/tilt only, no fly-arc) — used for the top face. */
-    orbitTo: (_target: CameraTarget) => void;
+    orbitTo: (_target: CameraTarget) => Required<CameraTarget> | null;
     /** Begins a live drag-orbit from the current viewport (seamless pivot capture). */
     beginDragOrbit: () => DragOrbit | null;
-    /** Fired with the clicked target right after its snap `easeTo` (drives flattened mode). */
-    onSnap?: (_target: CubeTarget) => void;
+    /**
+     * Fired with the clicked target right after its snap `easeTo` (drives flattened
+     * mode), plus the pitch actually applied — which the ground back-off may have
+     * pulled below the face's nominal one.
+     */
+    onSnap?: (_target: CubeTarget, _appliedPitch?: number) => void;
     /** Fired once a press promotes to a drag-orbit (exits flattened mode). */
     onOrbitStart?: () => void;
 };
@@ -128,8 +132,8 @@ export const useCubeInteraction = ({
             // No meaningful travel → treat as a click and snap to the pressed target.
             if (g.target) {
                 const orientation = resolveSnapOrientation(g.target, readOrientation().bearing);
-                orbitTo(orientation);
-                onSnap?.(g.target);
+                const applied = orbitTo(orientation);
+                onSnap?.(g.target, applied?.pitch);
             }
         },
         [viewer, orbitTo, readOrientation, onSnap]
