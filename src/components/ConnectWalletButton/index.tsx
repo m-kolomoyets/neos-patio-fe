@@ -10,6 +10,7 @@ import s from './styles.module.css';
 
 export const ConnectWalletButton: React.FC<WithClassName> = ({ className }) => {
     const { disconnect } = useDisconnect();
+
     return (
         <ConnectButton.Custom>
             {({ account, chain, openChainModal, openConnectModal, authenticationStatus, mounted }) => {

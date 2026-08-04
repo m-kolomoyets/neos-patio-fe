@@ -1,12 +1,6 @@
 import type { CameraState, CubeFace, CubeTarget } from '../types';
 import { Math as CesiumMath } from 'cesium';
-import { CUBE_TARGETS, MAX_PITCH } from '../constants';
-
-/**
- * The 4 side faces in clockwise (bearing-increasing) order. Index + 1 steps a
- * quarter-turn right (bearing +90°), - 1 steps left; consumed by {@link stepFace}.
- */
-export const FACE_ORDER: CubeFace[] = ['north', 'east', 'south', 'west'];
+import { CUBE_TARGETS, FACE_ORDER, MAX_PITCH } from '../constants';
 
 /** Clamp pitch to the map's valid range (0–{@link MAX_PITCH}). */
 export const clampPitch = (pitch: number): number => {

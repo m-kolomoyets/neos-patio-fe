@@ -11,18 +11,10 @@ import { getPatiosListAllQueryOptions } from '@/services/patios/queries';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { Button } from '@/components/ui/Button';
 import { XRConnectDialog } from '@/components/XRConnectDialog';
-import { SEARCH_TRIGGER_ID } from './constants';
+import { SEARCH_TRIGGER_ID, stateTransition, stateVariants } from './constants';
 import { useActionBarSearch } from './hooks/useActionBarSearch';
 import { PatioAutocomplete } from './components/PatioAutocomplete';
 import s from './styles.module.css';
-
-const stateVariants = {
-    initial: { opacity: 0, scale: 0.96 },
-    animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.96 },
-};
-
-const stateTransition = { duration: 0.2, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] };
 
 export const ActionBar: React.FC = () => {
     const navigate = useNavigate();

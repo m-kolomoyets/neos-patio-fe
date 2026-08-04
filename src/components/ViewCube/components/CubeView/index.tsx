@@ -1,10 +1,10 @@
 import type { Viewer } from 'cesium';
-import type { CameraState, CubeTarget } from '../../types';
-import type { FaceId } from '../../utils/faceGrid';
+import type { CameraState, CubeTarget, FaceId } from '../../types';
 import { useState } from 'react';
 import clsx from 'clsx';
+import { GRID_INDICES } from '../../constants';
 import { cubeTransform } from '../../utils/cameraMath';
-import { faceCellTarget, GRID_INDICES } from '../../utils/faceGrid';
+import { faceCellTarget } from '../../utils/faceGrid';
 import { useCameraState } from '../../hooks/useCameraState';
 import s from '../../styles.module.css';
 

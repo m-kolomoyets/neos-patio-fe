@@ -2,53 +2,26 @@ import AlertCircleIcon from '@/icons/alert-circle_24.svg?react';
 import MapPinIcon from '@/icons/map-pin_24.svg?react';
 import SearchIcon from '@/icons/search_24.svg?react';
 import { useAccount } from 'wagmi';
-import { CONTINENT_LABELS } from '@/services/patios/constants';
 import { usePatioPoints } from '@/services/patios/queries';
 import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
 import {
-    COORDINATE_PRECISION,
     NEW_PATIO_OWNER_FALLBACK,
     NEW_PATIO_PRICE,
     NEW_PATIO_PRICE_USD,
     NEW_PATIO_STATUS,
     PATIO_SIZE_M,
 } from '../../constants';
-import { continentAt } from '../../utils/continentAt';
-import { formatAzimuth } from '../../utils/formatAzimuth';
-import { getProjectedNorthDeg } from '../../utils/getProjectedNorthDeg';
 import { truncateMiddle } from '../../utils/truncateMiddle';
+import { formatCenterAzimuth } from './utils/formatCenterAzimuth';
+import { formatFootprintArea } from './utils/formatFootprintArea';
+import { formatLocation } from './utils/formatLocation';
 import { useCreatePatioMode } from '../../context/CreatePatioContext';
 import { useLiveMapText } from '../../hooks/useLiveMapText';
 import { useMintZoomGate } from '../../hooks/useMintZoomGate';
 import { useOverlapDetected } from '../../hooks/useOverlapDetected';
 import { MapPopup, MapPopupFooter, MapPopupHeader, MapPopupRow, MapPopupRows, MapPopupSeparator } from '../MapPopup';
 import s from './styles.module.css';
-
-/** `10000` → `10 000 m2`, derived from the footprint rather than hardcoded. */
-const formatFootprintArea = (meters: number): string => {
-    return `${(meters ** 2).toLocaleString('en-US').replaceAll(',', ' ')} m2`;
-};
-
-/** `Europe • 41.38510, 2.17340` — region omitted over open ocean, never empty. */
-const formatLocation = (map: mapboxgl.Map): string => {
-    const { lat, lng } = map.getCenter();
-    const coordinates = `${lat.toFixed(COORDINATE_PRECISION)}, ${lng.toFixed(COORDINATE_PRECISION)}`;
-    const continent = continentAt(lng, lat);
-
-    return continent ? `${CONTINENT_LABELS[continent]} • ${coordinates}` : coordinates;
-};
-
-/**
- * Geographic azimuth of the footprint about to be minted. The center square is
- * drawn screen-upright (`useSquaresDriver`, `azimuthDeg: 0`), so rotating the map
- * turns the world under it — its world azimuth is the negated screen angle of north.
- */
-const formatCenterAzimuth = (map: mapboxgl.Map): string => {
-    const { lat, lng } = map.getCenter();
-
-    return formatAzimuth(-getProjectedNorthDeg(map, lng, lat));
-};
 
 /** Split out so the popup's hooks only run while create mode is actually on. */
 const NewPatioPopupCard: React.FC = () => {

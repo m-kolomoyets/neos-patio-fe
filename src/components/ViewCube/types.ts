@@ -1,3 +1,6 @@
+import type { MapInteraction, WithClassName } from '@/lib/types';
+import type { PatioBounds } from '@/services/patios/types';
+
 /** The 4 cardinal side faces of the cube. */
 export type CubeFace = 'north' | 'east' | 'south' | 'west';
 
@@ -44,3 +47,38 @@ export type HomeView = {
     pitch: number;
     range: number;
 };
+
+/** A face that carries a 3×3 hit grid (the cube's underside is never rendered). */
+export type FaceId = 'top' | CubeFace;
+
+/** A cube-body direction; each component ∈ {-1, 0, 1}. */
+export type Axis3 = readonly [number, number, number];
+
+/**
+ * ViewCube navigation widget (bottom-right overlay).
+ *
+ * A CSS 3D cube whose perspective mirrors the live Cesium camera, acting as a
+ * combined compass + pitch indicator (#02). Faces/corners carry `data-face` for
+ * hover and, via {@link useCubeInteraction}, click-to-snap + drag-to-orbit
+ * (#03). Clicking a side face flattens the cube to that face with step arrows
+ * (#04). No three.js / GL — pure DOM + CSS transforms.
+ *
+ * The camera adapter ({@link useCesiumCamera}) models every move as a
+ * `lookAt(target, HeadingPitchRange)` around the patio bounds centre. The live
+ * camera subscription is pushed down into the {@link CubeView} and
+ * {@link LiveZoomControl} leaves, so this shell does not re-render per frame.
+ */
+export type ViewCubeProps = WithClassName<{
+    /** Patio bounds framed by the camera; the orbit target is its centre. */
+    bounds: PatioBounds;
+    /** The patio's look-at offset above ground (`Patio.height`); raises the orbit pivot. */
+    height?: number;
+    /** Stable id (the patio id) keying the per-patio Home-view localStorage entry. */
+    storageId: string;
+    /**
+     * Camera mode. In `'view'` the cube's orbit/zoom pivot on the fixed bounds
+     * centre (center-locked, agrees with the map drags); `'edit'` (default)
+     * pivots on the viewport-centre ground pick.
+     */
+    interaction?: MapInteraction;
+}>;

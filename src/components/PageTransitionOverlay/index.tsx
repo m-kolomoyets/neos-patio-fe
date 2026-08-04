@@ -4,10 +4,8 @@ import { useUpdateEffect } from '@react-hookz/web';
 import { AnimatePresence, motion } from 'motion/react';
 import { LoadingSpinnerWithLogo } from '@/components/ui/LoadingSpinnerWithLogo';
 import { Typography } from '@/components/ui/Typography';
+import { BG_FADE_IN, FADE_OUT } from './constants';
 import s from './styles.module.css';
-
-const FADE_OUT = { duration: 0.5, ease: 'easeInOut' } as const;
-const BG_FADE_IN = { duration: 0.4, ease: 'easeOut' } as const;
 
 /**
  * Full-screen loading overlay shown while navigating to a patio. Renders the

@@ -1,23 +1,9 @@
-import type { Viewer } from 'cesium';
-import type { CameraState } from '../../types';
+import type { LiveZoomControlProps } from './types';
 import { useCallback } from 'react';
 import { ZOOM_STEP_FACTOR } from '../../constants';
 import { percentToRange, rangeToPercent } from '../../utils/cameraMath';
 import { useCameraState } from '../../hooks/useCameraState';
 import { ZoomControl } from './components/ZoomControl';
-
-type LiveZoomControlProps = {
-    viewer: Viewer;
-    readOrientation: () => CameraState;
-    /** Camera range (m) that reads as 100% — the patio diagonal. */
-    referenceRange: number;
-    /** Change only the range, preserving the live camera pose (stepper + presets). */
-    zoomTo: (_range: number) => void;
-    /** Frame the whole patio at the default orientation (zoom-to-fit). */
-    fitBounds: () => void;
-    onSetHome: () => void;
-    onResetHome: () => void;
-};
 
 /**
  * Live-zoom leaf: owns the per-frame camera subscription so the (memoized)

@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react';
 import type { Patio } from '@/services/patios/types';
-import type { IndicatorType } from '../../types';
 import { useState } from 'react';
 import ChevronDownIcon from '@/icons/chevron-down_24.svg?react';
 import DotIcon from '@/icons/dot_24.svg?react';
@@ -14,35 +13,16 @@ import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Typography } from '@/components/ui/Typography';
 import { COORDINATE_PRECISION, INDICATOR_PALETTE, START_COORDINATE } from '../../constants';
+import { STATUS_LABELS } from './constants';
 import { derivePatioMapGeometry } from '../../utils/derivePatioMapGeometry';
 import { formatAzimuth } from '../../utils/formatAzimuth';
 import { resolveIndicatorType } from '../../utils/resolveIndicatorType';
+import { formatCreatedAt } from './utils/formatCreatedAt';
 import { useCreatePatioMode } from '../../context/CreatePatioContext';
 import { useIsMine } from '../../hooks/useIsMine';
 import { CopyLinkRow } from './components/CopyLinkRow';
 import { MapPopup, MapPopupFooter, MapPopupHeader, MapPopupRow, MapPopupRows, MapPopupSeparator } from '../MapPopup';
 import s from './styles.module.css';
-
-/** `2025-09-12T10:00:00Z` → `12.09.2025`, the dotted format the design shows. */
-const formatCreatedAt = (isoDate: string): string => {
-    return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
-        .format(new Date(isoDate))
-        .replaceAll('/', '.');
-};
-
-/**
- * Status wording per indicator type. Ownership is carried by the dot color alone
- * (orange / yellow), never repeated in the text — the wording only ever states
- * whether the patio is published.
- */
-const STATUS_LABELS: Record<IndicatorType, string> = {
-    owned: 'Published',
-    'not-published': 'Unpublished',
-    'owned-and-published': 'Published',
-    'owned-and-not-published': 'Unpublished',
-    // Unreachable: `target` is the create-mode cursor, never a saved patio.
-    target: 'Draft',
-};
 
 /** Card body once the detail query has resolved. */
 const PatioDetails: React.FC<{ patio: Patio }> = ({ patio }) => {

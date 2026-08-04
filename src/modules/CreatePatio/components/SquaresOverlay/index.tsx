@@ -1,5 +1,4 @@
-import type { CSSProperties } from 'react';
-import type { IndicatorType } from '../../types';
+import type { IndicatorVars, InnerShadowProps, OverlayVars } from './types';
 import { Fragment } from 'react';
 import {
     CENTER_SQUARE,
@@ -14,7 +13,9 @@ import {
     SQUARE_BORDER_WIDTH,
     SQUARE_CORNER_RADIUS,
 } from '../../constants';
+import { INDICATOR_TYPES, SHAPE_RESULT } from './constants';
 import { getCrossfadeOpacity } from '../../utils/getCrossfadeOpacity';
+import { indicatorGradientId, indicatorInsetId, indicatorInsetPressedId, indicatorSheenId } from './utils/indicators';
 import { useCreatePatioMode } from '../../context/CreatePatioContext';
 import { useCrossfadeDriver } from '../../hooks/useCrossfadeDriver';
 import { usePatioGeometries } from '../../hooks/usePatioGeometries';
@@ -25,68 +26,6 @@ import { useZoomAtLeast } from '../../hooks/useZoomAtLeast';
 import { useViewportSize } from './hooks/useViewportSize';
 import { GridPath } from './components/GridPath';
 import s from './styles.module.css';
-
-/**
- * Overlay-level custom properties: the cross-fade opacity the driver rewrites each
- * frame, and the resting scale of the accent sheen (constant across types, so it is
- * declared once here and inherited by every square).
- */
-type OverlayVars = CSSProperties & {
-    '--crossfade-opacity': string;
-    '--indicator-sheen-rest': string;
-};
-
-/**
- * Per-square paint read by `styles.module.css`: the pressed/selected ring color and
- * the two inner-glow filters (with the white highlights for default/hovered,
- * without them once selected — the accent ring takes over there).
- */
-type IndicatorVars = CSSProperties & {
-    '--indicator-pressed-border': string;
-    '--indicator-inset': string;
-    '--indicator-inset-pressed': string;
-};
-
-/** Every indicator type gets its own gradient + inner-glow filter, defined once. */
-const INDICATOR_TYPES = Object.keys(INDICATOR_PALETTE) as IndicatorType[];
-
-const indicatorGradientId = (type: IndicatorType) => {
-    return `indicator-gradient-${type}`;
-};
-
-const indicatorInsetId = (type: IndicatorType) => {
-    return `indicator-inset-${type}`;
-};
-
-/** Same glow, minus the white highlights — the selected/pressed treatment. */
-const indicatorInsetPressedId = (type: IndicatorType) => {
-    return `${indicatorInsetId(type)}-pressed`;
-};
-
-/** The 222.5° accent sheen laid over the square, one ramp per indicator type. */
-const indicatorSheenId = (type: IndicatorType) => {
-    return `indicator-sheen-${type}`;
-};
-
-/**
- * Filter-local name of the square's *silhouette*. The squares are filled with a
- * mostly-transparent radial gradient, so `SourceAlpha` is a soft blob rather than
- * the rounded rect — inverting it would leave the whole interior lit and wash the
- * square white. Saturating alpha first gives the shadows the shape they need.
- */
-const SHAPE_RESULT = 'shape';
-
-type InnerShadowProps = {
-    color: string;
-    /** CSS blur radius; halved for the filter's `stdDeviation`. */
-    blur: number;
-    dx?: number;
-    dy?: number;
-    /** CSS shadow spread; negative narrows the band, as in `box-shadow`. */
-    spread?: number;
-    /** Filter-local result name this chain publishes. */
-    result: string;
-};
 
 /**
  * One CSS-`inset`-equivalent shadow as filter primitives: spread the silhouette,

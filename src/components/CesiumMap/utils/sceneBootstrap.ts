@@ -1,3 +1,4 @@
+import type { MapInteraction } from '@/lib/types';
 import type { PatioBounds } from '@/services/patios/types';
 import { BoundingSphere, Cesium3DTileset, Math as CesiumMath, HeadingPitchRange, Ion, Rectangle, Viewer } from 'cesium';
 import { sampleSurfaceHeight } from '@/lib/utils/sampleSurfaceHeight';
@@ -55,14 +56,6 @@ export const configureViewer = (container: HTMLDivElement): Viewer => {
 
     return viewer;
 };
-
-/**
- * How the map camera may be driven. `'edit'` leaves the default Cesium
- * screen-space controller untouched (today's editor behaviour). `'view'`
- * constrains it to orbit + zoom around the patio: free translate/pan across the
- * globe and free-look/fly are disabled so the patio always stays framed.
- */
-export type MapInteraction = 'edit' | 'view';
 
 /**
  * Multipliers off the framed patio's bounding-sphere radius that bound how close

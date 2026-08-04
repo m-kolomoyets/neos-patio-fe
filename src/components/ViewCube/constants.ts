@@ -1,5 +1,14 @@
-import type { CubeTarget } from './types';
+import type { Axis3, CubeFace, CubeTarget, FaceId } from './types';
 import { NINETY_DEGREES } from '@/lib/constants';
+
+/** Single-letter labels for the flattened head-on face. */
+export const FACE_LABELS: Record<CubeFace, string> = { north: 'N', east: 'E', south: 'S', west: 'W' };
+
+/**
+ * The 4 side faces in clockwise (bearing-increasing) order. Index + 1 steps a
+ * quarter-turn right (bearing +90°), - 1 steps left; consumed by {@link stepFace}.
+ */
+export const FACE_ORDER: CubeFace[] = ['north', 'east', 'south', 'west'];
 
 /** Duration (ms) for every programmatic camera move (snap, arrows, home, zoom presets). */
 export const CAMERA_EASE_MS = 400;
@@ -105,3 +114,22 @@ export const CUBE_TARGETS: Record<CubeTarget, { bearing: number | null; pitch: n
     'edge-top-s': { bearing: 0, pitch: 30 },
     'edge-top-w': { bearing: NINETY_DEGREES, pitch: 30 },
 };
+
+/**
+ * Body-frame basis of each face's local 3×3 grid.
+ *
+ * Cube-body axes (derived from the CSS face transforms): `x` E+ / W−, `y` S+ /
+ * N−, `z` Top+ / Bottom−. `fixed` is the face's outward normal; `ax`/`ay` are
+ * the body directions its grid columns / rows advance along. A cell's body
+ * vector is `fixed + ax·(col−1) + ay·(row−1)` — see {@link cellVector}.
+ */
+export const FACE_BASIS: Record<FaceId, { fixed: Axis3; ax: Axis3; ay: Axis3 }> = {
+    top: { fixed: [0, 0, 1], ax: [1, 0, 0], ay: [0, 1, 0] },
+    north: { fixed: [0, -1, 0], ax: [1, 0, 0], ay: [0, 0, 1] },
+    south: { fixed: [0, 1, 0], ax: [1, 0, 0], ay: [0, 0, -1] },
+    east: { fixed: [1, 0, 0], ax: [0, -1, 0], ay: [0, 0, -1] },
+    west: { fixed: [-1, 0, 0], ax: [0, 1, 0], ay: [0, 0, -1] },
+};
+
+/** Row/col indices of a face's 3×3 grid, top-left = (0,0). */
+export const GRID_INDICES = [0, 1, 2] as const;

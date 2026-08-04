@@ -2,13 +2,9 @@ import type { MapView } from '../../types';
 import { useMap } from 'react-map-gl/mapbox';
 import { Tabs } from '@/components/ui/Tabs';
 import { CREATE_PATIO_MAP_ID, SATELLITE_RASTER_LAYER_ID } from '../../constants';
+import { VIEWS } from './constants';
 import { useMapView } from '../../hooks/useMapView';
 import s from './styles.module.css';
-
-const VIEWS: { value: MapView; label: string }[] = [
-    { value: 'aerial', label: 'Aerial' },
-    { value: 'satellite', label: 'Satellite' },
-];
 
 /**
  * Top-center overlay switching the base map between satellite and aerial. Applies

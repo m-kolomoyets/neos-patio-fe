@@ -1,5 +1,5 @@
 import type { Viewer } from 'cesium';
-import type { MapInteraction } from '@/components/CesiumMap/utils/sceneBootstrap';
+import type { MapInteraction } from '@/lib/types';
 import type { PatioBounds } from '@/services/patios/types';
 import type { CameraState, CameraTarget } from '../types';
 import { useCallback, useEffect, useMemo, useRef } from 'react';

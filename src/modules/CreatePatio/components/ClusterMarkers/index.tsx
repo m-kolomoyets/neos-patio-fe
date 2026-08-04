@@ -1,6 +1,6 @@
-import type { CSSProperties } from 'react';
 import type { GeoJSONFeature, GeoJSONSource } from 'mapbox-gl';
 import type { IndicatorType } from '../../types';
+import type { ClusterMarker, MorphVars, PatioMarker, SingletonMarker } from './types';
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { Marker, useMap } from 'react-map-gl/mapbox';
@@ -9,11 +9,11 @@ import {
     CLUSTER_EXPAND_ZOOM_PADDING,
     CREATE_PATIO_MAP_ID,
     DEFAULT_ZOOM,
-    INDICATOR_PALETTE,
     PATIO_CLUSTER_SOURCE_ID,
     SINGLE_PATIO_VIEW_ZOOM,
     START_COORDINATE,
 } from '../../constants';
+import { BADGE_FADE_MS, CREATE_MARKER_KEY } from './constants';
 import { derivePatioMapGeometry } from '../../utils/derivePatioMapGeometry';
 import { flyToView } from '../../utils/flyToView';
 import { getCrossfadeOpacity } from '../../utils/getCrossfadeOpacity';
@@ -22,71 +22,14 @@ import { prefersReducedMotion } from '../../utils/prefersReducedMotion';
 import { resolveIndicatorType } from '../../utils/resolveIndicatorType';
 import { getBadgeSize } from './utils/getBadgeSize';
 import { getMorphStyle } from './utils/getMorphStyle';
+import { markerKey } from './utils/markerKey';
+import { toIndicatorVars } from './utils/toIndicatorVars';
 import { useCreatePatioMode } from '../../context/CreatePatioContext';
 import { useCrossfadeDriver } from '../../hooks/useCrossfadeDriver';
 import { usePlacementEnabled } from '../../hooks/usePlacementEnabled';
 import { useMorphDriver } from './hooks/useMorphDriver';
 import { usePresence } from './hooks/usePresence';
 import s from './styles.module.css';
-
-type BaseMarker = {
-    /** Stable dedupe/render key: cluster id or patio id. */
-    key: string;
-    longitude: number;
-    latitude: number;
-    /** Member count: cluster size, or `1` for a lone patio. */
-    count: number;
-    /** Blue treatment: cluster holds unpublished work, or the lone patio is unpublished. */
-    hasUnpublished: boolean;
-};
-
-/** A count bubble; taps fly the camera down to where it breaks apart. */
-type ClusterMarker = BaseMarker & { cluster: true; clusterId: number };
-/** A lone patio; taps select it via the shared selection path. */
-type SingletonMarker = BaseMarker & { cluster: false; patioId: string; indicatorType: IndicatorType };
-type PatioMarker = ClusterMarker | SingletonMarker;
-
-/** Indicator palette entry a badge paints with, as CSS custom properties. */
-type IndicatorVars = CSSProperties & {
-    '--indicator-fill': string;
-    '--indicator-glow': string;
-};
-
-/** CSS custom properties the morph driver / initial render write onto a marker. */
-type MorphVars = IndicatorVars & {
-    '--morph-size': string;
-    '--morph-radius': string;
-    '--morph-text-opacity': string;
-    '--morph-rotate': string;
-    '--crossfade-opacity': string;
-};
-
-/**
- * Badge colors for one indicator type. Singleton badges use the full four-color
- * palette (the same entries the SVG squares use) so the badge→square morph across
- * `MORPH_BAND` is a pure shape change; clusters pass only the two aggregate
- * colors — `owned` (green) when everything inside is published, `not-published`
- * (blue) otherwise.
- */
-const toIndicatorVars = (type: IndicatorType): IndicatorVars => {
-    const palette = INDICATOR_PALETTE[type];
-
-    return {
-        '--indicator-fill': palette.badgeFill,
-        '--indicator-glow': palette.insetShadow,
-    };
-};
-
-/** Key for the always-on-top orange create-patio marker (never in the source). */
-const CREATE_MARKER_KEY = 'create-patio-marker';
-
-/** Stable key accessor for `usePresence` (must not change identity per render). */
-const markerKey = (marker: PatioMarker) => {
-    return marker.key;
-};
-
-/** How long an outgoing marker lingers to cross-fade out; matches `badge-fade-in`. */
-const BADGE_FADE_MS = 220;
 
 /** Turns resolved morph geometry into the CSS custom properties the badge reads. */
 const toMorphVars = (

@@ -1,17 +1,11 @@
 import type { Continent, PatioType } from '@/services/patios/types';
+import type { FilterSectionsProps } from './types';
 import React from 'react';
 import { ToggleGroup as BaseToggleGroup } from '@base-ui/react/toggle-group';
 import { Chip } from '@/components/ui/Chip';
 import { Typography } from '@/components/ui/Typography';
 import { CONTINENT_LABELS, TYPE_LABELS } from '../../constants';
 import s from './styles.module.css';
-
-type FilterSectionsProps = {
-    continents: Continent[];
-    types: PatioType[];
-    onContinentsChange: (_values: Continent[]) => void;
-    onTypesChange: (_values: PatioType[]) => void;
-};
 
 export const FilterSections: React.FC<FilterSectionsProps> = ({
     continents,
