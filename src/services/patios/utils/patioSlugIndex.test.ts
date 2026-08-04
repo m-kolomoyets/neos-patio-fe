@@ -36,15 +36,15 @@ describe('buildPatioSlugIndex', () => {
             makePatio({ id: '2', name: 'Sagrada Família' }),
         ]);
 
-        expect(index.get('mont-saint-michel')?.id).toBe('1');
-        expect(index.get('sagrada-familia')?.id).toBe('2');
+        expect(index.get('Mont_Saint_Michel')?.id).toBe('1');
+        expect(index.get('Sagrada_Familia')?.id).toBe('2');
     });
 
     it('prefers an explicit slug over the derived one', () => {
-        const index = buildPatioSlugIndex([makePatio({ id: '1', name: 'Castillo de Chambord', slug: 'chambord' })]);
+        const index = buildPatioSlugIndex([makePatio({ id: '1', name: 'Castillo de Chambord', slug: 'Chambord' })]);
 
-        expect(index.get('chambord')?.id).toBe('1');
-        expect(index.has('castillo-de-chambord')).toBe(false);
+        expect(index.get('Chambord')?.id).toBe('1');
+        expect(index.has('Castillo_De_Chambord')).toBe(false);
     });
 
     it('falls back to the id ref when the name yields no usable slug', () => {
@@ -60,8 +60,8 @@ describe('buildPatioSlugIndex', () => {
             makePatio({ id: '2', name: 'Chambord' }),
         ]);
 
-        expect(index.get('chambord')?.id).toBe('1');
-        expect(index.get('chambord-2')?.id).toBe('2');
+        expect(index.get('Chambord')?.id).toBe('1');
+        expect(index.get('Chambord_2')?.id).toBe('2');
     });
 
     it('increments a three-way collision', () => {
@@ -71,17 +71,27 @@ describe('buildPatioSlugIndex', () => {
             makePatio({ id: '3', name: 'Chambord' }),
         ]);
 
-        expect([...index.keys()]).toEqual(['chambord', 'chambord-2', 'chambord-3']);
+        expect([...index.keys()]).toEqual(['Chambord', 'Chambord_2', 'Chambord_3']);
     });
 
     it('dedupes an explicit slug that collides with a derived one', () => {
         const index = buildPatioSlugIndex([
             makePatio({ id: '1', name: 'Chambord' }),
+            makePatio({ id: '2', name: 'Somewhere Else', slug: 'Chambord' }),
+        ]);
+
+        expect(index.get('Chambord')?.id).toBe('1');
+        expect(index.get('Chambord_2')?.id).toBe('2');
+    });
+
+    it('treats a case-only difference as a collision, since refs resolve case-insensitively', () => {
+        const index = buildPatioSlugIndex([
+            makePatio({ id: '1', name: 'Chambord' }),
             makePatio({ id: '2', name: 'Somewhere Else', slug: 'chambord' }),
         ]);
 
-        expect(index.get('chambord')?.id).toBe('1');
-        expect(index.get('chambord-2')?.id).toBe('2');
+        expect(index.get('Chambord')?.id).toBe('1');
+        expect(index.get('chambord_2')?.id).toBe('2');
     });
 
     it('exposes the reassigned slug on the indexed patio', () => {
@@ -90,7 +100,7 @@ describe('buildPatioSlugIndex', () => {
             makePatio({ id: '2', name: 'Chambord' }),
         ]);
 
-        expect(index.get('chambord-2')?.slug).toBe('chambord-2');
+        expect(index.get('Chambord_2')?.slug).toBe('Chambord_2');
     });
 
     it('warns when a collision is auto-resolved', () => {
@@ -100,8 +110,8 @@ describe('buildPatioSlugIndex', () => {
 
         expect(warn).toHaveBeenCalledTimes(1);
         const message = String(warn.mock.calls[0]?.[0]);
-        expect(message).toContain('chambord');
-        expect(message).toContain('chambord-2');
+        expect(message).toContain('Chambord');
+        expect(message).toContain('Chambord_2');
         expect(message).toContain('2');
     });
 
@@ -138,7 +148,7 @@ describe('the fixture slug index', () => {
         expect(new Set(slugs).size).toBe(14);
         expect(
             slugs.filter((slug) => {
-                return /-\d+$/.test(slug);
+                return /_\d+$/.test(slug);
             })
         ).toEqual([]);
     });

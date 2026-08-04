@@ -29,24 +29,28 @@ const warnCollision = (slug: string, patio: Patio, resolved: string): void => {
  * Builds the slug → patio lookup so resolution is constant-time rather than a linear scan.
  *
  * Owns collision resolution: the first patio to claim a slug keeps it, later ones get a
- * numeric suffix in definition order (`chambord`, `chambord-2`). An explicit fixture slug is
+ * numeric suffix in definition order (`Chambord`, `Chambord_2`). An explicit fixture slug is
  * not exempt — silently overwriting would make one patio unreachable and undebuggable.
+ * Collisions are compared case-insensitively, because refs resolve that way: two slugs
+ * differing only in case would otherwise leave one patio unreachable.
  *
  * The stored patio carries the slug it was actually indexed under, so `patio.slug` is always
  * the canonical ref. Pure, apart from the development-only collision warning.
  */
 export const buildPatioSlugIndex = (patios: Patio[]): Map<string, Patio> => {
     const index = new Map<string, Patio>();
+    const taken = new Set<string>();
 
     patios.forEach((patio) => {
         const preferred = preferredSlug(patio);
 
         let slug = preferred;
         let suffix = 1;
-        while (index.has(slug)) {
+        while (taken.has(slug.toLowerCase())) {
             suffix += 1;
-            slug = `${preferred}-${suffix}`;
+            slug = `${preferred}_${suffix}`;
         }
+        taken.add(slug.toLowerCase());
 
         if (slug !== preferred) {
             warnCollision(preferred, patio, slug);
